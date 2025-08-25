@@ -1,0 +1,177 @@
+{% extends 'padres/base.html' %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5>Editar Perfil</h5>
+                            <a href="{% url 'padres:configuracion_padre' %}" class="btn btn-sm btn-light">
+                                <i class="fas fa-arrow-left me-1"></i> Volver
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            <div class="row mb-4">
+                                <div class="col-md-4 text-center">
+                                    {% if padre.imagen_usuario %}
+                                        <img src="{{ padre.imagen_usuario.url }}" class="rounded-circle mb-3"
+                                             width="150" height="150" alt="Foto de perfil" id="previewImage">
+                                    {% else %}
+                                        <div class="rounded-circle bg-secondary mb-3 d-inline-flex align-items-center justify-content-center"
+                                             style="width: 150px; height: 150px;">
+                                            <span class="text-white fs-1">{{ padre.nombre_completo|first }}{{ padre.apellidos|first }}</span>
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-group">
+                                        {{ form.imagen_usuario.label_tag }}
+                                        {{ form.imagen_usuario }}
+                                        <small class="form-text text-muted">Formatos soportados: JPG, PNG</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                {{ form.nombre_completo.label_tag }}
+                                                {{ form.nombre_completo }}
+                                                {% if form.nombre_completo.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.nombre_completo.errors.0 }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                {{ form.apellidos.label_tag }}
+                                                {{ form.apellidos }}
+                                                {% if form.apellidos.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.apellidos.errors.0 }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        {{ form.correo_electronico.label_tag }}
+                                        {{ form.correo_electronico }}
+                                        {% if form.correo_electronico.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.correo_electronico.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                {{ form.telefono_principal.label_tag }}
+                                                {{ form.telefono_principal }}
+                                                {% if form.telefono_principal.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.telefono_principal.errors.0 }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                {{ form.telefono_respaldo.label_tag }}
+                                                {{ form.telefono_respaldo }}
+                                                {% if form.telefono_respaldo.errors %}
+                                                    <div class="invalid-feedback d-block">
+                                                        {{ form.telefono_respaldo.errors.0 }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group mb-3">
+                                {{ form.datos_personales.label_tag }}
+                                {{ form.datos_personales }}
+                                <small class="form-text text-muted">Información personal relevante</small>
+                            </div>
+                            <hr>
+
+                            <h5 class="mb-3">Cambiar Contraseña</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        {{ form.nueva_contraseña.label_tag }}
+                                        {{ form.nueva_contraseña }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        {{ form.confirmar_contraseña.label_tag }}
+                                        {{ form.confirmar_contraseña }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Deja estos campos en blanco si no deseas cambiar la contraseña.
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save me-2"></i>Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Preview de la imagen seleccionada
+        document.getElementById('id_imagen_usuario').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const preview = document.getElementById('previewImage');
+                    if (preview) {
+                        preview.src = e.target.result;
+                    } else {
+                        const divPreview = document.querySelector('.rounded-circle.bg-secondary');
+                        if (divPreview) {
+                            divPreview.innerHTML = `<img src="${e.target.result}" class="rounded-circle" width="150" height="150" id="previewImage">`;
+                        }
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('form');
+
+            form.addEventListener('submit', function () {
+                const nuevaContraseña = document.querySelector('#id_nueva_contraseña');
+                const confirmarContraseña = document.querySelector('#id_confirmar_contraseña');
+
+                // Si el usuario no tocó los campos, los limpiamos antes de enviar
+                if (nuevaContraseña.value === '' && confirmarContraseña.value === '') {
+                    nuevaContraseña.value = '';
+                    confirmarContraseña.value = '';
+                }
+            });
+        });
+    </script>
+{% endblock %}

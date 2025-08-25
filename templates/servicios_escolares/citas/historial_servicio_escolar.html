@@ -1,0 +1,201 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% block content %}
+    <div class="container">
+        <h2>Historial de Citas - {{ servicio_escolar.nombre_completo }}</h2>
+
+        <!-- Filtros -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label>Estado</label>
+                            <select name="estado" class="form-control">
+                                <option value="">Todos</option>
+                                {% for valor, etiqueta in estados_cita.items %}
+                                    <option value="{{ valor }}" {% if request.GET.estado == valor %}selected{% endif %}>
+                                        {{ etiqueta }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Desde</label>
+                            <input type="date" name="fecha_inicio" class="form-control"
+                                   value="{{ request.GET.fecha_inicio }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label>Hasta</label>
+                            <input type="date" name="fecha_fin" class="form-control"
+                                   value="{{ request.GET.fecha_fin }}">
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary mt-4">Filtrar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Resumen -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">Total</h5>
+                        <p class="card-text display-4">{{ total_citas }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info">
+                    <div class="card-body">
+                        <h5 class="card-title">Hoy</h5>
+                        <p class="card-text display-4">{{ citas_hoy }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title">Pendientes</h5>
+                        <p class="card-text display-4">{{ citas_pendientes }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">Completadas</h5>
+                        <p class="card-text display-4">{{ citas_completadas }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de citas prioritarias -->
+        <div class="card mb-4 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">Citas Prioritarias</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Citas prioritarias creadas por el servicio escolar -->
+                    <div class="col-md-6">
+                        <h5 class="text-success">
+                            <i class="fas fa-user-shield"></i> Citas creadas por ti
+                        </h5>
+                        <div class="list-group">
+                            {% for cita in citas %}
+                                {% if cita.servicio_escolar == servicio_escolar and cita.nivel_prioridad %}
+                                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 
+                                        {% if cita.nivel_prioridad == 'critica' %}border-danger{% elif cita.nivel_prioridad == 'alta' %}border-warning{% else %}border-info{% endif %}">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">
+                                                {{ cita.get_tipo_urgencia_display }}
+                                                <span class="badge badge-{{ cita.color_prioridad }}">
+                                            {{ cita.get_nivel_prioridad_display }}
+                                        </span>
+                                            </h5>
+                                            <small>{{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}</small>
+                                        </div>
+                                        <p class="mb-1">Solicitante: {{ cita.solicitante.nombre_completo }}</p>
+                                        <small>
+                                            Estado: <span class="badge badge-{{ cita.get_badge_color }}">
+                                        {{ cita.get_estado_display }}
+                                    </span>
+                                        </small>
+                                        <a href="#" class="btn btn-sm btn-primary float-right">
+                                            <i class="fas fa-eye"></i> Ver
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% empty %}
+                                <div class="alert alert-info">No has creado citas prioritarias</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Citas prioritarias creadas por otros usuarios -->
+                    <div class="col-md-6">
+                        <h5 class="text-danger">
+                            <i class="fas fa-exclamation-triangle"></i> Citas creadas por padres
+                        </h5>
+                        <div class="list-group">
+                            {% for cita in citas %}
+                                {% if cita.servicio_escolar == servicio_escolar and cita.nivel_prioridad and cita.solicitante != servicio_escolar %}
+                                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 
+                                        {% if cita.nivel_prioridad == 'critica' %}border-danger{% elif cita.nivel_prioridad == 'alta' %}border-warning{% else %}border-info{% endif %}">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">
+                                                {{ cita.get_tipo_urgencia_display }}
+                                                <span class="badge badge-{{ cita.color_prioridad }}">
+                                            {{ cita.get_nivel_prioridad_display }}
+                                        </span>
+                                            </h5>
+                                            <small>{{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}</small>
+                                        </div>
+                                        <p class="mb-1">Solicitante: {{ cita.solicitante.nombre_completo }}</p>
+                                        <small>
+                                            Estado: <span class="badge badge-{{ cita.get_badge_color }}">
+                                        {{ cita.get_estado_display }}
+                                    </span>
+                                        </small>
+                                        <a href="#" class="btn btn-sm btn-primary float-right">
+                                            <i class="fas fa-eye"></i> Ver
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% empty %}
+                                <div class="alert alert-info">No hay citas prioritarias de padres</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <!-- Lista de citas -->
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>Fecha/Hora</th>
+                        <th>Tipo</th>
+                        <th>Solicitante</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for cita in citas %}
+                        <tr>
+                            <td>{{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}</td>
+                            <td>{{ cita.get_tipo_display }}</td>
+                            <td>{{ cita.solicitante.nombre_completo }}</td>
+                            <td>
+                            <span class="badge badge-{{ cita.get_badge_color }}">
+                                {{ cita.get_estado_display }}
+                            </span>
+                            </td>
+                            <td>
+                                {# {% url 'citas:detalle' cita.id %} #}
+                                <a href="#"
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No se encontraron citas</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

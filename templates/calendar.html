@@ -1,0 +1,258 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calendar</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Fuentes y iconos -->
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/calendar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        var csrf_token = '{{ csrf_token }}';
+        var currentDate = new Date();
+    </script>
+</head>
+
+<body>
+<div id="container">
+    <!-- Barra lateral -->
+    <div id="cal-side-bar">
+        <div id="cal-side-bar-top">
+                <span id="btn-menu" class="btn-fa">
+                    <i class="fa fa-bars"></i>
+                </span>
+        </div>
+
+        <!-- Mini calendario -->
+        <div id="cal-thumb">
+            <div id="cal-thumb-content-top">
+                <span class="month-long">{{ current_month }}</span>
+                <span class="year">{{ current_year }}</span>
+            </div>
+            <div id="cal-thumb-content-grid">
+                <div id="thumb-week-days">
+                    <ul>
+                        <li>Su</li>
+                        <li>Mo</li>
+                        <li>Tu</li>
+                        <li>We</li>
+                        <li>Th</li>
+                        <li>Fr</li>
+                        <li>Sa</li>
+                    </ul>
+                </div>
+                <!-- Semanas del mes (ejemplo estático) -->
+                {% for week in "12345" %}
+                    <div class="thumb-week-row">
+                        <ul>
+                            {% for day in "1234567" %}
+                                <li {% if forloop.parentloop.first and forloop.counter < 5 %}class="disabled"{% endif %}>
+                                    {{ day }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Reloj -->
+        <div id="time">
+            <span id="hour">{{ current_hour }}</span>:
+            <span id="minutes">{{ current_minute }}</span>
+            <span id="am-pm">{{ am_pm }}</span>
+        </div>
+
+        <!-- Eventos de hoy -->
+        <div id="today-events">
+            <div class="top-heading">Today</div>
+            <ul>
+                {% for event in today_events %}
+                    <li>{{ event }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Clima -->
+        <div id="weather">
+            <div class="top-heading">Weather</div>
+            <div id="weather-content">
+                <div id="weather-type">
+                    <p id="weather-type-icon">
+                        <i class="fa {{ weather.icon }}"></i>
+                    </p>
+                    <p id="weather-type-text">{{ weather.type }}</p>
+                </div>
+                <span id="weather-max">{{ weather.max_temp }}</span>
+                <span id="weather-min">{{ weather.min_temp }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido principal del calendario -->
+    <div id="cal-content">
+        <div id="cal-content-top">
+                <span id="cal-content-top-month">
+                    <span class="btn-fa" id="cal-content-month-up">
+                        <i class="fa fa-chevron-up"></i>
+                    </span>
+                    <span class="btn-fa" id="cal-content-month-dn">
+                        <i class="fa fa-chevron-down"></i>
+                    </span>
+                    <span class="month-long">{{ current_month }}</span>
+                    <span class="year">{{ current_year }}</span>
+                </span>
+            <span id="cal-content-top-icon">
+                    <span class="btn-fa" id="btn-sync">
+                        <i class="fa fa-refresh"></i>
+                    </span>
+                    <span class="btn-fa">
+                        <i class="fa fa-gear"></i>
+                    </span>
+                </span>
+        </div>
+
+        <!-- Grid del calendario -->
+        <div id="cal-content-grid">
+            <div id="week-days">
+                <ul>
+                    <li class="week-day">Sunday</li>
+                    <li class="week-day">Monday</li>
+                    <li class="week-day selected">Tuesday</li>
+                    <li class="week-day">Wednesday</li>
+                    <li class="week-day">Thursday</li>
+                    <li class="week-day">Friday</li>
+                    <li class="week-day">Saturday</li>
+                </ul>
+            </div>
+
+            <!-- Semanas del mes (ejemplo estático) -->
+            {% for week in "123456" %}
+                <div class="week-row {% if forloop.last %}last{% endif %}">
+                    <ul>
+                        {% for day in "1234567" %}
+                            <li class="week-row-cell 
+                                  {% if forloop.parentloop.first and forloop.counter < 5 %}disabled{% endif %}
+                                  {% if forloop.parentloop.counter == 3 and forloop.counter == 4 %}selected{% endif %}
+                                  {% if forloop.last %}last{% endif %}">
+                                {{ day }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Formulario para añadir eventos -->
+<div class="form-wrapper" id="add-event-form">
+    <form>
+        {% csrf_token %}
+        <input type="hidden" name="action" id="add-event-action" value="add">
+        <input type="hidden" name="eid" id="add-event-eid" value="">
+        <input type="hidden" name="synced" id="add-event-synced" value="false">
+
+        <ul>
+            <li class="form-li">
+                <span class="form-top"
+                      id="add-event-top">{{ current_month }} {{ current_day }}, {{ current_year }}</span>
+                <span class="btn-fa btn-close form-close">
+                        <i class="fa fa-times"></i>
+                    </span>
+            </li>
+            <li class="form-li">
+                    <span class="input-field">
+                        <input id="add-event-name" maxlength="50" name="name" placeholder="Event Name" type="text"
+                               required>
+                    </span>
+            </li>
+            <li class="form-li">
+                    <span class="input-field">
+                        <input id="add-event-location" maxlength="100" name="location" placeholder="Location" required>
+                    </span>
+            </li>
+            <li class="form-li">
+                <span class="input-name">Starts</span>
+                <span class="input-field datetime-field">
+                        <input id="add-event-sdate" name="start_date" type="date">
+                        <input id="add-event-stime" name="start_time" type="time" required>
+                    </span>
+            </li>
+            <li class="form-li">
+                <span class="input-name">Ends</span>
+                <span class="input-field datetime-field">
+                        <input id="add-event-edate" name="end_date" type="date">
+                        <input id="add-event-etime" name="end_time" type="time" required>
+                    </span>
+            </li>
+            <li class="form-li">
+                <input id="add-event-allday" type="checkbox" name="allday">
+                <label for="add-event-allday" class="input-name"> All Day</label>
+            </li>
+            <li class="form-li">
+                <textarea id="add-event-desc" name="description" placeholder="Description" maxlength="200"></textarea>
+            </li>
+            <li class="form-li">
+                <input class="form-btn form-close" type="button" value="Cancel">
+                <input class="form-btn btn-right" type="submit" value="Save">
+            </li>
+        </ul>
+    </form>
+</div>
+
+<!-- Formulario de detalle de evento -->
+<div class="form-wrapper" id="detail-event-form">
+    <form>
+        <ul>
+            <li class="form-li">
+                <span class="form-top" id="detail-event-name">Event Name</span>
+                <span class="btn-fa btn-close form-close">
+                        <i class="fa fa-times"></i>
+                    </span>
+            </li>
+            <li class="form-li">
+                <p class="detail-label">Where</p>
+                <p id="detail-event-location" class="detail-info"></p>
+            </li>
+            <li class="form-li">
+                <p class="detail-label">When</p>
+                <p id="detail-event-date" class="detail-info"></p>
+            </li>
+            <li class="form-li">
+                <p class="detail-label">Description</p>
+                <p id="detail-event-desc" class="detail-info"></p>
+            </li>
+            <div class="form-li">
+                <input class="form-btn" id="btn-edit" type="button" value="Edit">
+                <input class="form-btn btn-right" id="btn-delete" type="button" value="Delete">
+            </div>
+        </ul>
+    </form>
+</div>
+
+<!-- JavaScript -->
+<script src="{% static 'js/calendar.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        // Inicialización básica
+        $('#btn-menu').click(function () {
+            alert('Menú clickeado - implementar funcionalidad');
+        });
+
+        // Más lógica de inicialización aquí...
+    });
+</script>
+</body>
+</html>

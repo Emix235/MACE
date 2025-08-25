@@ -1,0 +1,153 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <h2>Configuración del Tema</h2>
+
+        {% if messages %}
+            <div class="container mt-3 ps-0 pe-0">
+                {% for message in messages %}
+                    <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Formulario principal unificado -->
+        <form method="post" action="{% url 'servicios_escolares:theme_settings' %}">
+            {% csrf_token %}
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Tema Global Actual</h4>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="theme-select">Selecciona el tema:</label>
+                        <select class="form-control" id="theme-select" name="active_theme">
+                            {% for theme_value, theme_name in theme_config.THEME_CHOICES %}
+                                <option value="{{ theme_value }}"
+                                        {% if theme_config.global_theme == theme_value %}selected{% endif %}>
+                                    {{ theme_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Permisos de Cambio</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="allow_profesors"
+                                       id="allow_profesors" {% if theme_config.allow_profesors %}checked{% endif %}>
+                                <label class="form-check-label" for="allow_profesors">
+                                    <i class="fas fa-chalkboard-teacher me-2"></i>Profesores
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="allow_padres"
+                                       id="allow_padres" {% if theme_config.allow_padres %}checked{% endif %}>
+                                <label class="form-check-label" for="allow_padres">
+                                    <i class="fas fa-user-friends me-2"></i>Padres
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estado actual de permisos -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">Estado Actual de Permisos</h4>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Profesores pueden cambiar tema
+                            <span class="badge bg-{% if theme_config.allow_profesors %}success{% else %}danger{% endif %} rounded-pill">
+                            {% if theme_config.allow_profesors %}Permitido{% else %}No permitido{% endif %}
+                        </span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Padres pueden cambiar tema
+                            <span class="badge bg-{% if theme_config.allow_padres %}success{% else %}danger{% endif %} rounded-pill">
+                            {% if theme_config.allow_padres %}Permitido{% else %}No permitido{% endif %}
+                        </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save me-2"></i>Guardar Cambios
+                </button>
+            </div>
+        </form>
+
+        <!-- Vista previa de temas -->
+        <div class="card mt-4">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Vista Previa de Temas</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for theme_value, theme_name in theme_config.THEME_CHOICES %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header text-center">
+                                    <strong>{{ theme_name }}</strong>
+                                    {% if theme_config.global_theme == theme_value %}
+                                        <span class="badge bg-primary float-end">Actual</span>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body text-center">
+                                    <img src="{% static 'img/theme-previews/'|add:theme_name|lower|cut:' '|add:'.jpg' %}"
+                                         alt="{{ theme_name }}" class="img-fluid rounded mb-2"
+                                         style="max-height: 150px;">
+                                    <p class="text-muted">Selecciona para previsualizar</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('theme-select').addEventListener('change', function () {
+            const oldThemeLink = document.querySelector('link[href*="themes/"]');
+            const newThemeHref = `/static/${this.value}?v=${new Date().getTime()}`;
+
+            const newLink = oldThemeLink.cloneNode();
+            newLink.href = newThemeHref;
+
+            newLink.onload = () => {
+                oldThemeLink.remove();
+                const mainContainer = document.querySelector('.container');
+                if (mainContainer) {
+                    mainContainer.classList.remove('theme-transition'); // Reinicia animación si ya está
+                    void mainContainer.offsetWidth; // Fuerza reflow para reiniciar animación
+                    mainContainer.classList.add('theme-transition');
+                }
+            };
+
+            oldThemeLink.parentNode.insertBefore(newLink, oldThemeLink.nextSibling);
+        });
+    </script>
+
+
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Gestión de Plantillas de Retroalimentación</h2>
+
+        <!-- Barra de navegación para paneles -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <!--<h2 class="mb-0">Gestión de Plantillas de Retroalimentación</h2>-->
+            <div class="btn-group">
+                <a href="{% url 'formularios:profesores_destacados' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-chalkboard-teacher me-1"></i> Profesores Destacados
+                </a>
+                <a href="{% url 'formularios:panel_metricas' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-chart-bar me-1"></i> Métricas
+                </a>
+                <a href="{% url 'formularios:retroalimentaciones_servicio_escolar' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-chart-bar me-1"></i> Datos obtenidos de servicio
+                </a>
+                <a href="{% url 'formularios:retroalimentaciones_profesores' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-chart-bar me-1"></i> Datos obtenidos de los profesores
+                </a>
+                <a href="{% url 'formularios:historial_preguntas' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-chart-bar me-1"></i> Historial de preguntas
+                </a>
+            </div>
+        </div>
+
+
+        {% if messages %}
+            <div class="container mt-3 ps-0 pe-0">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Pestañas para alternar entre tipos -->
+        <ul class="nav nav-tabs mb-4">
+            <li class="nav-item">
+                <a class="nav-link {% if tab_activa == 'servicio' %}active{% endif %}" data-bs-toggle="tab"
+                   href="#servicio">Servicio Escolar</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if tab_activa == 'profesor' %}active{% endif %}" data-bs-toggle="tab"
+                   href="#profesor">Profesores</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Tab Servicio Escolar -->
+            <div class="tab-pane fade {% if tab_activa == 'servicio' %}show active{% endif %}" id="servicio">
+                <!-- Panel de plantilla para servicio escolar -->
+                {% include 'formularios/retroalimentacion/_panel_plantilla.html' with plantilla=plantilla_servicio historial=historial_servicio otras_plantillas=plantillas_servicio tipo='servicio' %}
+            </div>
+
+            <!-- Tab Profesores -->
+            <div class="tab-pane fade {% if tab_activa == 'profesor' %}show active{% endif %}" id="profesor">
+                {% include 'formularios/retroalimentacion/_panel_plantilla.html' with plantilla=plantilla_profesor historial=historial_profesor otras_plantillas=plantillas_profesor tipo='profesor' %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

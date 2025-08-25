@@ -1,0 +1,97 @@
+{% extends 'padres/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Información del Padre -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title">Mi Perfil</h3>
+                </div>
+                <div class="card-body text-center">
+                    {% if padre.imagen_usuario %}
+                        <img src="{{ padre.imagen_usuario.url }}" class="img-fluid rounded-circle mb-3" style="max-height: 150px;" alt="Imagen de perfil">
+                    {% else %}
+                        <img src="{% static 'img/default-user.png' %}" class="img-fluid rounded-circle mb-3" style="max-height: 150px;" alt="Imagen de perfil">
+                    {% endif %}
+                    <h4>{{ padre.nombre_completo }} {{ padre.apellidos }}</h4>
+                    <p class="text-muted">{{ padre.correo_electronico }}</p>
+                    <hr>
+                    <p><strong>Teléfono:</strong> {{ padre.telefono_principal }}</p>
+                    {% if padre.telefono_respaldo %}
+                        <p><strong>Teléfono respaldo:</strong> {{ padre.telefono_respaldo }}</p>
+                    {% endif %}
+                    <p><small class="text-muted">Registrado el: {{ padre.fecha_registro|date:"d/m/Y" }}</small></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Estudiantes/Hijos -->
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title">Mis Estudiantes/Hijos</h3>
+                </div>
+                <div class="card-body">
+                    {% if hijos %}
+                        <div class="list-group">
+                            {% for estudiante in hijos %}
+                                <a href="{% url 'padres:detalles_estudiante' estudiante.id %}" class="list-group-item list-group-item-action estudiante-item" 
+                                   data-estudiante-id="{{ estudiante.id }}">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">{{ estudiante.nombre_completo }}</h5>
+                                        <small>Matrícula: {{ estudiante.matricula }}</small>
+                                    </div>
+                                    <p class="mb-1">
+                                        <strong>Grupo:</strong> 
+                                        {% if estudiante.grupo_actual %}
+                                            {{ estudiante.grupo_actual }}
+                                        {% else %}
+                                            Sin grupo asignado
+                                        {% endif %}
+                                    </p>
+                                    <small>
+                                        <strong>Edad:</strong> 
+                                        {% if estudiante.edad %}
+                                            {{ estudiante.edad }} años
+                                        {% else %}
+                                            No especificada
+                                        {% endif %}
+                                    </small>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            No tienes estudiantes/hijos asociados a tu cuenta.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para detalles del estudiante -->
+<div class="modal-overlay" id="estudianteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Detalles del Estudiante</h2>
+            <button class="close-btn" id="closeModal">&times;</button>
+        </div>
+        <div class="modal-body" id="estudianteDetalles">
+            <!-- Los detalles se cargarán aquí via AJAX -->
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Cargando...</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cerrarModal">Cerrar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

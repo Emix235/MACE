@@ -1,0 +1,211 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Respuestas de la encuesta: {{ encuesta_aplicada.encuesta.titulo }}</h2>
+        <p class="text-muted">Ciclo escolar: {{ encuesta_aplicada.ciclo_escolar }}</p>
+
+        <!-- Barra de estadísticas -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4>Estadísticas generales</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-white bg-success mb-3">
+                            <div class="card-header">Mejores evaluadas</div>
+                            <div class="card-body">
+                                <ol>
+                                    {% for pregunta in mejores_preguntas %}
+                                        <li>{{ pregunta.pregunta.texto|truncatewords:8 }}
+                                            ({{ pregunta.promedio|floatformat:1 }}/5)
+                                        </li>
+                                    {% endfor %}
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-danger mb-3">
+                            <div class="card-header">Peores evaluadas</div>
+                            <div class="card-body">
+                                <ol>
+                                    {% for pregunta in peores_preguntas %}
+                                        <li>{{ pregunta.pregunta.texto|truncatewords:8 }}
+                                            ({{ pregunta.promedio|floatformat:1 }}/5)
+                                        </li>
+                                    {% endfor %}
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-info mb-3">
+                            <div class="card-header">Comentarios más frecuentes</div>
+                            <div class="card-body">
+                                <ol>
+                                    {% for pregunta in preguntas_texto_top %}
+                                        <li>{{ pregunta.pregunta.texto|truncatewords:5 }} ({{ pregunta.conteo }}
+                                            respuestas)
+                                        </li>
+                                    {% endfor %}
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de usuarios que respondieron -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Usuarios que respondieron ({{ total_usuarios }})</h4>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for usuario in usuarios %}
+                        <a href="#usuario-{{ usuario.objeto.id }}"
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                           data-toggle="collapse">
+                            {{ usuario.objeto.nombre_completo }} ({{ usuario.tipo }})
+                            <span class="badge badge-primary badge-pill">{{ usuario.respuestas|length }} respuestas</span>
+                        </a>
+                        <div class="collapse" id="usuario-{{ usuario.objeto.id }}">
+                            <div class="card card-body">
+                                <div class="row">
+                                    {% for respuesta in usuario.respuestas %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card">
+                                                <div class="card-header">
+                                                    <strong>{{ respuesta.pregunta.texto }}</strong>
+                                                </div>
+                                                <div class="card-body">
+                                                    {% if respuesta.pregunta.tipo == 'escala_5' %}
+                                                        <div class="progress">
+                                                            <div class="progress-bar bg-success"
+                                                                 style="width: {{ respuesta.valor_numero|multiply:20 }}%">
+                                                                {{ respuesta.valor_numero }}/5
+                                                            </div>
+                                                        </div>
+                                                    {% elif respuesta.pregunta.tipo == 'si_no' %}
+                                                        <span class="badge badge-{% if respuesta.valor_numero == 1 %}success{% else %}danger{% endif %}">
+                                            {% if respuesta.valor_numero == 1 %}Sí{% else %}No{% endif %}
+                                        </span>
+                                                    {% else %}
+                                                        <p>{{ respuesta.valor_texto }}</p>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="card-footer text-muted">
+                                                    Respondido el: {{ respuesta.fecha_respuesta|date:"d/m/Y H:i" }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos detallados por pregunta -->
+        <div class="card">
+            <div class="card-header">
+                <h4>Análisis detallado por pregunta</h4>
+            </div>
+            <div class="card-body">
+                {% for stats in preguntas_stats %}
+                    <div class="mb-5">
+                        <h5>{{ stats.pregunta.texto }}</h5>
+
+                        {% if stats.tipo == 'escala_5' %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p>Promedio: <strong>{{ stats.promedio|floatformat:1 }}/5</strong></p>
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar bg-success"
+                                             style="width: {{ stats.promedio|multiply:20 }}%">
+                                            {{ stats.promedio|floatformat:1 }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <p>Distribución de respuestas:</p>
+                                    {% for valor, count in stats.distribucion.items %}
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="mr-2" style="width: 30px;">{{ valor }}:</span>
+                                            <div class="progress flex-grow-1">
+                                                <div class="progress-bar bg-info"
+                                                     style="width: {{ count|divide:stats.conteo|multiply:100 }}%">
+                                                    {{ count }}
+                                                    ({{ count|divide:stats.conteo|multiply:100|floatformat:0 }}%)
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                        {% elif stats.tipo == 'si_no' %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Sí: {{ stats.si }}</span>
+                                        <span>No: {{ stats.no }}</span>
+                                    </div>
+                                    <div class="progress" style="height: 30px;">
+                                        <div class="progress-bar bg-success"
+                                             style="width: {{ stats.si|divide:stats.total|multiply:100 }}%">
+                                            {{ stats.si|divide:stats.total|multiply:100|floatformat:0 }}%
+                                        </div>
+                                        <div class="progress-bar bg-danger"
+                                             style="width: {{ stats.no|divide:stats.total|multiply:100 }}%">
+                                            {{ stats.no|divide:stats.total|multiply:100|floatformat:0 }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        {% else %}
+                            <p>Total de respuestas: {{ stats.conteo }}</p>
+                            <div class="row">
+                                {% for nombre, texto in stats.respuestas %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <strong>{{ nombre }}</strong>
+                                            </div>
+                                            <div class="card-body">
+                                                <p>{{ texto }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <hr>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        $(document).ready(function () {
+            // Activar tooltips
+            $('[data-toggle="tooltip"]').tooltip();
+
+            // Alternar visibilidad de respuestas de usuario
+            $('.list-group-item[data-toggle="collapse"]').click(function () {
+                $(this).find('i').toggleClass('fa-chevron-down fa-chevron-up');
+            });
+        });
+    </script>
+{% endblock %}

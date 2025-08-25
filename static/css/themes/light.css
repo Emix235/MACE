@@ -1,0 +1,1266 @@
+:root {
+    /* Colores principales */
+    --primary-color: #D4AF37; /* Dorado principal */
+    --secondary-color: #E6B800; /* Amarillo dorado */
+
+    /* Fondo y estructura */
+    --dark-bg: #1A120B; /* Fondo oscuro base */
+    --darker-bg: #241A0F; /* Fondo más oscuro */
+    --light-bg: #2E2215; /* Fondo claro */
+    --light-color: #fffbe6; /* Alternativo claro (opcional) */
+
+    /* Texto */
+    --text-color: #F8F8F8; /* Texto principal claro */
+    --dark-color: #2a2a2a; /* Texto oscuro alternativo */
+    --muted-text: rgba(248, 248, 248, 0.7); /* Texto secundario claro */
+
+    /* Colores de estado */
+    --success-color: #4CAF50; /* Verde éxito */
+    --danger-color: #E53935; /* Rojo error */
+
+    /* Bordes */
+    --border-color: #3E2E1A; /* Borde dorado oscuro */
+
+    /* Alertas (tema citas prioritarias) */
+    --alert-high-bg: #4A2C12; /* Fondo para alertas altas */
+    --alert-high-text: #FFAB40; /* Texto alertas altas */
+    --alert-medium-bg: #3A2E0A; /* Fondo alertas medias */
+    --alert-medium-text: #FFD54F; /* Texto alertas medias */
+}
+
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--dark-bg);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    color: var(--text-color);
+}
+
+.navbar {
+    background-color: var(--primary-color);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color);
+    width: 100%;
+    z-index: 1000;
+    opacity: initial;
+    position: fixed;
+}
+
+.navbar.navbar-brand {
+    color: var(--text-color);
+}
+
+.navbar.nav-link {
+    color: var(--muted-text);
+}
+
+.navbar.nav-link:hover,
+.navbar.nav-link:focus {
+    color: var(--secondary-color);
+}
+
+.navbar.nav-link.active {
+    font-weight: 600;
+}
+
+.navbar.dropdown-menu {
+    background-color: var(--light-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+}
+
+.main-container,
+.content-wrapper {
+    background-color: var(--dark-bg);
+}
+
+.centered-content {
+    background-color: transparent;
+}
+
+.main-content {
+    background-color: var(--darker-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+}
+
+.login-container {
+    background-color: var(--darker-bg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.login-container h2 {
+    color: var(--primary-color);
+}
+
+.table {
+    color: var(--text-color);
+}
+
+.table td {
+    background-color: var(--primary-color);
+    border-color: var(--border-color);
+    color: var(--darker-bg);
+}
+
+.table td:hover {
+    background-color: #fff3c2 !important;
+    color: black;
+}
+
+.footer {
+    background-color: var(--light-bg) !important;
+    color: var(--text-color);
+    border-top: 1px solid var(--border-color);
+}
+
+.footer-custom h5 {
+    color: var(--primary-color);
+}
+
+.footer-custom a {
+    color: var(--muted-text);
+}
+
+.footer-custom a:hover {
+    color: var(--primary-color);
+}
+
+.calendar-nav-btn {
+    background-color: #ffeaa7;
+    border-color: #f6c90e;
+    color: black;
+}
+
+/* Iconos */
+.bi-person-plus {
+    color: #f1c40f;
+}
+
+.bi-calendar-plus {
+    color: #2ecc71;
+}
+
+.bi-calendar-x {
+    color: #e74c3c;
+}
+
+.bi-ticket-detailed {
+    color: #9b59b6;
+}
+
+.bi-chat-left-dots {
+    color: #f39c12;
+}
+
+.bi-exclamation-triangle {
+    color: #e67e22;
+}
+
+.bi-bell {
+    color: #a0a0a0;
+}
+
+/*DE PROFESORES*/
+
+/* Variables de color dorado */
+
+/* Colores generales */
+body {
+    background-color: #fffaf0; /* Fondo base marfil */
+    color: var(--dark-color);
+}
+
+/* Navbar */
+.navbar-custom {
+    background-color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.navbar-custom .nav-link {
+    color: rgba(42, 42, 42, 0.85);
+}
+
+.navbar-custom .nav-link:hover,
+.navbar-custom .nav-link:focus {
+    color: var(--dark-color);
+}
+
+.navbar-custom .nav-link.active {
+    color: var(--dark-color);
+    font-weight: 600;
+}
+
+/* Footer */
+.footer-custom {
+    background-color: var(--primary-color);
+    color: var(--dark-color);
+    border-top: 1px solid var(--border-color);
+}
+
+.footer-custom h5 {
+    color: var(--dark-color);
+}
+
+.footer-custom a {
+    color: var(--dark-color);
+}
+
+.footer-custom a:hover {
+    color: #000000;
+}
+
+/* Contenido principal */
+.main-content {
+    background-color: #fef6e4; /* Fondo contenedores */
+    border: 1px solid var(--border-color);
+}
+
+/* Login */
+.login-container {
+    background-color: #fef6e4;
+    background-image: linear-gradient(135deg, #fffbe6 0%, #f8e8b0 100%);
+}
+
+.login-form input:focus {
+    border-color: var(--primary-color);
+}
+
+.login-form .btn-primary {
+    background-color: var(--primary-color);
+    color: var(--dark-color);
+}
+
+.login-form .btn-primary:hover {
+    background-color: var(--secondary-color);
+}
+
+.register-link {
+    color: var(--primary-color);
+}
+
+.register-link:hover {
+    color: var(--secondary-color);
+}
+
+.errorlist {
+    color: var(--danger-color);
+}
+
+/* Dashboard */
+.dashboard-container {
+    background-color: #fffaf0;
+}
+
+.dashboard-header {
+    background-color: #fffbe6;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header-left h2 {
+    color: var(--dark-color);
+}
+
+.user-avatar, .avatar-placeholder {
+    background-color: var(--primary-color);
+    color: var(--dark-color);
+}
+
+.btn-logout {
+    color: var(--muted-text);
+}
+
+.btn-logout:hover {
+    color: var(--danger-color);
+}
+
+/* Tarjetas */
+.card {
+    background-color: #fef6e4;
+    border: 1px solid var(--border-color);
+}
+
+.card-header {
+    background-color: #fff5d0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-header h5 {
+    color: var(--dark-color);
+}
+
+/* Perfil */
+.profile-details h4 {
+    color: var(--dark-color);
+}
+
+.profile-details p {
+    color: var(--muted-text);
+}
+
+.status-badge.activo {
+    background-color: #e8f5e9;
+    color: var(--success-color);
+}
+
+.status-badge.inactivo {
+    background-color: #fde8e8;
+    color: var(--danger-color);
+}
+
+.last-access {
+    color: var(--muted-text);
+}
+
+/* Asignaturas */
+.subject-name {
+    color: var(--dark-color);
+}
+
+.subject-group {
+    background-color: #fff5d0;
+    color: var(--primary-color);
+}
+
+.no-subjects p {
+    color: var(--muted-text);
+}
+
+.btn-add-subject {
+    background-color: var(--primary-color);
+    color: var(--dark-color);
+}
+
+.btn-add-subject:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Calendario */
+.day-header.today {
+    background-color: #fff5d0;
+}
+
+.day-name {
+    color: var(--muted-text);
+}
+
+.day-number {
+    color: var(--dark-color);
+}
+
+.hour-slot.today {
+    border-color: var(--primary-color);
+}
+
+.month-day.other-month {
+    background-color: #fffdf6;
+}
+
+.month-day.today {
+    border-color: var(--primary-color);
+    background-color: #fff5d0;
+}
+
+/* Acciones */
+.action-btn {
+    background-color: #fffdf6;
+    color: var(--dark-color);
+    border: 1px solid var(--border-color);
+}
+
+.action-btn:hover {
+    background-color: #fff5d0;
+}
+
+.action-btn i {
+    color: var(--primary-color);
+}
+
+/* Notificaciones */
+.notification-item.unread {
+    background-color: #fffdf6;
+}
+
+.notification-icon {
+    color: var(--primary-color);
+}
+
+.notification-title {
+    color: var(--dark-color);
+}
+
+.notification-time {
+    color: var(--muted-text);
+}
+
+.view-all {
+    color: var(--primary-color);
+}
+
+/* Citas */
+.citas-pendientes-container {
+    background-color: var(--darker-bg);
+    border: 1px solid var(--primary-color);
+    border-radius: 0.5rem;
+}
+
+.citas-pendientes-header h3 {
+    color: var(--primary-color);
+}
+
+.citas-pendientes-header a {
+    background-color: var(--primary-color);
+    color: var(--dark-color); /* Texto oscuro alternativo */
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.citas-pendientes-header a:hover {
+    background-color: var(--secondary-color);
+}
+
+.cita-item {
+    background-color: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    color: var(--text-color);
+}
+
+.cita-item .estado {
+    background-color: var(--alert-high-bg);
+    color: var(--alert-high-text);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 500;
+}
+
+.cita-item .acciones {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.cita-item .acciones .confirmar-btn {
+    background-color: var(--success-color);
+    color: white;
+    padding: 0.4rem 0.75rem;
+    border: none;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease;
+}
+
+.cita-item .acciones .confirmar-btn:hover {
+    background-color: #3e8e41;
+}
+
+.cita-item .acciones .cancelar-btn {
+    background-color: var(--danger-color);
+    color: white;
+    padding: 0.4rem 0.75rem;
+    border: none;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease;
+}
+
+.cita-item .acciones .cancelar-btn:hover {
+    background-color: #c62828;
+}
+
+/* Modal (ya compatible con tema dorado oscuro) */
+.modal-content {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background-color: var(--dark-bg);
+    color: var(--text-color);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+}
+
+.modal-header {
+    padding: 1.2rem 1.5rem;
+    background-color: var(--primary-color);
+    color: var(--dark-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    background-color: var(--light-bg);
+    color: var(--text-color);
+}
+
+.modal-footer {
+    padding: 1rem 1.5rem;
+    background-color: var(--darker-bg);
+    border-top: 1px solid var(--border-color);
+}
+
+/* Cards */
+
+.card.border-0.shadow-sm.hover-shadow.transition-all {
+    background-color: var(--light-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+.card.border-0.shadow-sm.hover-shadow.transition-all:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(212, 175, 55, 0.3) !important; /* sombra dorada suave */
+}
+
+/* Badge */
+
+.badge {
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+    color: var(--text-color);
+    background-color: var(--secondary-color);
+    border-radius: 0.25rem;
+    user-select: none;
+}
+
+.badge.bg-warning.bg-opacity-15.text-black.me-1 {
+    background-color: rgba(255, 193, 7, 0.15); /* Amarillo con opacidad */
+    color: var(--text-color);
+}
+
+.badge.bg-danger.bg-opacity-15.text-danger {
+    background-color: rgba(220, 53, 69, 0.15); /* Rojo con opacidad */
+    color: var(--danger-color);
+}
+
+/* Botones */
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: var(--text-color);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: var(--text-color);
+}
+
+.btn-confirmar {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: var(--text-color);
+}
+
+.btn-confirmar:hover {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+    color: var(--dark-bg);
+}
+
+.btn-cancelar:hover {
+    color: var(--danger-color);
+    border-color: var(--dark-color);
+}
+
+.btn-cancelar {
+    background-color: var(--danger-color);
+    color: var(--text-color);
+}
+
+.btn-outline-danger {
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.btn-outline-danger:hover {
+    background-color: var(--danger-color);
+    color: var(--text-color);
+}
+
+.btn-outline-secondary {
+    color: var(--muted-text);
+    border-color: var(--muted-text);
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--muted-text);
+    color: var(--dark-bg);
+}
+
+.emergency-modal {
+    background-color: rgba(18, 18, 18, 0.85);
+}
+
+/*Texto de Dorado*/
+.estudiantes-header {
+    background-color: var(--light-bg);
+    color: var(--text-color);
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.estudiantes-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+}
+
+.estudiantes-header a.btn {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.estudiantes-header a.btn:hover {
+    background-color: var(--primary-color);
+    color: var(--dark-color);
+}
+
+/* Tema Dorado para Citas Prioritarias */
+
+/* Contenedor de emergencia dorado */
+.emergency-container {
+    border: 3px solid var(--primary-color) !important;
+    border-left: 12px solid var(--primary-color) !important;
+    background: linear-gradient(to right, var(--dark-bg), var(--darker-bg));
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+    animation: golden-pulse 3s infinite;
+}
+
+@keyframes golden-pulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+    }
+}
+
+/* Encabezado de emergencia */
+.emergency-header {
+    background: linear-gradient(to right, #8B6B0D, var(--primary-color));
+    color: var(--text-color);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Icono de emergencia */
+.emergency-icon {
+    background: var(--primary-color);
+    color: var(--dark-bg);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.7);
+}
+
+/* Badge de emergencia */
+.emergency-badge {
+    background: linear-gradient(to right, #8B6B0D, var(--primary-color));
+    color: var(--text-color);
+    border-color: #6B520A;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+/* Botón de emergencia */
+.emergency-button {
+    background: linear-gradient(to right, #8B6B0D, var(--primary-color));
+    color: var(--text-color);
+    border-color: #6B520A;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.emergency-button:hover {
+    background: linear-gradient(to right, #6B520A, #C99C2D);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(139, 107, 13, 0.3);
+}
+
+/* Enlace "Ver todas" */
+.ver-todas {
+    color: var(--secondary-color);
+    transition: color 0.2s ease;
+}
+
+.ver-todas:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+/* Ítems de alerta */
+.alerta-item {
+    border-bottom: 1px dashed var(--border-color);
+    transition: background-color 0.3s ease;
+}
+
+.alerta-item:hover {
+    background-color: rgba(212, 175, 55, 0.1);
+}
+
+/* Fecha de alerta */
+.fecha-alerta {
+    color: var(--secondary-color);
+}
+
+/* Niveles de alerta */
+.nivel-alerta.alta {
+    background: var(--alert-high-bg);
+    color: var(--alert-high-text);
+    border: 1px solid #FF6D00;
+}
+
+.nivel-alerta.media {
+    background: var(--alert-medium-bg);
+    color: var(--alert-medium-text);
+    border: 1px solid #FFC400;
+}
+
+/* Botón de confirmar */
+.boton-confirmar {
+    border: 1px solid var(--success-color);
+    color: var(--success-color);
+    transition: all 0.3s ease;
+}
+
+.boton-confirmar:hover {
+    background: var(--success-color);
+    color: var(--text-color);
+    transform: scale(1.05);
+}
+
+/* Scrollbar personalizada */
+.scrollbar-estilizada {
+    scrollbar-color: var(--primary-color) var(--darker-bg);
+}
+
+.scrollbar-estilizada::-webkit-scrollbar-track {
+    background: var(--darker-bg);
+    border-radius: 4px;
+}
+
+.scrollbar-estilizada::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color);
+    border-radius: 4px;
+    border: 2px solid var(--darker-bg);
+}
+
+.scrollbar-estilizada::-webkit-scrollbar-thumb:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Efectos adicionales */
+.status-badge.pending {
+    background: rgba(255, 213, 79, 0.2);
+    color: var(--alert-medium-text);
+}
+
+.status-badge.confirmed {
+    background: rgba(76, 175, 80, 0.2);
+    color: var(--success-color);
+}
+
+.urgency-type-badge {
+    background: rgba(212, 175, 55, 0.2);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}
+
+/* Tarjeta de emergencia */
+.emergency-card:hover {
+    background: rgba(212, 175, 55, 0.05);
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+}
+
+/* Modal de emergencia */
+.emergency-modal .modal-content {
+    background: linear-gradient(to bottom, var(--darker-bg), var(--dark-bg));
+    border: 2px solid var(--primary-color);
+}
+
+.emergency-modal .modal-header {
+    background: linear-gradient(to right, #6B520A, var(--primary-color));
+    color: var(--text-color);
+    border-bottom: 1px solid var(--primary-color);
+}
+
+.emergency-modal .detail-section {
+    border-bottom: 1px dashed var(--border-color);
+}
+
+/* Botones de acción */
+.confirm-button {
+    background: linear-gradient(to right, #2E7D32, var(--success-color));
+    color: white;
+}
+
+.details-button {
+    background: linear-gradient(to right, #6B520A, var(--primary-color));
+    color: white;
+}
+
+/*Para profesores*/
+/* Estilo para la sección de "Citas para completar" con tema dorado oscuro */
+
+.card.shadow-sm {
+    background-color: var(--dark-bg) !important;;
+    border: 1px solid var(--border-color) !important;;
+    color: var(--text-color) !important;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+/* Header dorado con texto blanco */
+.card-header.bg-primary.text-white {
+    background-color: var(--primary-color) !important;
+    color: var(--text-color) !important;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Título e ícono */
+.card-header h5 {
+    font-weight: bold;
+    margin-bottom: 0;
+}
+
+/* Badge de cantidad */
+.card-header .badge.bg-light.text-dark {
+    background-color: var(--secondary-color) !important;
+    color: var(--dark-bg) !important;
+}
+
+/* Cuerpo del card */
+.card-body {
+    background-color: var(--darker-bg);
+    color: var(--text-color) !important;
+    padding: 1rem 1.5rem;
+}
+
+/* Tabla */
+.table {
+    color: var(--text-color);
+    background-color: var(--light-bg);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--alert-medium-bg);
+}
+
+/* Cabecera de tabla sticky */
+.table thead {
+    background-color: var(--primary-color);
+    color: var(--dark-bg);
+}
+
+.table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: var(--primary-color);
+    color: var(--dark-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Botón completar */
+.btn.btn-sm {
+    font-size: 0.875rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 0.3rem;
+}
+
+/* Botón completar (amarillo dorado) */
+.btn.btn-sm[style*="background-color: #FFD700"] {
+    background-color: var(--secondary-color) !important;
+    color: var(--dark-bg) !important;
+    border: none;
+}
+
+.btn.btn-sm[style*="background-color: #FFD700"]:hover {
+    background-color: var(--primary-color) !important;
+    color: var(--text-color) !important;
+}
+
+/* Botón ver (informativo) */
+.btn-info {
+    background-color: var(--alert-high-bg);
+    border-color: var(--border-color);
+    color: var(--alert-high-text);
+}
+
+.btn-info:hover {
+    background-color: var(--primary-color);
+    color: var(--dark-bg);
+}
+
+/* Alertas */
+.alert.alert-info {
+    background-color: var(--alert-medium-bg);
+    color: var(--alert-medium-text);
+    border: 1px solid var(--border-color);
+}
+
+/*Cita Prioritaria, estilo para el formulario*/
+
+.cita-prioritaria-form {
+    background-color: var(--light-bg);
+    color: var(--text-color);
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.cita-prioritaria-form .form-label,
+.cita-prioritaria-form .form-text,
+.cita-prioritaria-form .form-check-label {
+    color: var(--text-color);
+}
+
+.cita-prioritaria-form .form-control,
+.cita-prioritaria-form .input-group-text {
+    background-color: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.cita-prioritaria-form .form-control:focus {
+    border-color: var(--primary-color);
+    background-color: var(--dark-bg);
+    color: var(--text-color);
+    box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.3);
+}
+
+.cita-prioritaria-form .input-group-text {
+    background-color: var(--light-bg);
+    color: var(--text-color);
+}
+
+.cita-prioritaria-form .alert-danger {
+    background-color: var(--alert-high-bg);
+    color: var(--alert-high-text);
+    border-color: var(--danger-color);
+}
+
+.cita-prioritaria-form .alert-warning {
+    background-color: var(--alert-medium-bg);
+    color: var(--alert-medium-text);
+    border-color: var(--secondary-color);
+}
+
+.cita-prioritaria-form .invalid-feedback {
+    color: var(--alert-high-text);
+}
+
+.cita-prioritaria-form .btn-danger {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+    color: #fff;
+}
+
+.cita-prioritaria-form .btn-danger:hover {
+    background-color: #c62828;
+    border-color: #b71c1c;
+}
+
+.cita-prioritaria-form .btn-outline-secondary {
+    border-color: var(--border-color);
+    color: var(--light-color);
+    background-color: transparent;
+}
+
+.cita-prioritaria-form .btn-outline-secondary:hover {
+    background-color: var(--border-color);
+    color: var(--light-color);
+}
+
+.cita-prioritaria-form .bg-danger.bg-opacity-10 {
+    background-color: rgba(229, 57, 53, 0.1) !important;
+    color: var(--danger-color);
+}
+
+.cita-prioritaria-form .text-muted {
+    color: var(--muted-text) !important;
+}
+
+.cita-prioritaria-form .text-warning {
+    color: var(--secondary-color) !important;
+}
+
+.cita-prioritaria-form .text-danger {
+    color: var(--danger-color) !important;
+}
+
+.cita-prioritaria-form .text-primary {
+    color: var(--primary-color) !important;
+}
+
+.cita-prioritaria-form small.form-text,
+.cita-prioritaria-form .form-text.text-muted,
+.cita-prioritaria-form small.text-muted {
+    color: var(--muted-text) !important;
+}
+
+.card-body .text-muted {
+    color: var(--muted-text) !important;
+}
+
+small.form-text {
+    color: var(--muted-text) !important;
+}
+
+.bg-light {
+    --bs-bg-opacity: 1;
+    color: black;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem !important;
+    color: var(--dark-bg) !important;
+}
+
+/*Calendar*/
+
+/* FullCalendar personalizado con variables de color */
+.fc-daygrid-day {
+    border: 1px solid var(--border-color);
+    background-color: var(--light-bg);
+    color: var(--text-color);
+    vertical-align: top;
+    position: relative;
+}
+
+/* Día actual */
+.fc .fc-day-today {
+    background-color: var(--secondary-color) !important;
+    color: var(--dark-color) !important;
+    font-weight: bold;
+}
+
+/* Encabezado de días */
+.fc .fc-col-header-cell {
+    background-color: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    text-align: center;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.fc .fc-col-header-cell-cushion {
+    padding: 0.5rem;
+    display: block;
+    color: var(--primary-color);
+}
+
+/* Eventos */
+.fc .fc-event {
+    /*background-color: var(--success-color) !important;*/
+    color: white !important;
+    border: none;
+    border-radius: 0.4rem;
+    padding: 2px 4px;
+    font-size: 0.85rem;
+    width: 100%;
+    height: 85px;
+    /* display: flex; */
+    text-align: center;
+    flex-direction: column;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 10px;
+}
+
+/* Título del calendario */
+.fc .fc-toolbar-title {
+    font-size: 1.25rem;
+    color: var(--primary-color);
+}
+
+/* Botones del calendario */
+.fc .fc-button {
+    background-color: var(--primary-color);
+    border-color: var(--border-color);
+    color: var(--dark-color);
+    font-weight: bold;
+}
+
+.fc .fc-button-primary:not(:disabled):hover {
+    background-color: var(--secondary-color);
+    border-color: var(--border-color);
+    color: var(--dark-color);
+}
+
+.fc .fc-button-primary:disabled {
+    background-color: var(--light-bg);
+    border-color: var(--border-color);
+    color: var(--muted-text);
+}
+
+/* Simula tabla responsive */
+#calendar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    background-color: var(--darker-bg);
+    border: 1px solid var(--border-color);
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.card {
+    background-color: var(--darker-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.card-header {
+    background-color: var(--primary-color);
+    color: var(--dark-color);
+}
+
+.fc-theme-standard td, .fc-theme-standard th {
+    border: 1px solid var(--light-color);
+    background: var(--primary-color);
+}
+
+.fc-theme-standard td:hover {
+    border: 1px solid var(--dark-color);
+    background: var(--alert-medium-text);
+}
+
+a {
+    color: rgba(var(--dark-bg), var(--dark-color, 1));
+    text-decoration: none;
+}
+
+.mb-3 {
+    margin-bottom: 1rem !important;
+    color: var(--light-color) !important;
+}
+
+.mb-2 {
+    margin-bottom: 1rem !important;
+    color: var(--light-color) !important;
+}
+
+li {
+    color: var(--light-color) !important;
+}
+
+label {
+    display: inline-block;
+    color: var(--dark-bg) !important;
+}
+
+.container h2 {
+    color: var(--dark-color) !important;
+}
+
+/*Citas por completar*/
+
+/* Estilos para el modal de Citas por Completar */
+#modalCitasParaCompletar .modal-content {
+    background-color: var(--light-color);
+    border-radius: 1rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    border: none;
+}
+
+#modalCitasParaCompletar .modal-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+}
+
+#modalCitasParaCompletar .modal-title {
+    color: white;
+}
+
+#modalCitasParaCompletar .btn-close {
+    filter: invert(1); /* botón blanco */
+}
+
+#modalCitasParaCompletar .modal-body {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+}
+
+#modalCitasParaCompletar .list-group-item {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    border-color: var(--secondary-color);
+}
+
+#modalCitasParaCompletar h6 {
+    color: var(--dark-color);
+}
+
+#modalCitasParaCompletar small.text-muted {
+    color: var(--secondary-color);
+}
+
+#modalCitasParaCompletar .badge {
+    font-size: 0.85em;
+    margin-bottom: 0.2rem;
+}
+
+#modalCitasParaCompletar .badge.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+#modalCitasParaCompletar .badge.bg-danger {
+    background-color: var(--danger-color) !important;
+}
+
+#modalCitasParaCompletar .badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: var(--dark-color);
+}
+
+#modalCitasParaCompletar .btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+#modalCitasParaCompletar .btn-success:hover {
+    background-color: #157347;
+    border-color: #146c43;
+}
+
+#modalCitasParaCompletar .modal-footer {
+    background-color: var(--light-color);
+    border-bottom-left-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+    border-top: 1px solid var(--secondary-color);
+}
+
+#modalCitasParaCompletar .btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+#modalCitasParaCompletar .btn-secondary:hover {
+    background-color: #5c636a;
+    border-color: #565e64;
+}
+
+.list-group-flush > .list-group-item {
+    background: var(--light-bg);
+    color: var(--light-color);
+    text-decoration: none;
+}

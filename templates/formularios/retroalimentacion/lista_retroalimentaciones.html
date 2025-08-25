@@ -1,0 +1,164 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+{% load my_filters %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1>{{ titulo }}</h1>
+                <p class="lead text-muted">{{ subtitulo }}</p>
+            </div>
+            <div>
+            <span class="badge bg-primary">
+                <i class="fas fa-chart-bar me-1"></i>
+                Promedio: {{ promedio|floatformat:1 }}/5.0
+            </span>
+                <span class="badge bg-success ms-2">
+                <i class="fas fa-list me-1"></i>
+                Total: {{ total_evaluaciones }}
+            </span>
+            </div>
+        </div>
+
+        {% if tipo == 'profesor' %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Profesor</th>
+                                <th>Materias</th>
+                                <th>Evaluaciones</th>
+                                <th>Promedio</th>
+                                <th>Última evaluación</th>
+                                <th>Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for profesor in page_obj %}
+                                <tr>
+                                    <td>{{ profesor.nombre_completo }}</td>
+                                    <td>{{ profesor.materias.all|join:", "|truncatechars:30 }}</td>
+                                    <td>{{ profesor.retroalimentaciones_recibidas.count }}</td>
+                                    <td>
+                                        {% with promedio=profesor.retroalimentaciones_recibidas.all|avg_calificacion %}
+                                            <span class="badge bg-{% if promedio >= 4 %}success{% elif promedio >= 3 %}warning{% else %}danger{% endif %}">
+                                    {{ promedio|floatformat:1 }}/5.0
+                                </span>
+                                        {% endwith %}
+                                    </td>
+                                    <td>{{ profesor.retroalimentaciones_recibidas.last.fecha_respuesta|date:"d M Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'formularios:detalle_retroalimentaciones_profesor' profesor.id %}"
+                                           class="btn btn-sm btn-outline-primary">
+                                            Ver detalles
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="alert alert-info mb-0">
+                                            No hay retroalimentaciones registradas.
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Padre</th>
+                                <th>Tipo de cita</th>
+                                <th>Calificación</th>
+                                <th>Comentarios</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for retro in page_obj %}
+                                <tr>
+                                    <td>{{ retro.fecha_respuesta|date:"d M Y" }}</td>
+                                    <td>{{ retro.cita.solicitante.nombre_completo }}</td>
+                                    <td>{{ retro.cita.get_tipo_display }}</td>
+                                    <td>
+                                        {% with calificacion=retro.respuestas.all|first_escala_5 %}
+                                            <span class="badge bg-{% if calificacion >= 4 %}success{% elif calificacion >= 3 %}warning{% else %}danger{% endif %}">
+                                    {{ calificacion }}/5
+                                </span>
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% with comentario=retro.respuestas.all|first_texto %}
+                                            {{ comentario|truncatechars:30|default:"-" }}
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="alert alert-info mb-0">
+                                            No hay retroalimentaciones registradas.
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Paginación -->
+        {% if page_obj.paginator.num_pages > 1 %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    </div>
+{% endblock %}

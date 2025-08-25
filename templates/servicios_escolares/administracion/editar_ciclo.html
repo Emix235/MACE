@@ -1,0 +1,166 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Editar Ciclo Escolar</h2>
+    
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Editando: {{ ciclo.nombre }}</h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="id_nombre" class="form-label">Nombre del Ciclo</label>
+                        {{ form.nombre }}
+                        <small class="form-text text-muted">Formato: AAAA-AAAA (ej: 2023-2024)</small>
+                        {% if form.nombre.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.nombre.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="id_nivel" class="form-label">Nivel Educativo</label>
+                        {{ form.nivel }}
+                        {% if form.nivel.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.nivel.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="id_fecha_inicio" class="form-label">Fecha de Inicio</label>
+                        {{ form.fecha_inicio }}
+                        {% if form.fecha_inicio.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.fecha_inicio.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="id_tipo_duracion" class="form-label">Tipo de Duración</label>
+                        {{ form.tipo_duracion }}
+                        {% if form.tipo_duracion.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.tipo_duracion.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="id_fecha_fin" class="form-label">Fecha de Término</label>
+                        {{ form.fecha_fin }}
+                        <small class="form-text text-muted">
+                            Duración actual: {{ ciclo.duracion_formateada }}
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            {{ form.actual }}
+                            <label class="form-check-label" for="id_actual">
+                                ¿Marcar como ciclo actual?
+                            </label>
+                            <small class="form-text text-muted d-block">
+                                Al activar esta opción, se desactivará cualquier otro ciclo marcado como actual
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Guardar Cambios
+                    </button>
+                    <a href="{% url 'servicios_escolares:panel-principal' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if ciclo.periodos_reales.all %}
+    <div class="card shadow mt-4">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">Periodos de este Ciclo</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Fechas</th>
+                            <th>Duración</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for periodo in ciclo.periodos_reales.all %}
+                        <tr>
+                            <td>{{ periodo.nombre }}</td>
+                            <td>
+                                {{ periodo.fecha_inicio|date:"d/m/Y" }} - 
+                                {{ periodo.fecha_fin|date:"d/m/Y" }}
+                            </td>
+                            <td>{{ periodo.duracion_en_meses }} meses</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoDuracion = document.getElementById('id_tipo_duracion');
+    const fechaInicio = document.getElementById('id_fecha_inicio');
+    const fechaFin = document.getElementById('id_fecha_fin');
+    
+    function calcularFechaFin() {
+        if (!fechaInicio.value || !tipoDuracion.value || tipoDuracion.value === 'PERS') return;
+        
+        const fecha = new Date(fechaInicio.value);
+        let meses = 12; // Por defecto 12 meses
+        
+        switch(tipoDuracion.value) {
+            case 'TRAD': meses = 10; break;
+            case 'CUAT': meses = 12; break;
+            case 'TRIM': meses = 12; break;
+            case 'SEM': meses = 12; break;
+            default: return;
+        }
+        
+        fecha.setMonth(fecha.getMonth() + meses);
+        fecha.setDate(fecha.getDate() - 1); // Ajustar al último día del mes anterior
+        
+        // Formatear a YYYY-MM-DD
+        const year = fecha.getFullYear();
+        const month = String(fecha.getMonth() + 1).padStart(2, '0');
+        const day = String(fecha.getDate()).padStart(2, '0');
+        
+        fechaFin.value = `${year}-${month}-${day}`;
+    }
+    
+    tipoDuracion.addEventListener('change', calcularFechaFin);
+    fechaInicio.addEventListener('change', calcularFechaFin);
+});
+</script>
+{% endblock %}

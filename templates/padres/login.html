@@ -1,0 +1,88 @@
+{% extends 'padres/base.html' %}
+
+{% block content %}
+    <div class="login-container">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="login-card card">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="mb-0">Inicio de Sesión para Padres</h2>
+                    </div>
+                    <div class="card-body">
+                        {% if messages %}
+                            <div class="container mt-3 ps-0 pe-0"> <!-- Bootstrap 5 -->
+                                {% for message in messages %}
+                                    <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                aria-label="Cerrar"></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <!-- Errores generales no ligados a campos -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    <p class="mb-0">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <form method="post" class="login-form">
+                            {% csrf_token %}
+
+                            <!-- Campo correo -->
+                            <div class="form-group mb-4">
+                                <label for="{{ form.correo_electronico.id_for_label }}">Correo Electrónico</label>
+                                <input
+                                        type="email"
+                                        name="{{ form.correo_electronico.name }}"
+                                        id="{{ form.correo_electronico.id_for_label }}"
+                                        class="form-control {% if form.correo_electronico.errors %}is-invalid{% endif %}"
+                                        placeholder="tu.correo@escuela.edu"
+                                        required
+                                >
+                                {% if form.correo_electronico.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.correo_electronico.errors|striptags }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Campo contraseña -->
+                            <div class="form-group mb-4">
+                                <label for="{{ form.contraseña.id_for_label }}">Contraseña</label>
+                                <input
+                                        type="password"
+                                        name="{{ form.contraseña.name }}"
+                                        id="{{ form.contraseña.id_for_label }}"
+                                        class="form-control {% if form.contraseña.errors %}is-invalid{% endif %}"
+                                        placeholder="Ingresa tu contraseña"
+                                        required
+                                >
+                                {% if form.contraseña.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ form.contraseña.errors|striptags }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg mt-3">
+                                Iniciar Sesión
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <p class="mb-0">¿No tienes cuenta?
+                                <a href="{% url 'padres:registro_padre' %}" class="register-link">
+                                    Regístrate aquí
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

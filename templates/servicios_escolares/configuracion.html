@@ -1,0 +1,230 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% load static %}
+
+{% block content %}
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <h4 class="mb-3" style="color: var(--primary-color);">Configuración</h4>
+                        </div>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item bg-transparent border-0 px-0">
+                                <a class="d-flex align-items-center text-decoration-none" href="#">
+                                    <i class="bi bi-gear-fill me-2"></i>
+                                    <span class="fw-bold">Ajustes Generales</span>
+                                </a>
+                            </li>
+                            <li class="list-group-item bg-transparent border-0 px-0">
+                                <a class="d-flex align-items-center text-decoration-none"
+                                   href="{% url 'servicios_escolares:panel_notificaciones' %}">
+                                    <i class="bi bi-bell-fill me-2"></i>
+                                    <span class="fw-bold">Notificaciones</span>
+                                </a>
+                            </li>
+                            <li class="list-group-item bg-transparent border-0 px-0">
+                                <a class="d-flex align-items-center text-decoration-none"
+                                   href="{% url 'servicios_escolares:todos_tickets' %}">
+                                    <i class="bi bi-bell-fill me-2"></i>
+                                    <span class="fw-bold">Tickets de Soporte</span>
+                                </a>
+                            </li>
+                            <li class="list-group-item bg-transparent border-0 px-0">
+                                <a class="d-flex align-items-center text-decoration-none"
+                                   href="{% url 'servicios_escolares:theme_settings' %}">
+                                    <i class="bi bi-palette-fill me-2"></i>
+                                    <span class="fw-bold">Cambiar Tema Global</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+style="background-color: var(--dark-bg); color: var(--text-color);"
+<!-- Contenido Principal -->
+<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Panel de Configuración</h1>
+    </div>
+
+    <!-- Mensajes flash -->
+    {% if messages %}
+        <div class="alert-container">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"
+                            aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Sección de Ajustes Generales -->
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-sliders me-2"></i> Ajustes Generales</h5>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Tema de la interfaz</label>
+                            <select class="form-select">
+                                <option>Claro</option>
+                                <option>Oscuro</option>
+                                <option>Automático</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Idioma</label>
+                            <select class="form-select">
+                                <option>Español</option>
+                                <option>Inglés</option>
+                            </select>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="notificationsCheck">
+                            <label class="form-check-label" for="notificationsCheck">Activar
+                                notificaciones</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de Seguridad -->
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-shield-lock me-2"></i> Seguridad</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6>Autenticación</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span>Contraseña</span>
+                            <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
+                                    data-bs-target="#cambiarPasswordModal">
+                                Cambiar contraseña
+                            </button>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Autenticación en dos pasos</span>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="twoFactorSwitch">
+                                <label class="form-check-label" for="twoFactorSwitch"></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6>Sesiones activas</h6>
+                        <div class="list-group">
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between">
+                                    <span>Chrome - Windows</span>
+                                    <small class="text-muted">Hoy, 10:45 AM</small>
+                                </div>
+                                <small class="text-muted">192.168.1.105</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Notificaciones -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-bell-fill me-2"></i> Configuración de Notificaciones
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Preferencias de notificación</h6>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="emailNotifications"
+                                           checked>
+                                    <label class="form-check-label" for="emailNotifications">Notificaciones
+                                        por correo</label>
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="pushNotifications"
+                                           checked>
+                                    <label class="form-check-label" for="pushNotifications">Notificaciones
+                                        push</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Tipos de notificación</h6>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input" id="systemAlerts"
+                                           checked>
+                                    <label class="form-check-label" for="systemAlerts">Alertas del
+                                        sistema</label>
+                                </div>
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" class="form-check-input"
+                                           id="updateNotifications">
+                                    <label class="form-check-label" for="updateNotifications">Actualizaciones</label>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Actualizar preferencias</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal para cambiar contraseña -->
+<div class="modal fade" id="cambiarPasswordModal" tabindex="-1" aria-labelledby="cambiarPasswordModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cambiarPasswordModalLabel">Cambiar contraseña</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="passwordForm" method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Contraseña actual</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password"
+                               required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label">Nueva contraseña</label>
+                        <input type="password" class="form-control" id="new_password" name="new_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">Confirmar nueva contraseña</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                               required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="passwordForm" class="btn btn-primary">Cambiar contraseña</button>
+            </div>
+        </div>
+    </div>
+</div>

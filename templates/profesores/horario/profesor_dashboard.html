@@ -1,0 +1,433 @@
+{% extends 'profesores/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Panel Lateral -->
+            <div class="col-md-4">
+                <!-- Tarjeta de Perfil -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 bg-primary text-white">
+                        <h6 class="m-0 font-weight-bold">Mi Perfil</h6>
+                    </div>
+                    <div class="card-body text-center">
+                        {% if profesor.imagen_usuario %}
+                        <img src="{{ profesor.imagen_usuario.url }}" class="user-icon" alt="Foto de perfil" width="100px" height="100px">
+                    {% else %}
+                        <div class="avatar-placeholder">
+                            {{ profesor.nombre_completo|first }}{{ profesor.apellidos|first }}
+                        </div>
+                    {% endif %}
+                        <h4>{{ profesor.nombre_completo }}</h4>
+                        <p class="text-muted">{{ profesor.correo_electronico }}</p>
+                    </div>
+                </div>
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <a href="{% url 'profesores:agregar_clase' %}" class="btn btn-sm btn-success ml-1"
+                           title="Agregar clase">
+                            <i class="fas fa-plus">Agregar Clase</i>
+                        </a>
+                        <a href="{% url 'profesores:agregar_tiempo_libre' %}" class="btn btn-sm btn-success ml-1"
+                           title="Agregar tiempo libre">
+                            <i class="fas fa-coffee">Agregar Tiempo Libre</i>
+                        </a>
+                    </div>
+                </div>
+                <!-- Tarjeta de Clases -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center bg-info text-white">
+                        <h6 class="m-0 font-weight-bold">Mis Clases</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if clases %}
+                            <div class="list-group">
+                                {% for clase in clases %}
+                                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-2">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">{{ clase.nombre }}</h5>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'profesores:editar_clase' clase.id %}"
+                                                   class="btn btn-outline-primary">
+                                                    <i class="bi bi-pen-fill"></i>
+                                                </a>
+                                                <a href="{% url 'profesores:eliminar_clase' clase.id %}"
+                                                   class="btn btn-outline-danger">
+                                                    <i class="bi bi-trash3-fill"></i>
+                                                </a>
+                                                <a href="{% url 'profesores:gestionar_horarios' clase.id %}"
+                                                   class="btn btn-outline-info" title="Gestionar horarios">
+                                                    <i class="bi bi-clock-fill"></i>
+                                                    <!-- Icono de reloj (usando Bootstrap Icons) -->
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <p class="mb-1">
+                                            <strong>Grupo:</strong> {{ clase.grupo }}<br>
+                                            <strong>Nivel:</strong> {{ clase.get_nivel_educativo_display }}<br>
+                                            <strong>Tipo:</strong> {{ clase.get_tipo_asignatura_display }}
+                                        </p>
+                                        <small class="text-muted">Ciclo: {{ clase.ciclo_escolar.nombre }}</small>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">No tienes clases asignadas.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Tarjeta de Tiempos Libres -->
+                <div class="card shadow">
+                    <div class="card-header py-3 bg-success text-white">
+                        <h6 class="m-0 font-weight-bold">Mis Tiempos Libres</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if tiempos_libres %}
+                            <div class="list-group">
+                                {% for tiempo in tiempos_libres %}
+                                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-2">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">{{ tiempo.get_dia_semana_display }}</h5>
+                                            <div>
+                                                <a href="{% url 'profesores:editar_tiempo_libre' tiempo.id %}"
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-pen-fill"></i>
+                                                </a>
+                                                <a href="{% url 'profesores:eliminar_tiempo_libre' tiempo.id %}"
+                                                   class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash3-fill"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <p class="mb-1">
+                                            {{ tiempo.hora_inicio|time:"H:i" }} - {{ tiempo.hora_fin|time:"H:i" }}
+                                            {% if tiempo.motivo %}<br><small>{{ tiempo.motivo }}</small>{% endif %}
+                                        </p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning">No has registrado tiempos libres</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendario Principal -->
+            <div class="col-md-8">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center bg-primary text-white">
+                        <h6 class="m-0 font-weight-bold">Mi Horario - {{ ciclo_actual.nombre }}</h6>
+                        <div class="btn-group">
+                            <button id="btn-semana" class="btn btn-sm btn-light active">Semana</button>
+                            <button id="btn-dia" class="btn btn-sm btn-light">Día</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Vista Semanal (por defecto) -->
+                        <div id="vista-semana">
+                            <div class="table-responsive">
+                                <table class="table table-bordered calendar-fixed-layout">
+                                    <thead>
+                                    <tr>
+                                        <th class="hour-column">Hora</th>
+                                        {% for dia in dias_semana %}
+                                            <th class="day-column">{{ dia.1 }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for hora in horas %}
+                                        <tr class="calendar-row">
+                                            <td class="hour-cell">{{ hora|time:"H:i" }}</td>
+                                            {% for dia in dias_semana %}
+                                                <td class="day-cell">
+                                                    <div class="event-container fixed-height">
+                                                        <!-- Contenedor con 2 clases -->
+                                                        <!-- Clases -->
+                                                        {% for clase in clases %}
+                                                            {% for horario in clase.horarios.all %}
+                                                                {% if horario.dia_semana == dia.0 and horario.hora_inicio <= hora and horario.hora_fin > hora %}
+                                                                    <div class="card mb-1 border-left-primary event-card expandible">
+                                                                        <!-- Clase "expandible" agregada -->
+                                                                        <div class="card-body p-2">
+                                                                            <h6 class="card-title mb-0">{{ clase.nombre }}</h6>
+                                                                            <p class="card-text mb-0 small">
+                                                                                {{ horario.hora_inicio|time:"H:i" }}
+                                                                                - {{ horario.hora_fin|time:"H:i" }}
+                                                                            </p>
+                                                                            <p class="card-text small text-muted mb-0">
+                                                                                {{ clase.grupo }} |
+                                                                                Aula: {{ horario.aula }}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% endfor %}
+
+                                                        <!-- Tiempos libres -->
+                                                        {% for tiempo in tiempos_libres %}
+                                                            {% if tiempo.dia_semana == dia.0 and tiempo.hora_inicio <= hora and tiempo.hora_fin > hora %}
+                                                                <div class="card mb-1 border-left-success event-card expandible">
+                                                                    <!-- Agregamos clase "expandible" -->
+                                                                    <div class="card-body p-2">
+                                                                        <h6 class="card-title mb-0">Tiempo Libre</h6>
+                                                                        <p class="card-text mb-0 small">
+                                                                            {{ tiempo.hora_inicio|time:"H:i" }}
+                                                                            - {{ tiempo.hora_fin|time:"H:i" }}
+                                                                        </p>
+                                                                        {% if tiempo.motivo %}
+                                                                            <p class="card-text small text-muted mb-0 motivo-texto">
+                                                                                <!-- Clase "motivo-texto" -->
+                                                                                {{ tiempo.motivo }}
+                                                                            </p>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                </div>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                </td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Vista por Día (oculta inicialmente) -->
+                        <div id="vista-dia" style="display: none;">
+                            <div class="text-center mb-3">
+                                <button id="btn-dia-anterior" class="btn btn-sm btn-secondary mr-2">
+                                    <i class="fas fa-chevron-left"></i> Anterior
+                                </button>
+                                <span id="dia-actual" class="font-weight-bold">Lunes</span>
+                                <button id="btn-dia-siguiente" class="btn btn-sm btn-secondary ml-2">
+                                    Siguiente <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                    <tr>
+                                        <th>Hora</th>
+                                        <th>Actividades</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="tabla-dia">
+                                    {% for hora in horas %}
+                                        <tr>
+                                            <td>{{ hora|time:"H:i" }}</td>
+                                            <td id="dia-{{ forloop.counter }}"></td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Datos para la vista por día
+            var diasSemana = [
+                {% for dia in dias_semana %}
+                    {id: {{ dia.0 }}, nombre: '{{ dia.1 }}'} {% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ];
+
+            var diaActual = 0; // Índice del día actual
+
+            // Función para cargar los datos del día seleccionado
+            function cargarDia(indiceDia) {
+                var dia = diasSemana[indiceDia];
+                $('#dia-actual').text(dia.nombre);
+
+                // Limpiar tabla
+                $('#tabla-dia td:nth-child(2)').empty();
+
+                // Cargar clases
+                {% for clase in clases %}
+                    {% for horario in clase.horarios.all %}
+                        if ({{ horario.dia_semana }} == dia.id) {
+                            {% for hora in horas %}
+                                if ('{{ horario.hora_inicio|time:"H:i" }}' <= '{{ hora|time:"H:i" }}' &&
+                                    '{{ horario.hora_fin|time:"H:i" }}' > '{{ hora|time:"H:i" }}') {
+                                    $('#dia-{{ forloop.counter }}').append(`
+                                <div class="card mb-2 border-left-primary">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title mb-0">{{ clase.nombre }}</h6>
+                                        <p class="card-text mb-0 small">
+                                            {{ horario.hora_inicio|time:"H:i" }} - {{ horario.hora_fin|time:"H:i" }}
+                                        </p>
+                                        <p class="card-text small text-muted mb-0">
+                                            {{ clase.grupo }} | Aula: {{ horario.aula }}
+                                        </p>
+                                    </div>
+                                </div>
+                            `);
+                                }
+                            {% endfor %}
+                        }
+                    {% endfor %}
+                {% endfor %}
+
+                // Cargar tiempos libres
+                {% for tiempo in tiempos_libres %}
+                    if ({{ tiempo.dia_semana }} == dia.id) {
+                        {% for hora in horas %}
+                            if ('{{ tiempo.hora_inicio|time:"H:i" }}' <= '{{ hora|time:"H:i" }}' &&
+                                '{{ tiempo.hora_fin|time:"H:i" }}' > '{{ hora|time:"H:i" }}') {
+                                $('#dia-{{ forloop.counter }}').append(`
+                            <div class="card mb-2 border-left-success">
+                                <div class="card-body p-2">
+                                    <h6 class="card-title mb-0">Tiempo Libre</h6>
+                                    <p class="card-text mb-0 small">
+                                        {{ tiempo.hora_inicio|time:"H:i" }} - {{ tiempo.hora_fin|time:"H:i" }}
+                                    </p>
+                                    {% if tiempo.motivo %}
+                                        <p class="card-text small text-muted mb-0">
+                                            {{ tiempo.motivo }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        `);
+                            }
+                        {% endfor %}
+                    }
+                {% endfor %}
+            }
+
+            // Manejar botones de vista
+            $('#btn-semana').click(function () {
+                $('#vista-semana').show();
+                $('#vista-dia').hide();
+                $(this).addClass('active');
+                $('#btn-dia').removeClass('active');
+            });
+
+            $('#btn-dia').click(function () {
+                $('#vista-semana').hide();
+                $('#vista-dia').show();
+                $(this).addClass('active');
+                $('#btn-semana').removeClass('active');
+                cargarDia(diaActual);
+            });
+
+            // Navegación por días
+            $('#btn-dia-anterior').click(function () {
+                diaActual = (diaActual - 1 + diasSemana.length) % diasSemana.length;
+                cargarDia(diaActual);
+            });
+
+            $('#btn-dia-siguiente').click(function () {
+                diaActual = (diaActual + 1) % diasSemana.length;
+                cargarDia(diaActual);
+            });
+
+            // Tooltips
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+    </script>
+
+    <!-- CSS Personalizado (agrégalo en tu hoja de estilos) -->
+    <style>
+        /* Estructura fija del calendario */
+        .calendar-fixed-layout {
+            table-layout: fixed;
+        }
+
+        .hour-column {
+            width: 10% !important;
+        }
+
+        .day-column {
+            width: 18% !important; /* Ajusta según número de días */
+        }
+
+        .calendar-row {
+            height: 100px; /* Altura fija por fila */
+        }
+
+        .day-cell, .hour-cell {
+            vertical-align: top;
+            padding: 4px !important;
+        }
+
+        /* Contenedor de eventos */
+        .event-container {
+            height: 100%;
+            min-height: 90px; /* Ajusta según necesidad */
+        }
+
+        .fixed-height {
+            overflow-y: auto; /* Scroll si hay muchos eventos */
+            max-height: 90px;
+        }
+
+        /* Optimización de cards */
+        .event-card {
+            margin-bottom: 4px !important;
+        }
+
+        .event-card .card-body {
+            padding: 6px !important;
+        }
+
+        .text-truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .border-left-primary {
+            border-left: 4px solid #4e73df !important;
+        }
+
+        .border-left-success {
+            border-left: 4px solid #1cc88a !important;
+        }
+
+        /* Contenedor de eventos (asegura posición relativa para los hijos absolutos) */
+        .day-cell {
+            position: relative; /* Necesario para que el absolute funcione dentro */
+        }
+
+        /* Efecto al hacer hover o click */
+        .event-card.expandible {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .event-card.expandible:hover,
+        .event-card.expandible:focus {
+            position: absolute;
+            z-index: 1000; /* Para que aparezca por encima de todo */
+            width: 300px; /* Ancho expandido */
+            min-height: 120px; /* Altura expandida */
+            transform: translateY(-10px); /* Efecto de levantar */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* Sombra para destacar */
+            background: white; /* Fondo sólido (evita transparencias raras) */
+        }
+
+        /* Opcional: Para dispositivos táctiles (evita que el hover se quede "pegado") */
+        @media (hover: none) {
+            .event-card.expandible:hover {
+                position: static;
+                transform: none;
+            }
+        }
+
+    </style>
+
+{% endblock %}

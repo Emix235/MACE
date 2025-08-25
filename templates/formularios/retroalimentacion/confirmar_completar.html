@@ -1,0 +1,52 @@
+{% extends base %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="card border-0 shadow">
+            <div class="card-header {% if es_servicio %}bg-primary{% else %}bg-info{% endif %} text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Confirmar Completar Cita
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert {% if es_servicio %}alert-primary{% else %}alert-info{% endif %}">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Al marcar como completada, se enviará automáticamente un formulario de
+                    retroalimentación al padre.
+                </div>
+
+                <div class="mb-4">
+                    <h5>Detalles de la cita:</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Título:</strong> {{ cita.titulo }}</p>
+                            <p><strong>Fecha:</strong> {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}</p>
+                            <p><strong>Duración:</strong> {{ cita.duracion }} minutos</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Padre:</strong> {{ cita.solicitante.nombre_completo }}</p>
+                            <p><strong>Estado:</strong> <span
+                                    class="badge bg-{{ cita.get_badge_color }}">{{ cita.get_estado_display }}</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="
+                                
+                                {% if es_servicio %}{% url 'servicios_escolares:lista_citas' %}{% else %}{% url 'profesores:mis_citas' %}{% endif %}"
+                           class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn {% if es_servicio %}btn-primary{% else %}btn-info{% endif %}">
+                            <i class="fas fa-check-circle me-1"></i> Confirmar Completada
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

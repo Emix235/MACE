@@ -1,0 +1,53 @@
+{% extends 'padres/base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 text-center">
+        {% if estudiante.foto %}
+            <img src="{{ estudiante.foto.url }}" class="img-fluid rounded-circle estudiante-img mb-3" alt="Foto del estudiante">
+        {% else %}
+            {# {% static 'img/default-student.png' %} #}
+            <img src="#" class="img-fluid rounded-circle estudiante-img mb-3" alt="Foto del estudiante">
+        {% endif %}
+    </div>
+    <div class="col-md-8">
+        <h3>{{ estudiante.nombre_completo }}</h3>
+        <hr>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <p><strong>Matrícula:</strong> {{ estudiante.matricula }}</p>
+                <p><strong>CURP:</strong> {{ estudiante.curp|default:"No especificada" }}</p>
+                <p><strong>Fecha de nacimiento:</strong> 
+                    {% if estudiante.fecha_nacimiento %}
+                        {{ estudiante.fecha_nacimiento|date:"d/m/Y" }} ({{ estudiante.edad }} años)
+                    {% else %}
+                        No especificada
+                    {% endif %}
+                </p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Grupo:</strong> 
+                    {% if estudiante.grupo_actual %}
+                        {{ estudiante.grupo_actual }}
+                    {% else %}
+                        Sin grupo asignado
+                    {% endif %}
+                </p>
+                <p><strong>Ciclo escolar:</strong> 
+                    {% if estudiante.ciclo_inscripcion %}
+                        {{ estudiante.ciclo_inscripcion }}
+                    {% else %}
+                        No especificado
+                    {% endif %}
+                </p>
+                <p><strong>Fecha de inscripción:</strong> {{ estudiante.fecha_inscripcion|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+        <div class="mb-3">
+            <h5>Información Académica</h5>
+            <!-- Aquí puedes agregar más información académica si es necesario -->
+            <p>Información adicional del estudiante...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

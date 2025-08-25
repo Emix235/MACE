@@ -1,0 +1,118 @@
+{% extends 'padres/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-calendar-alt me-2"></i>Mis Citas</h2>
+            <div>
+                <a href="{% url 'padres:profesores_disponibles' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i> Nueva Cita
+                </a>
+            </div>
+        </div>
+
+        {% if messages %}
+            <div class="container mt-3 ps-0 pe-0"> <!-- Bootstrap 5 -->
+                {% for message in messages %}
+                    <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Filtros por estado -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <a href="{% url 'padres:mis_citas' %}"
+                       class="btn btn-sm btn-outline-secondary {% if not filtro_estado %}active{% endif %}">Todas</a>
+                    {% for estado, nombre in estados_cita %}
+                        <a href="{% url 'padres:mis_citas' %}?estado={{ estado }}"
+                           class="btn btn-sm btn-outline-{% if estado == 'pendiente' %}warning{% elif estado == 'confirmada' %}success{% elif estado == 'completada' %}info{% elif estado == 'cancelada' %}danger{% else %}secondary{% endif %} {% if filtro_estado == estado %}active{% endif %}">
+                            {{ nombre }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pestañas de navegación -->
+        <ul class="nav nav-tabs mb-4" id="citasTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="creadas-tab" data-bs-toggle="tab" data-bs-target="#creadas"
+                        type="button" role="tab" aria-controls="creadas" aria-selected="true">
+                    <i class="fas fa-calendar-plus me-1"></i> Mis Citas
+                    <span class="badge bg-primary ms-1">{{ citas_creadas.count }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="solicitante-tab" data-bs-toggle="tab" data-bs-target="#solicitante"
+                        type="button" role="tab" aria-controls="solicitante" aria-selected="false">
+                    <i class="fas fa-user-tag me-1"></i> Citas por Servicio
+                    <span class="badge bg-warning text-dark ms-1">{{ citas_solicitante_servicio.count }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="profesor-tab" data-bs-toggle="tab" data-bs-target="#profesor"
+                        type="button" role="tab" aria-controls="profesor" aria-selected="false">
+                    <i class="fas fa-chalkboard-teacher me-1"></i> Citas por Profesores
+                    <span class="badge bg-success ms-1">{{ citas_solicitante_profesor.count }}</span>
+                </button>
+            </li>
+        </ul>
+
+        <!-- Contenido de las pestañas -->
+        <div class="tab-content" id="citasTabContent">
+            <!-- Pestaña Citas Creadas -->
+            <div class="tab-pane fade show active" id="creadas" role="tabpanel" aria-labelledby="creadas-tab">
+                {% if citas_creadas %}
+                    <div class="row">
+                        {% for cita in citas_creadas %}
+                            {% include 'padres/citas/tarjeta_cita.html' with cita=cita es_creador=True es_solicitante=False %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i> No has creado citas {% if filtro_estado %}en estado "
+                        {{ filtro_estado }}"{% endif %}.
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Pestaña Citas por Servicio Escolar -->
+            <div class="tab-pane fade" id="solicitante" role="tabpanel" aria-labelledby="solicitante-tab">
+                {% if citas_solicitante_servicio %}
+                    <div class="row">
+                        {% for cita in citas_solicitante_servicio %}
+                            {% include 'padres/citas/tarjeta_cita.html' with cita=cita es_creador=False es_solicitante=True creador_servicio=True %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i> No tienes citas del servicio escolar
+                        {% if filtro_estado %}en estado "{{ filtro_estado }}"{% endif %}.
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Pestaña Citas por Profesores -->
+            <div class="tab-pane fade" id="profesor" role="tabpanel" aria-labelledby="profesor-tab">
+                {% if citas_solicitante_profesor %}
+                    <div class="row">
+                        {% for cita in citas_solicitante_profesor %}
+                            {% include 'padres/citas/tarjeta_cita.html' with cita=cita es_creador=False es_solicitante=True creador_profesor=True %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i> No tienes citas de profesores {% if filtro_estado %}en
+                        estado "{{ filtro_estado }}"{% endif %}.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

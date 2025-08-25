@@ -1,0 +1,90 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Detalles de la cita -->
+            <div class="col-md-6">
+                <h5 class="mb-3">{{ cita.titulo }}</h5>
+                <div class="mb-3">
+                <span class="badge bg-{{ cita.get_badge_color }}">
+                    {{ cita.get_estado_display }}
+                </span>
+                    <span class="badge bg-secondary ms-2">
+                    {{ cita.get_tipo_display }}
+                </span>
+                </div>
+
+                <dl class="row">
+                    <dt class="col-sm-4">Solicitante:</dt>
+                    <dd class="col-sm-8">{{ cita.solicitante.nombre_completo }}</dd>
+
+                    <dt class="col-sm-4">Fecha y hora:</dt>
+                    <dd class="col-sm-8">{{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}
+                        a {{ cita.fecha_hora_fin|date:"H:i" }}</dd>
+
+                    <dt class="col-sm-4">Duración:</dt>
+                    <dd class="col-sm-8">{{ cita.duracion }} minutos</dd>
+
+                    <dt class="col-sm-4">Ubicación:</dt>
+                    <dd class="col-sm-8">{{ cita.ubicacion|default:"Por definir" }}</dd>
+
+                    {% if cita.profesor %}
+                        <dt class="col-sm-4">Profesor:</dt>
+                        <dd class="col-sm-8">{{ cita.profesor.nombre_completo }}</dd>
+                    {% endif %}
+
+                    {% if cita.servicio_escolar %}
+                        <dt class="col-sm-4">Servicio escolar:</dt>
+                        <dd class="col-sm-8">{{ cita.servicio_escolar.nombre_completo }}</dd>
+                    {% endif %}
+                </dl>
+            </div>
+
+            <!-- Motivo y observaciones -->
+            <div class="col-md-6">
+                <h6 class="mb-3">Motivo:</h6>
+                <div class="card mb-3">
+                    <div class="card-body">
+                        {{ cita.motivo|linebreaks }}
+                    </div>
+                </div>
+
+                {% if cita.observaciones %}
+                    <h6 class="mb-3">Observaciones:</h6>
+                    <div class="card">
+                        <div class="card-body">
+                            {{ cita.observaciones|linebreaks }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Confirmación y cancelación de la cita si es servicio escolar y pendiente -->
+        {% if es_servicio_escolar and cita.estado == 'pendiente' %}
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="d-flex justify-content-end">
+                        <form method="post" action="{% url 'servicios_escolares:reprogramar_cita' cita.id %}"
+                              class="me-2">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">Reprogramar</button>
+                        </form>
+                        <form method="post" action="{% url 'servicios_escolares:cancelar_cita_servicio' cita.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Cancelar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+
+<form method="post" action="{% url 'servicios_escolares:confirmar_cita_servicio' cita.id %}"
+      class="me-2">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-success">Confirmar</button>
+</form>

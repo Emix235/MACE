@@ -1,0 +1,79 @@
+<div class="card">
+    <div class="card-header">
+        <h4>Plantilla Actual: {{ plantilla.titulo }}</h4>
+        <small class="text-muted">Versión {{ plantilla.version }}</small>
+    </div>
+
+    <div class="card-body">
+        <h5>Preguntas:</h5>
+        <ul class="list-group mb-4">
+            {% for pregunta in plantilla.preguntas.all %}
+                <li class="list-group-item">
+                    {{ pregunta.texto }}
+                    <span class="badge badge-secondary">{{ pregunta.get_tipo_display }}</span>
+                    {% if pregunta.obligatoria %}
+                        <span class="badge badge-primary">Obligatoria</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+
+        <div class="d-flex justify-content-between">
+            {# {% url 'editar_plantilla' plantilla.id %} #}
+            <a href="{% url 'formularios:editar_retroalimentacion' plantilla.id %}" class="btn btn-primary">
+                Editar Plantilla (creará nueva versión)
+            </a>
+
+            <button class="btn btn-outline-secondary" data-toggle="collapse" data-target="#historial{{ tipo }}">
+                Ver Historial de Versiones
+            </button>
+        </div>
+
+        <div class="collapse mt-3" id="historial{{ tipo }}">
+            <div class="card card-body">
+                <h5>Versiones Anteriores:</h5>
+                {% if historial %}
+                    <ul class="list-group">
+                        {% for version in historial %}
+                            <li class="list-group-item">
+                                <strong>v{{ version.version }}</strong> - {{ version.titulo }}
+                                <small class="text-muted">({{ version.fecha_creacion|date:"d/m/Y" }})</small>
+                                <a href="{% url 'ver_plantilla' version.id %}"
+                                   class="btn btn-sm btn-outline-info float-right">
+                                    Ver Detalles
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No hay versiones anteriores de esta plantilla.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if otras_plantillas.has_other_pages %}
+    <nav>
+        <ul class="pagination">
+            {% if otras_plantillas.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                       href="?tab={{ tipo }}&page_{{ tipo }}={{ otras_plantillas.previous_page_number }}">Anterior</a>
+                </li>
+            {% endif %}
+
+            {% for num in otras_plantillas.paginator.page_range %}
+                <li class="page-item {% if otras_plantillas.number == num %}active{% endif %}">
+                    <a class="page-link" href="?tab={{ tipo }}&page_{{ tipo }}={{ num }}">{{ num }}</a>
+                </li>
+            {% endfor %}
+
+            {% if otras_plantillas.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?tab={{ tipo }}&page_{{ tipo }}={{ otras_plantillas.next_page_number }}">Siguiente</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}

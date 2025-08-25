@@ -1,0 +1,68 @@
+<!-- profesores/theme_settings.html -->
+{% extends 'profesores/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <h2>Configuración de Tema Personal</h2>
+
+        {% if messages %}
+            <div class="container mt-3 ps-0 pe-0"> <!-- Bootstrap 5 -->
+                {% for message in messages %}
+                    <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Selecciona tu tema:</label>
+                <select name="personal_theme" class="form-select">
+                    {% for value, label in THEME_CHOICES %}
+                        <option value="{{ value }}"
+                                {% if value == current_theme %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+        </form>
+
+        <!-- Vista previa de temas -->
+        <div class="card mt-4">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Vista Previa de Temas</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for theme_value, theme_name in theme_config.THEME_CHOICES %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header text-center">
+                                    <strong>{{ theme_name }}</strong>
+                                    {% if request.user_obj.personal_theme == theme_value %}
+                                        <span class="badge bg-success float-end">Tu Tema</span>
+                                    {% elif theme_value == theme_config.global_theme %}
+                                        <span class="badge bg-primary float-end">Global</span>
+                                    {% endif %}
+
+                                </div>
+                                <div class="card-body text-center">
+                                    <img src="{% static 'img/theme-previews/'|add:theme_name|lower|cut:' '|add:'.jpg' %}"
+                                         alt="{{ theme_name }}" class="img-fluid rounded mb-2"
+                                         style="max-height: 150px;">
+                                    <p class="text-muted">Selecciona para previsualizar</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

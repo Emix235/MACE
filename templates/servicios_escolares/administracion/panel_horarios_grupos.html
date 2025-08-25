@@ -1,0 +1,192 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% block content %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<div class="container-fluid">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-calendar-alt"></i> Horarios Escolares
+        </h1>
+        <div class="alert alert-info mb-0">
+            <strong>Ciclo escolar:</strong> {{ ciclo_actual.nombre }}
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" id="gradosTab" role="tablist">
+        {% for grado in grados %}
+        <li class="nav-item">
+            <a class="nav-link {% if forloop.first %}active{% endif %}" 
+               id="grado-{{ grado.id }}-tab" 
+               data-toggle="tab" 
+               href="#grado-{{ grado.id }}" 
+               role="tab"
+               aria-controls="grado-{{ grado.id }}"
+               aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                {{ grado.nombre }}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <div class="tab-content" id="gradosTabContent">
+        {% for grado in grados %}
+        <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" 
+             id="grado-{{ grado.id }}" 
+             role="tabpanel"
+             aria-labelledby="grado-{{ grado.id }}-tab">
+            
+            <ul class="nav nav-pills mb-4" id="grupoTab-{{ grado.id }}" role="tablist">
+                {% for grupo in grado.grupos %}
+                <li class="nav-item">
+                    <a class="nav-link {% if forloop.first %}active{% endif %}" 
+                       id="grupo-{{ grupo.id }}-tab" 
+                       data-toggle="pill" 
+                       href="#grupo-{{ grupo.id }}" 
+                       role="tab"
+                       aria-controls="grupo-{{ grupo.id }}"
+                       aria-selected="{% if forloop.first %}true{% else %}false{% endif %}">
+                        Grupo {{ grupo.letra }} ({{ grupo.turno }})
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <div class="tab-content">
+                {% for grupo in grado.grupos %}
+                <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" 
+                     id="grupo-{{ grupo.id }}" 
+                     role="tabpanel"
+                     aria-labelledby="grupo-{{ grupo.id }}-tab">
+                    
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 bg-primary text-white">
+                            <h5 class="m-0 font-weight-bold">
+                                {{ grado.nombre }} - Grupo {{ grupo.letra }} ({{ grupo.turno }})
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="thead-dark">
+                                        <tr>
+                                            <th>Hora</th>
+                                            {% for dia_id, dia_nombre in dias_semana %}
+                                                <th>{{ dia_nombre }}</th>
+                                            {% endfor %}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for fila in grupo.matriz_horarios %}
+                                        <tr>
+                                            <td class="font-weight-bold">
+                                                {{ fila.hora|time:"H:i" }}
+                                            </td>
+                                            {% for dia in fila.dias %}
+                                                <td>
+                                                    {% for clase in dia.clases %}
+                                                    <div class="card mb-2 border-left-primary">
+                                                        <div class="card-body p-2">
+                                                            <h6 class="card-title mb-1">
+                                                                {{ clase.materia }}
+                                                            </h6>
+                                                            <p class="card-text mb-1 small">
+                                                                <i class="fas fa-user-tie"></i> {{ clase.profesor }}
+                                                            </p>
+                                                            <p class="card-text small text-muted mb-0">
+                                                                <i class="fas fa-door-open"></i> {{ clase.aula }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </td>
+                                            {% endfor %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<script>
+$(document).ready(function() {
+    function actualizarContenidoGrupo(gradoId, grupoId) {
+        try {
+            console.log('[DEBUG] Actualizando contenido del grupo:', 'Grado ID:', gradoId, 'Grupo ID:', grupoId);
+            $('#grado-' + gradoId + ' .tab-content .tab-pane').removeClass('show active');
+            $('#grupo-' + grupoId).addClass('show active');
+        } catch (error) {
+            console.error('[ERROR] Error en actualizarContenidoGrupo:', error);
+        }
+    }
+
+    // Función para manejar el cambio de pestañas de grado
+    $('#gradosTab a').on('click', function(e) {
+        try {
+            e.preventDefault();
+            var gradoTarget = $(this).attr('href');
+            console.log('[DEBUG] Pestaña de grado clickeada:', gradoTarget);
+            $(this).tab('show');
+            $(gradoTarget).find('.nav-pills a:first').tab('show');
+            var primerGrupoTarget = $(gradoTarget).find('.tab-content .tab-pane:first').attr('id');
+            var gradoId = gradoTarget.split('-')[1];
+            var grupoId = primerGrupoTarget.split('-')[1];
+            actualizarContenidoGrupo(gradoId, grupoId);
+            localStorage.setItem('lastGradoTab', gradoTarget);
+            localStorage.removeItem('lastGrupoTab');
+            console.log('[DEBUG] Pestaña de grado guardada:', gradoTarget);
+        } catch (error) {
+            console.error('[ERROR] Error en click de pestaña de grado:', error);
+        }
+    });
+
+    // Función para manejar el cambio de pestañas de grupo
+    $('[id^="grupoTab-"] a').on('click', function(e) {
+        try {
+            e.preventDefault();
+            var grupoTarget = $(this).attr('href');
+            console.log('[DEBUG] Pestaña de grupo clickeada:', grupoTarget);
+            $(this).tab('show');
+            var gradoId = $(this).closest('.tab-pane').attr('id').split('-')[1];
+            var grupoId = grupoTarget.split('-')[1];
+            actualizarContenidoGrupo(gradoId, grupoId);
+            localStorage.setItem('lastGrupoTab', grupoTarget);
+            console.log('[DEBUG] Pestaña de grupo guardada:', grupoTarget);
+        } catch (error) {
+            console.error('[ERROR] Error en click de pestaña de grupo:', error);
+        }
+    });
+
+    // Restaurar pestañas al cargar la página
+    var lastGradoTab = localStorage.getItem('lastGradoTab');
+    var lastGrupoTab = localStorage.getItem('lastGrupoTab');
+    console.log('[DEBUG] Pestañas de grado y grupo restauradas:', 'Grado:', lastGradoTab, 'Grupo:', lastGrupoTab);
+
+    if (lastGradoTab) {
+        $('#gradosTab a[href="' + lastGradoTab + '"]').tab('show');
+        if (lastGrupoTab && $(lastGradoTab).find(lastGrupoTab).length) {
+            $(lastGrupoTab + '-tab').tab('show');
+            var gradoId = lastGradoTab.split('-')[1];
+            var grupoId = lastGrupoTab.split('-')[1];
+            actualizarContenidoGrupo(gradoId, grupoId)
+        } else {
+            $(lastGradoTab + ' .nav-pills a:first').tab('show');
+            var primerGrupoTarget = $(lastGradoTab + ' .tab-content .tab-pane:first').attr('id');
+            var gradoId = lastGradoTab.split('-')[1];
+            var grupoId = primerGrupoTarget.split('-')[1];
+            actualizarContenidoGrupo(gradoId, grupoId);
+        }
+    } else {
+        $('#gradosTab a:first').tab('show');
+        $('[id^="grupoTab-"] a:first').tab('show');
+        $('.tab-content .tab-pane:first').addClass('show active');
+    }
+});
+</script>
+{% endblock %}

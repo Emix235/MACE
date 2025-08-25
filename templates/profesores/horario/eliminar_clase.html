@@ -1,0 +1,94 @@
+{% extends 'profesores/base.html' %}
+{% load static %}
+
+{% block title %}Confirmar Eliminación - {{ clase.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Modal de confirmación -->
+            <div class="card shadow-lg border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="m-0 font-weight-bold">
+                        <i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">¿Estás seguro que deseas eliminar esta clase?</h5>
+                        <p class="mb-0">Esta acción no se puede deshacer y se perderán todos los datos asociados.</p>
+                    </div>
+
+                    <!-- Detalles de la clase -->
+                    <div class="card mb-4 border-warning">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="m-0">Detalles de la Clase</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Nombre:</strong> {{ clase.nombre }}</p>
+                                    <p><strong>Nivel:</strong> {{ clase.get_nivel_educativo_display }}</p>
+                                    <p><strong>Tipo:</strong> {{ clase.get_tipo_asignatura_display }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Grupo:</strong> {{ clase.grupo }}</p>
+                                    <p><strong>Ciclo Escolar:</strong> {{ clase.ciclo_escolar.nombre }}</p>
+                                    <p><strong>Profesor:</strong> {{ clase.profesor.nombre_completo }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Horarios de la clase -->
+                    {% if horarios %}
+                    <div class="card mb-4 border-info">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="m-0">Horarios Asociados</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group">
+                                {% for horario in horarios %}
+                                <li class="list-group-item">
+                                    {{ horario.get_dia_semana_display }}: 
+                                    {{ horario.hora_inicio|time:"H:i" }} - {{ horario.hora_fin|time:"H:i" }} | 
+                                    Aula {{ horario.aula }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Formulario de confirmación -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'profesores:panel_horario' %}" class="btn btn-lg btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-lg btn-danger">
+                                <i class="fas fa-trash-alt"></i> Confirmar Eliminación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card.shadow-lg {
+        box-shadow: 0 0.5rem 1rem rgba(220, 53, 69, 0.3) !important;
+    }
+    .card-header.bg-danger {
+        background-color: #dc3545 !important;
+    }
+    .alert.alert-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-left: 5px solid #dc3545;
+    }
+</style>
+{% endblock %}

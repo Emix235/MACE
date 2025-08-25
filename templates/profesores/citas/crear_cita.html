@@ -1,0 +1,479 @@
+{% extends 'profesores/base.html' %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-primary">
+                <i class="fas fa-calendar-plus me-2"></i> Agendar Cita con {{ estudiante.nombre_completo }}
+            </h2>
+            <a href="{% url 'profesores:lista_estudiantes_citas' estudiante.grupo_actual.clases.first.id %}"
+               class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Volver
+            </a>
+        </div>
+
+        {% if messages %}
+            <div class="container mt-3 ps-0 pe-0"> <!-- Bootstrap 5 -->
+                {% for message in messages %}
+                    <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Detalles de la Cita</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Información básica -->
+                    <div class="alert alert-info mb-4">
+                        <div class="row">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-tie fs-5 me-3 text-primary"></i>
+                                    <div>
+                                        <h6 class="mb-1 text-muted">Padre/Tutor</h6>
+                                        <p class="mb-0 fw-bold">{{ estudiante.padre.nombre_completo }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-graduate fs-5 me-3 text-primary"></i>
+                                    <div>
+                                        <h6 class="mb-1 text-muted">Estudiante</h6>
+                                        <p class="mb-0 fw-bold">{{ estudiante.nombre_completo }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección de datos de la cita -->
+                    <div class="mb-4">
+                        <h5 class="d-flex align-items-center text-primary mb-4">
+                            <span class="bg-primary bg-opacity-10 p-2 rounded me-3">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                            Detalles de la Cita
+                        </h5>
+
+                        <div class="row g-3">
+                            <!-- Título -->
+                            <div class="col-md-6">
+                                <div class="input-group-flex">
+                                    <label class="form-label" for="{{ form.titulo.id_for_label }}">
+                                        <i class="fas fa-heading me-1 text-muted"></i> {{ form.titulo.label }}
+                                    </label>
+                                    {{ form.titulo }}
+                                    {% if form.titulo.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            {{ form.titulo.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <small class="form-text">Ej: Revisión de progreso, Problemas de conducta,
+                                        etc.</small>
+                                </div>
+                            </div>
+
+                            <!-- Tipo -->
+                            <div class="col-md-6">
+                                <div class="input-group-flex">
+                                    <label class="form-label" for="{{ form.tipo.id_for_label }}">
+                                        <i class="fas fa-tag me-1 text-muted"></i> {{ form.tipo.label }}
+                                    </label>
+                                    <div class="select-wrapper">
+                                        {{ form.tipo }}
+                                        <i class="fas fa-chevron-down select-arrow"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fecha y Hora -->
+                            <div class="col-md-4">
+                                <div class="input-group-flex">
+                                    <label class="form-label" for="id_fecha_hora_inicio">
+                                        <i class="far fa-calendar-alt me-1 text-muted"></i> Fecha y Hora
+                                    </label>
+                                    <div class="input-with-icon">
+                                        <input type="datetime-local" name="fecha_hora_inicio"
+                                               class="form-control" id="id_fecha_hora_inicio"
+                                               value="{{ form.fecha_hora_inicio.value|date:'Y-m-d\TH:i' }}"
+                                               required>
+                                        <i class="far fa-clock input-icon"></i>
+                                    </div>
+                                    {% if form.fecha_hora_inicio.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-circle me-1"></i>
+                                            {{ form.fecha_hora_inicio.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Duración -->
+                            <div class="col-md-4">
+                                <div class="input-group-flex">
+                                    <label class="form-label" for="{{ form.duracion.id_for_label }}">
+                                        <i class="fas fa-hourglass-half me-1 text-muted"></i> Duración
+                                    </label>
+                                    <div class="input-with-suffix">
+                                        {{ form.duracion }}
+                                        <span class="input-suffix">minutos</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Ubicación -->
+                            <div class="col-md-4">
+                                <div class="input-group-flex">
+                                    <label class="form-label" for="{{ form.ubicacion.id_for_label }}">
+                                        <i class="fas fa-map-marker-alt me-1 text-muted"></i> {{ form.ubicacion.label }}
+                                    </label>
+                                    {{ form.ubicacion }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Motivo de la cita -->
+                    <div class="mb-4">
+                        <h5 class="d-flex align-items-center text-primary mb-4">
+                            <span class="bg-primary bg-opacity-10 p-2 rounded me-3">
+                                <i class="fas fa-comment-dots"></i>
+                            </span>
+                            Motivo de la Reunión
+                        </h5>
+
+                        <div class="input-group-flex">
+                            <label class="form-label" for="{{ form.motivo.id_for_label }}">
+                                <i class="fas fa-align-left me-1 text-muted"></i> Descripción detallada
+                            </label>
+                            <div class="textarea-wrapper">
+                                {{ form.motivo }}
+                                <div class="d-flex justify-content-between mt-2">
+                                    <small class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i> Describa claramente el propósito
+                                    </small>
+                                    <small class="form-text fw-semibold">
+                                        <span id="motivo-count">0</span>/500 caracteres
+                                    </small>
+                                </div>
+                                {% if form.motivo.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        {{ form.motivo.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="d-flex justify-content-between mt-5 pt-4 border-top">
+                        <a href="{% url 'profesores:lista_estudiantes_citas' estudiante.grupo_actual.clases.first.id %}"
+                           class="btn btn-lg btn-outline-secondary px-4">
+                            <i class="fas fa-times me-2"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-lg btn-primary px-4 shadow">
+                            <i class="fas fa-calendar-check me-2"></i> Confirmar Cita
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% if mostrar_boton_prioritario %}
+                <div class="mt-4 text-end"
+                     style="padding: 15px 20px; display: flex; justify-content: center; transition: transform 0.2s;">
+                    <a href="{% url 'profesores:crear_cita_prioritaria' estudiante_id=estudiante.id %}"
+                       class="btn btn-danger btn-lg fw-bold shadow-sm border-0 d-inline-flex align-items-center gap-2">
+                        <i class="fas fa-exclamation-triangle fa-lg"></i>
+                        ¿Es una cita urgente? Use el formulario prioritario
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <style>
+        /* ESTILOS PREMIUM PARA INPUTS - VERSIÓN 3.0 */
+        textarea {
+            resize: vertical;
+            width: var(--input-width);
+            min-height: var(--input-min-height);
+            padding: var(--input-padding);
+            font-size: var(--input-font-size);
+            line-height: var(--input-line-height);
+            border: var(--input-border-width) solid var(--input-border-color);
+            border-radius: var(--input-border-radius);
+            background-color: #ffffff;
+            color: #374151;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: var(--input-transition);
+            appearance: none;
+            outline: none;
+        }
+
+        :root {
+            --input-border-radius: 8px;
+            --input-border-width: 2px;
+            --input-padding: 0.75rem 1rem;
+            --input-font-size: 1rem;
+            --input-line-height: 1.5;
+            --input-min-height: 48px;
+            --input-width: 100%;
+            --input-border-color: #d1d5db;
+            --input-focus-border-color: #3b82f6;
+            --input-focus-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            --input-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Estilo base para todos los inputs */
+        .form-control,
+        .form-select,
+        textarea.form-control,
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="date"],
+        input[type="datetime-local"],
+        input[type="number"],
+        input[type="tel"],
+        input[type="time"],
+        input[type="url"],
+        input[type="search"] {
+            /* Dimensiones */
+            width: var(--input-width);
+            min-height: var(--input-min-height);
+            padding: var(--input-padding);
+
+            /* Tipografía */
+            font-size: var(--input-font-size);
+            line-height: var(--input-line-height);
+
+            /* Bordes */
+            border: var(--input-border-width) solid var(--input-border-color);
+            border-radius: var(--input-border-radius);
+
+            /* Fondo y color */
+            background-color: #ffffff;
+            color: #374151;
+
+            /* Efectos */
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: var(--input-transition);
+
+            /* Apariencia */
+            appearance: none;
+            outline: none;
+        }
+
+        /* Hover state */
+        .form-control:hover,
+        .form-select:hover,
+        textarea.form-control:hover {
+            border-color: #9ca3af;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Focus state */
+        .form-control:focus,
+        .form-select:focus,
+        textarea.form-control:focus {
+            border-color: var(--input-focus-border-color);
+            box-shadow: var(--input-focus-shadow);
+        }
+
+        /* Select personalizado */
+        .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+            padding-right: 2.5rem;
+        }
+
+        /* Textarea */
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* Input groups */
+        .input-group {
+            display: flex;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        .input-group .form-control,
+        .input-group .form-select {
+            flex: 1 1 auto;
+            width: 1%;
+            min-width: 0;
+        }
+
+        .input-group-text {
+            display: flex;
+            align-items: center;
+            padding: var(--input-padding);
+            font-size: var(--input-font-size);
+            font-weight: 400;
+            color: #6b7280;
+            text-align: center;
+            white-space: nowrap;
+            background-color: #f9fafb;
+            border: var(--input-border-width) solid var(--input-border-color);
+            border-radius: var(--input-border-radius);
+            transition: var(--input-transition);
+        }
+
+        /* Validación */
+        .is-invalid {
+            border-color: #ef4444 !important;
+        }
+
+        .is-invalid:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+        }
+
+        .invalid-feedback {
+            display: block;
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+            color: #ef4444;
+        }
+
+        /* Checkboxes y radios */
+        .form-check-input {
+            width: 1.2em;
+            height: 1.2em;
+            margin-top: 0.15em;
+            vertical-align: top;
+            background-color: #fff;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: var(--input-border-width) solid #d1d5db;
+            appearance: none;
+            transition: var(--input-transition);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--input-focus-border-color);
+            border-color: var(--input-focus-border-color);
+        }
+
+        .form-check-input:focus {
+            box-shadow: var(--input-focus-shadow);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            :root {
+                --input-padding: 0.65rem 0.9rem;
+                --input-font-size: 0.9375rem;
+            }
+        }
+
+        /* ESTILO MEJORADO PARA SELECT */
+        .form-select {
+            /* Base igual que otros inputs */
+            width: 100%;
+            min-height: 48px;
+            padding: 0.75rem 2.5rem 0.75rem 1rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            background-color: #fff;
+            color: #374151;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            appearance: none;
+            outline: none;
+
+            /* Flecha personalizada */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236B7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 16px 12px;
+        }
+
+        /* Hover */
+        .form-select:hover {
+            border-color: #9ca3af;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Focus */
+        .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Estilo para selects dentro de input-group */
+        .input-group .form-select {
+            flex: 1 1 auto;
+            width: 1%;
+            min-width: 0;
+        }
+
+        /* Select deshabilitado */
+        .form-select:disabled {
+            background-color: #f3f4f6;
+            border-color: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* Select inválido */
+        .form-select.is-invalid {
+            border-color: #ef4444 !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23EF4444' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        }
+
+        /* Versión pequeña */
+        .form-select-sm {
+            min-height: 40px;
+            padding: 0.5rem 2rem 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            background-size: 14px 10px;
+        }
+
+        /* Versión grande */
+        .form-select-lg {
+            min-height: 56px;
+            padding: 1rem 3rem 1rem 1.25rem;
+            font-size: 1.125rem;
+            background-size: 18px 14px;
+        }
+
+        select {
+            /* Base igual que otros inputs */
+            width: 100%;
+            min-height: 48px;
+            padding: 0.75rem 2.5rem 0.75rem 1rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            background-color: #fff;
+            color: #374151;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            appearance: none;
+            outline: none;
+            /* Flecha personalizada */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236B7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 16px 12px;
+        }
+    </style>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load humanize %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2 class="mb-4">Panel de Tipos de Notificación</h2>
+
+        <!-- Tarjetas de Resumen General -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Notificaciones</h5>
+                        <p class="display-4">{{ total_notificaciones|intcomma }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Distribución por Estado</h5>
+                        <div class="row">
+                            <div class="col">
+                                <div class="text-center">
+                                    <div class="h4">{{ total_leidas|intcomma }}</div>
+                                    <small class="text-muted">Leídas</small>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="text-center">
+                                    <div class="h4 text-danger">{{ total_no_leidas|intcomma }}</div>
+                                    <small class="text-muted">Pendientes</small>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="text-center">
+                                    <div class="h4">{{ total_ultima_semana|intcomma }}</div>
+                                    <small class="text-muted">Últimos 7 días</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Listado de Tipos -->
+        {% for categoria, notificaciones in tipos_notificaciones.items %}
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center bg-{% if categoria == 'Padres' %}info{% elif categoria == 'Profesores' %}warning{% elif categoria == 'Servicio Escolar' %}danger{% else %}secondary{% endif %} text-white">
+                    <div>
+                        <strong>{{ categoria }}</strong>
+                        <span class="badge bg-light text-dark ms-2">{{ notificaciones|length }} tipos</span>
+                    </div>
+                    <span class="badge bg-light text-dark">
+                {{ stats_categorias.categoria.total }} notificaciones
+            </span>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                            <tr>
+                                <th width="25%">Tipo</th>
+                                <th width="20%">Total</th>
+                                <th width="20%">Pendientes</th>
+                                <th width="20%">Última semana</th>
+                                <th width="15%">URL Destino</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for notif in notificaciones %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ notif.tipo.1 }}</strong><br>
+                                        <small class="text-muted">{{ notif.tipo.0 }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ notif.total|intcomma }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger">{{ notif.no_leidas|intcomma }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ notif.ultima_semana|intcomma }}</span>
+                                    </td>
+                                    <td>
+                                        <code>{{ notif.url }}</code>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

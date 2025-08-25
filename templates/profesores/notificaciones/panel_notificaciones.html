@@ -1,0 +1,85 @@
+{% extends 'profesores/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Panel de Notificaciones</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{% url 'profesores:dashboard_profesor' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">Notificaciones</li>
+    </ol>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-bell me-1"></i>
+                    Notificaciones ({{ notificaciones|length }})
+                </div>
+                <div>
+                    <a href="?marcar_leidas=1" class="btn btn-sm btn-success">
+                        <i class="fas fa-check-circle"></i> Marcar todas como leídas
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Filtros -->
+            <div class="mb-4">
+                <div class="btn-group" role="group">
+                    <a href="{% url 'profesores:panel_notificaciones' %}" 
+                       class="btn btn-sm btn-outline-secondary {% if not tipo_filtro_actual %}active{% endif %}">
+                        Todas
+                    </a>
+                    {% for tipo, nombre in tipos_notificaciones.items %}
+                    <a href="?tipo={{ tipo }}" 
+                       class="btn btn-sm btn-outline-secondary {% if tipo_filtro_actual == tipo %}active{% endif %}">
+                        {{ nombre }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Lista de notificaciones -->
+            <div class="list-group">
+                {% if notificaciones %}
+                    {% for notif in notificaciones %}
+                    <a href="{{ notif.url }}" 
+                       class="list-group-item list-group-item-action {% if not notif.is_read %}list-group-item-primary{% endif %}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">
+                                {% if not notif.is_read %}
+                                <span class="badge bg-primary">Nuevo</span>
+                                {% endif %}
+                                {{ notif.title }}
+                            </h5>
+                            <small>{{ notif.fecha }}</small>
+                        </div>
+                        <p class="mb-1">{{ notif.message }}</p>
+                        <small class="text-muted">
+                            {% if notif.event_type in tipos_notificaciones %}
+                                {{ tipos_notificaciones.notif.event_type|default:"Notificación" }}
+                            {% else %}
+                                Notificación
+                            {% endif %}
+                        </small>
+                        {% if not notif.is_read %}
+                        <form method="post" action="{% url 'profesores:marcar_notificacion_leida' notif.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-success float-end">
+                                Marcar como leída
+                            </button>
+                        </form>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="alert alert-info">
+                        No hay notificaciones para mostrar.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

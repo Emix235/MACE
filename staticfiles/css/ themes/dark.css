@@ -1,0 +1,20 @@
+:root {
+    --primary-color: #4a6baf;
+    --secondary-color: #5a6268;
+    --dark-color: #121416;
+    --light-color: #e9ecef;
+    --success-color: #1aa05d;
+    --danger-color: #c82333;
+}
+
+body {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+.navbar-custom {
+    background-color: var(--dark-color);
+    border-bottom: 1px solid #333;
+}
+
+/* Ajusta los colores para modo oscuro */

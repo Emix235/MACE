@@ -1,0 +1,118 @@
+{% extends 'profesores/base.html' %}
+
+{% block content %}
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <div class="max-w-3xl mx-auto bg-white shadow-lg p-8 rounded-2xl mt-10 space-y-6" style="padding: 30px;">
+
+        <h2 class="text-3xl font-semibold text-red-600">Cancelar Cita</h2>
+
+        <!-- Información de la cita -->
+        <div class="bg-gray-100 p-6 rounded-xl shadow-inner space-y-2">
+            <p><strong>Fecha y hora:</strong> {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}</p>
+            <p><strong>Título:</strong> {{ cita.titulo }}</p>
+            <p><strong>Profesor:</strong> {{ cita.profesor }}</p>
+            <p><strong>Servicio Escolar:</strong> {{ cita.servicio_escolar|default:"No asignado" }}</p>
+            <p><strong>Solicitante:</strong> {{ cita.solicitante }}</p>
+            <p><strong>Estado actual:</strong> {{ cita.estado|title }}</p>
+        </div>
+
+        <!-- Formulario para cancelar -->
+        <form method="post" class="bg-red-50 p-6 rounded-xl shadow space-y-4 border border-red-200">
+            {% csrf_token %}
+
+            <div class="block">
+                <span class="text-gray-700 font-medium">Motivo de cancelación</span>
+                {{ form.motivo_cancelacion.errors }}
+                <textarea name="motivo_cancelacion" rows="3" required
+                          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                          placeholder="Explica brevemente el motivo...">{% if form.motivo_cancelacion.value %}
+                    {{ form.motivo_cancelacion.value }}{% endif %}</textarea>
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">
+                    Confirmar cancelación
+                </button>
+
+
+                <button type="button"
+                        onclick="toggleReprogramarForm()"
+                        class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+                    Reprogramar
+                </button>
+            </div>
+        </form>
+
+
+        <!-- Formulario de reprogramación oculto -->
+        <div id="reprogramar-form"
+             class="hidden bg-blue-50 mt-8 p-6 border border-blue-200 rounded-xl space-y-4 shadow-lg">
+            <h3 class="text-xl font-semibold text-blue-700">Reprogramar Cita</h3>
+            {# {% url 'pa:agendar_cita' estudiante_id %} #}
+            <form method="post" action="#">
+                {% csrf_token %}
+                <input type="hidden" name="reprogramar" value="{{ cita.id }}">
+
+                <div class="block">
+                    <span class="text-gray-700 font-medium">Nueva fecha y hora</span>
+                    <input type="datetime-local" name="nueva_fecha" required
+                           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                </div>
+
+                <div class="block">
+                    <span class="text-gray-700 font-medium">Motivo de reprogramación</span>
+                    <textarea name="motivo" rows="3" required
+                              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"></textarea>
+                </div>
+
+                <div class="text-right">
+                    <button type="submit" class="bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700">
+                        Confirmar reprogramación
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- JavaScript para depuración -->
+    <script>
+        // Función para mostrar/ocultar el formulario de reprogramación
+        function toggleReprogramarForm() {
+            console.log("DEBUG: Botón de Reprogramar clickeado.");
+
+            const form = document.getElementById('reprogramar-form');
+            if (form.classList.contains('hidden')) {
+                console.log("DEBUG: Mostrando formulario de reprogramación.");
+                form.classList.remove('hidden');
+            } else {
+                console.log("DEBUG: Ocultando formulario de reprogramación.");
+                form.classList.add('hidden');
+            }
+        }
+
+        // Verificar si el formulario se carga y si se muestran los campos correctamente
+        window.onload = function () {
+            console.log("DEBUG: Página cargada.");
+
+            const motivoField = document.querySelector('textarea[name="motivo_cancelacion"]');
+            console.log("DEBUG: Campo de motivo de cancelación: ", motivoField);
+
+            if (motivoField) {
+                console.log("DEBUG: El campo de motivo de cancelación está presente.");
+            } else {
+                console.error("ERROR: No se encuentra el campo de motivo de cancelación.");
+            }
+
+            // Verificar errores en el formulario
+            const errors = document.querySelectorAll('.errorlist');
+            if (errors.length > 0) {
+                console.log("DEBUG: Errores en el formulario: ", errors);
+            } else {
+                console.log("DEBUG: No hay errores en el formulario.");
+            }
+        };
+    </script>
+
+{% endblock %}

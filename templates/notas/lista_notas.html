@@ -1,0 +1,60 @@
+{% extends base_template %}  <!-- Usamos la variable base_template -->
+
+{% block content %}
+<div class="container">
+    <h2>{{ titulo }}</h2>
+    <p>Bienvenido {{ usuario.nombre_completo }}</p>
+    
+    <div class="mb-3">
+        <a href="{% url 'notas:crear_nota' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nueva Nota
+        </a>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <h3><i class="fas fa-paper-plane"></i> Notas Enviadas</h3>
+            {% if notas_enviadas %}
+                {% for nota in notas_enviadas %}
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ nota.titulo }}</h5>
+                        <p class="card-text">{{ nota.contenido|truncatechars:100 }}</p>
+                        <a href="{% url 'notas:detalle_nota' nota.id %}" class="btn btn-sm btn-info">
+                            Ver detalles
+                        </a>
+                    </div>
+                    <div class="card-footer text-muted">
+                        {{ nota.fecha_creacion|date:"d M Y H:i" }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">No has enviado ninguna nota.</div>
+            {% endif %}
+        </div>
+        
+        <div class="col-md-6">
+            <h3><i class="fas fa-inbox"></i> Notas Recibidas</h3>
+            {% if notas_recibidas %}
+                {% for nota in notas_recibidas %}
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ nota.titulo }}</h5>
+                        <p class="card-text">{{ nota.contenido|truncatechars:100 }}</p>
+                        <a href="{% url 'notas:detalle_nota' nota.id %}" class="btn btn-sm btn-info">
+                            Ver detalles
+                        </a>
+                    </div>
+                    <div class="card-footer text-muted">
+                        De: {{ nota.get_autor_display }} | {{ nota.fecha_creacion|date:"d M Y H:i" }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">No has recibido ninguna nota.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

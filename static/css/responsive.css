@@ -1,0 +1,67 @@
+@media only screen and (max-device-width: 480px) {
+	/* smartphones, iPhone, portrait 480x320 phones */
+	html,
+	body {
+		font-size: 18pt;
+	}
+	#cal-content-top {
+		height: 60px;
+		line-height: 60px;
+	}
+	#week-days li.week-day {
+		height: 60px;
+		line-height: 60px;
+	}
+	.week-row li.week-row-cell {
+		height: calc((100% - 120px) / 6);
+	}
+	#cal-side-bar {
+		width: 0;
+	}
+	#cal-content {
+		width: 100%;
+	}
+	.form-wrapper form {
+		width: 600px;
+		height: 700px;
+	}
+}
+
+@media (max-width:900px) {
+	#cal-side-bar {
+		width: 0;
+	}
+	#cal-content {
+		width: 100%;
+	}
+}
+
+/*
+@media (min-width:900px) {
+	html,
+	body {
+		font-size: 10pt;
+	}
+	#cal-content-top {
+		height: 40px;
+		line-height: 40px;
+	}
+	#week-days li.week-day {
+		height: 40px;
+		line-height: 40px;
+	}
+	.week-row li.week-row-cell {
+		height: calc((100% - 80px) / 6);
+	}
+	#cal-side-bar {
+		width: 250px;
+	}
+	#cal-content {
+		width: calc(100% - 250px);
+	}
+	.form-wrapper form {
+		width: 300px;
+		height: 450px;
+	}
+}
+*/

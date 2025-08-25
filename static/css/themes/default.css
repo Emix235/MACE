@@ -1,0 +1,941 @@
+/* Estilos base */
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --dark-color: #212529;
+    --light-color: #f8f9fa;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+/* Layout principal */
+.main-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-wrapper {
+    flex: 1;
+    padding: 2rem 0;
+}
+
+.centered-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Navbar mejorado */
+.navbar {
+    background-color: var(--primary-color);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem 0;
+    width: 100%;
+    z-index: 1000;
+    opacity: initial;
+    position: fixed;
+}
+
+.navbar .navbar-brand {
+    font-weight: 600;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.navbar .navbar-brand img {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.navbar .nav-link {
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    color: rgba(255, 255, 255, 0.85);
+    transition: all 0.3s;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus {
+    color: white;
+}
+
+.navbar .nav-link.active {
+    color: white;
+    font-weight: 600;
+}
+
+.navbar .dropdown-menu {
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+/* Footer mejorado */
+.footer {
+    background-color: var(--dark-color) !important;
+    color: var(--light-color);
+    padding: 2rem 0 1rem;
+    margin-top: auto;
+}
+
+.footer h5 {
+    color: var(--primary-color);
+    margin-bottom: 1.25rem;
+    font-weight: 600;
+}
+
+.footer ul {
+    padding-left: 0;
+    list-style: none;
+}
+
+.footer-custom ul li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-custom a {
+    color: var(--light-color);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.footer-custom a:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.footer-custom .social-icons a {
+    display: inline-block;
+    margin-right: 1rem;
+    font-size: 1.25rem;
+}
+
+.footer-custom .copyright {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1rem;
+    margin-top: 2rem;
+    font-size: 0.9rem;
+}
+
+/* Contenido principal */
+.main-content {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2rem;
+    padding: 70px 40px;
+}
+
+/* Login específico */
+.login-container {
+    max-width: 450px;
+    margin: 0 auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.login-container h2 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.day-number {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.day-events {
+    min-height: 60px;
+    font-size: 0.8rem;
+}
+
+.table td {
+    height: 100px;
+    vertical-align: top;
+}
+
+.table td:hover {
+    background-color: #f8f9fa !important;
+    cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .navbar-custom .navbar-collapse {
+        padding-top: 1rem;
+    }
+
+    .footer-custom .col-md-4 {
+        margin-bottom: 1.5rem;
+    }
+
+    .main-content,
+    .login-container {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .login-container {
+        padding: 1.5rem;
+        box-shadow: none;
+        border-radius: 0;
+    }
+}
+
+/* Estilos existentes... */
+
+.calendar-nav-btn {
+    min-width: 120px;
+}
+
+@media (max-width: 768px) {
+    .calendar-header {
+        flex-direction: column;
+    }
+
+    .calendar-nav-btns {
+        margin-top: 1rem;
+        justify-content: center;
+    }
+}
+
+/* Animación para el icono de campana */
+.animate-bell {
+    animation: ring 0.5s ease-in-out 2;
+    transform-origin: top center;
+}
+
+@keyframes ring {
+    0% {
+        transform: rotate(0);
+    }
+    25% {
+        transform: rotate(15deg);
+    }
+    50% {
+        transform: rotate(-15deg);
+    }
+    75% {
+        transform: rotate(10deg);
+    }
+    100% {
+        transform: rotate(0);
+    }
+}
+
+/* Efecto de pulso para el badge */
+.pulse {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Estilos para iconos de notificaciones */
+.bi-person-plus {
+    color: #4e73df;
+}
+
+/* Azul para registros */
+.bi-calendar-plus {
+    color: #1cc88a;
+}
+
+/* Verde para citas */
+.bi-calendar-x {
+    color: #e74a3b;
+}
+
+/* Rojo para cancelaciones */
+.bi-ticket-detailed {
+    color: #6f42c1;
+}
+
+/* Morado para tickets */
+.bi-chat-left-dots {
+    color: #f6c23e;
+}
+
+/* Amarillo para feedback */
+.bi-exclamation-triangle {
+    color: #fd7e14;
+}
+
+/* Naranja para incidencias */
+.bi-bell {
+    color: #858796;
+}
+
+/* Gris para generales */
+
+
+.navbar-dark .navbar-nav .nav-link.active {
+    color: #fff;
+}
+
+.dropdown-item.text-danger {
+    color: #dc3545; /* text-danger */
+}
+
+.dropdown-item.text-primary,
+.text-primary {
+    color: #0d6efd;
+}
+
+.badge.bg-danger {
+    background-color: #dc3545;
+}
+
+/* ==================== */
+/* TEMA PARA PROFESORES */
+/* ==================== */
+
+/* Variables de color específicas para profesores */
+body.user-profesor {
+    --primary-color: #3a0ca3; /* Morado oscuro principal */
+    --secondary-color: #7209b7; /* Morado claro secundario */
+    --dark-color: #10002b; /* Negro azulado */
+    --light-color: #f8f0ff; /* Lila muy claro */
+    --success-color: #198754; /* Verde azulado */
+    --danger-color: #e63946; /* Rojo vibrante */
+}
+
+/* Estructura base */
+body.user-profesor {
+    background-color: var(--light-color);
+    color: #1a1a1a;
+}
+
+/* Navbar personalizado */
+body.user-profesor .navbar {
+    background-color: var(--success-color) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+body.user-profesor .navbar-custom .nav-link {
+    color: rgba(255, 255, 255, 0.9);
+    transition: all 0.3s ease;
+}
+
+body.user-profesor .navbar-custom .nav-link:hover,
+body.user-profesor .navbar-custom .nav-link:focus {
+    color: white;
+    transform: translateY(-2px);
+}
+
+body.user-profesor .navbar-custom .nav-link.active {
+    color: white;
+    font-weight: 600;
+    border-bottom: 2px solid white;
+}
+
+/* Footer personalizado */
+body.user-profesor .footer-custom {
+    background-color: var(--dark-color);
+    border-top: 3px solid var(--primary-color);
+}
+
+body.user-profesor .footer-custom h5 {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+body.user-profesor .footer-custom a {
+    color: var(--light-color);
+    transition: color 0.2s;
+}
+
+body.user-profesor .footer-custom a:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+/* Contenido principal */
+body.user-profesor .main-content {
+    background-color: white;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+}
+
+/* Dashboard */
+body.user-profesor .dashboard-container {
+    background-color: #f5f0ff;
+}
+
+body.user-profesor .dashboard-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #4cc9f0 100%);
+    color: white;
+    border-radius: 8px 8px 0 0;
+}
+
+body.user-profesor .header-left h2 {
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Componentes */
+body.user-profesor .card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+body.user-profesor .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+body.user-profesor .card-header {
+    background-color: var(--light-color);
+    border-bottom: 2px solid var(--primary-color);
+}
+
+/* Botones */
+body.user-profesor .btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+body.user-profesor .btn-primary:hover {
+    background-color: #2a0a8f;
+    border-color: #2a0a8f;
+}
+
+/* Elementos específicos */
+body.user-profesor .status-badge.activo {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+body.user-profesor .subject-group {
+    background-color: #e8e0ff;
+    color: var(--primary-color);
+    border-left: 4px solid var(--primary-color);
+}
+
+/* Calendario */
+body.user-profesor .month-day.today {
+    background-color: #e8e0ff;
+    border-color: var(--primary-color);
+}
+
+/* Notificaciones */
+body.user-profesor .notification-item.unread {
+    background-color: #f0e5ff;
+    border-left: 3px solid var(--primary-color);
+}
+
+/* Citas */
+body.user-profesor .citas-pendientes-container {
+    border-color: var(--secondary-color);
+}
+
+body.user-profesor .citas-pendientes-header h3 {
+    color: var(--secondary-color);
+}
+
+body.user-profesor .cita-item .acciones .confirmar-btn {
+    background-color: var(--success-color);
+}
+
+body.user-profesor .cita-item .acciones .cancelar-btn {
+    background-color: var(--danger-color);
+}
+
+/* DE PADRES */
+
+/* Variables de color */
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --dark-color: #212529;
+    --light-color: #f8f9fa;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+}
+
+/* Aplicación de colores */
+body {
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.navbar-custom {
+    background-color: var(--primary-color);
+}
+
+.navbar-custom .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.navbar-custom .nav-link:hover,
+.navbar-custom .nav-link:focus {
+    color: white;
+}
+
+.navbar-custom .nav-link.active {
+    color: white;
+}
+
+.footer-custom {
+    background-color: var(--dark-color);
+    color: var(--light-color);
+}
+
+.footer-custom h5 {
+    color: var(--primary-color);
+}
+
+.footer-custom a {
+    color: var(--light-color);
+}
+
+.footer-custom a:hover {
+    color: var(--primary-color);
+}
+
+.main-content {
+    background-color: white;
+}
+
+.login-container {
+    background: white;
+}
+
+.dashboard-container {
+    background-color: #f5f7fa;
+}
+
+.dashboard-header {
+    background-color: #ffffff;
+}
+
+.card {
+    background-color: #ffffff;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+}
+
+/* Estados y variantes */
+.status-badge.activo {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-badge.inactivo {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.priority-alta {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.priority-media {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.priority-baja {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.action-btn i {
+    color: #3498db;
+}
+
+.notification-icon {
+    color: #3498db;
+}
+
+.emergency-modal {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.modal-content {
+    background-color: #fff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-bottom-color: #e5e7eb;
+}
+
+.modal-header h3 {
+    color: #dc2626;
+}
+
+.close-modal {
+    color: #9ca3af;
+}
+
+.close-modal:hover {
+    color: #6b7280;
+}
+
+.detail-section {
+    border-bottom-color: #f3f4f6;
+}
+
+.detail-section h4 {
+    color: #374151;
+}
+
+.priority-reason {
+    background: #fef2f2;
+    color: #7f1d1d;
+}
+
+.observations-text {
+    background: #f8fafc;
+}
+
+.evidence-link {
+    color: #2563eb;
+    background: #eff6ff;
+}
+
+.evidence-link:hover {
+    text-decoration: underline;
+}
+
+.modal-footer {
+    border-top-color: #e5e7eb;
+}
+
+.modal-close-button {
+    background: #dc2626;
+    color: white;
+}
+
+.modal-close-button:hover {
+    background: #b91c1c;
+}
+
+.status-text.pendiente {
+    color: #d97706;
+}
+
+.status-text.confirmada {
+    color: #059669;
+}
+
+.priority-critica {
+    color: #dc2626;
+}
+
+.priority-alta {
+    color: #ea580c;
+}
+
+.priority-media {
+    color: #ca8a04;
+}
+
+/*Para padres citas prioritarias*/
+
+.emergency-container {
+    border-color: #dc2626;
+    border-left-color: #dc2626;
+    background: white;
+    box-shadow: 0 0 15px rgba(220, 38, 38, 0.3);
+}
+
+.emergency-header {
+    background: linear-gradient(to right, #ef4444, #dc2626);
+    color: white;
+}
+
+.emergency-icon {
+    background: white;
+    color: #dc2626;
+}
+
+.emergency-badge {
+    background: #dc2626;
+    color: white;
+    border-color: #991b1b;
+}
+
+.emergency-button {
+    background: #dc2626;
+    color: white;
+    border-color: #991b1b;
+}
+
+.emergency-button:hover {
+    background: #b91c1c;
+}
+
+@keyframes emergency-pulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(220, 38, 38, 0.6);
+    }
+}
+
+.ver-todas {
+    color: #666;
+}
+
+.alerta-item {
+    border-bottom-color: #eee;
+}
+
+.fecha-alerta {
+    color: #888;
+}
+
+.nivel-alerta.alta {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.nivel-alerta.media {
+    background: #fff8e1;
+    color: #ff8f00;
+}
+
+.boton-confirmar {
+    border-color: #4caf50;
+    color: #4caf50;
+}
+
+.boton-confirmar:hover {
+    background: #4caf50;
+    color: white;
+}
+
+.scrollbar-estilizada {
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.scrollbar-estilizada::-webkit-scrollbar-track {
+    background: #f7fafc;
+}
+
+.scrollbar-estilizada::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    border-color: #f7fafc;
+}
+
+.scrollbar-estilizada::-webkit-scrollbar-thumb:hover {
+    background-color: #a0aec0;
+}
+
+/*Calendar*/
+/* Bordes y fondo del día */
+.fc .fc-daygrid-day {
+    border: 1px solid #dee2e6;
+    background-color: #f8f9fa; /* similar a .bg-light */
+}
+
+/* Día actual */
+.fc .fc-day-today {
+    background-color: #0d6efd !important;
+    color: white !important;
+}
+
+/* Título de días (Lun, Mar, etc.) */
+.fc .fc-col-header-cell {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #212529;
+}
+
+/* Texto dentro del encabezado */
+.fc .fc-col-header-cell-cushion {
+    color: #212529;
+}
+
+/* Eventos */
+.fc .fc-event {
+    /*background-color: var(--success-color) !important;*/
+    color: white !important;
+    border: none;
+    border-radius: 0.4rem;
+    padding: 2px 4px;
+    font-size: 0.85rem;
+    width: 100%;
+    height: 85px;
+    /* display: flex; */
+    text-align: center;
+    flex-direction: column;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 10px;
+}
+
+/* Botones normales */
+.fc .fc-button {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+/* Botones al pasar el cursor */
+.fc .fc-button-primary:not(:disabled):hover {
+    background-color: #157347;
+    border-color: #157347;
+}
+
+/* Botones deshabilitados */
+.fc .fc-button-primary:disabled {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.details-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.6rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.15);
+}
+
+.details-button:hover {
+    background-color: #0b5ed7; /* tono más oscuro del primario */
+    box-shadow: 0 6px 14px rgba(13, 110, 253, 0.25);
+}
+
+.details-button:active {
+    background-color: #0a58ca;
+    transform: scale(0.98);
+}
+
+.details-button i {
+    font-size: 1rem;
+}
+
+/*Citas por completar*/
+
+/* Estilos para el modal de Citas por Completar */
+#modalCitasParaCompletar .modal-content {
+    background-color: var(--light-color);
+    border-radius: 1rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    border: none;
+}
+
+#modalCitasParaCompletar .modal-header {
+    background-color: var(--primary-color);
+    color: white;
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+}
+
+#modalCitasParaCompletar .modal-title {
+    color: white;
+}
+
+#modalCitasParaCompletar .btn-close {
+    filter: invert(1); /* botón blanco */
+}
+
+#modalCitasParaCompletar .modal-body {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+}
+
+#modalCitasParaCompletar .list-group-item {
+    background-color: var(--light-color);
+    color: var(--dark-color);
+    border-color: var(--secondary-color);
+}
+
+#modalCitasParaCompletar h6 {
+    color: var(--dark-color);
+}
+
+#modalCitasParaCompletar small.text-muted {
+    color: var(--secondary-color);
+}
+
+#modalCitasParaCompletar .badge {
+    font-size: 0.85em;
+    margin-bottom: 0.2rem;
+}
+
+#modalCitasParaCompletar .badge.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+#modalCitasParaCompletar .badge.bg-danger {
+    background-color: var(--danger-color) !important;
+}
+
+#modalCitasParaCompletar .badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: var(--dark-color);
+}
+
+#modalCitasParaCompletar .btn-success {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+#modalCitasParaCompletar .btn-success:hover {
+    background-color: #157347;
+    border-color: #146c43;
+}
+
+#modalCitasParaCompletar .modal-footer {
+    background-color: var(--light-color);
+    border-bottom-left-radius: 1rem;
+    border-bottom-right-radius: 1rem;
+    border-top: 1px solid var(--secondary-color);
+}
+
+#modalCitasParaCompletar .btn-secondary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+#modalCitasParaCompletar .btn-secondary:hover {
+    background-color: #5c636a;
+    border-color: #565e64;
+}
+
+.list-group-flush > .list-group-item {
+    background: var(--dark-color);
+    color: var(--light-color);
+}

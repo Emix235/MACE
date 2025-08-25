@@ -1,0 +1,220 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load my_filters %}
+
+{% block content %}
+    <div class="container-fluid">
+        <h1 class="mt-4">{{ titulo_pagina }}</h1>
+        <p class="text-muted">Datos del {{ periodo_actual }}</p>
+
+        <!-- Resumen de métricas -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Calificación Promedio</h5>
+                        <h2 class="display-4">{{ metricas.calificaciones.promedio_general }}/5</h2>
+                        <p class="card-text">
+                            {% if metricas.tendencias.mejora == 'positiva' %}
+                                <i class="fas fa-arrow-up"></i> Mejora respecto al período anterior
+                            {% elif metricas.tendencias.mejora == 'negativa' %}
+                                <i class="fas fa-arrow-down"></i> Disminución respecto al período anterior
+                            {% else %}
+                                <i class="fas fa-equals"></i> Estable respecto al período anterior
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Tasa de Respuesta</h5>
+                        <h2 class="display-4">{{ metricas.estadisticas_avanzadas.tasa_respuesta.promedio }}%</h2>
+                        <p class="card-text">
+                            {{ metricas.estadisticas_avanzadas.tasa_respuesta.encuestas }}% encuestas |
+                            {{ metricas.estadisticas_avanzadas.tasa_respuesta.citas }}% citas
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Recomendación</h5>
+                        <h2 class="display-4">{{ metricas.calificaciones.porcentaje_recomendacion }}%</h2>
+                        <p class="card-text">de usuarios recomendarían el servicio</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico de tendencias -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-chart-line mr-1"></i>
+                Tendencia de Satisfacción
+            </div>
+            <div class="card-body">
+                <canvas id="tendenciaChart" width="100%" height="30"></canvas>
+            </div>
+        </div>
+
+        <!-- Comentarios recientes -->
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-comments mr-1"></i>
+                        Comentarios Recientes
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        {% for comentario in metricas.comentarios_recientes %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <strong>{{ comentario.usuario }} ({{ comentario.tipo_usuario }})</strong>
+                                    <small class="text-muted">{{ comentario.fecha|date:"SHORT_DATETIME_FORMAT" }}</small>
+                                </div>
+                                <p class="mb-1">{{ comentario.texto }}</p>
+                                <small class="text-muted">Re: {{ comentario.pregunta }}</small>
+                            </div>
+                            <hr>
+                        {% empty %}
+                            <p class="text-muted">No hay comentarios recientes</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Distribución de calificaciones -->
+            <div class="col-lg-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-star-half-alt mr-1"></i>
+                        Distribución de Calificaciones
+                    </div>
+                    <div class="card-body">
+                        <canvas id="distribucionChart" width="100%" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profesores mejor calificados -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-chalkboard-teacher mr-1"></i>
+                Profesores Mejor Calificados
+            </div>
+            <div class="card-body">
+                {% if metricas.estadisticas_avanzadas.satisfaccion_profesores %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                <th>Profesor</th>
+                                <th>Calificación Promedio</th>
+                                <th>N° de Evaluaciones</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for prof in metricas.estadisticas_avanzadas.satisfaccion_profesores %}
+                                <tr>
+                                    <td>{{ prof.nombre }}</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success"
+                                                 role="progressbar"
+                                                 style="width: {{ prof.calificacion|multiply:20 }}%"
+                                                 aria-valuenow="{{ prof.calificacion }}"
+                                                 aria-valuemin="1"
+                                                 aria-valuemax="5">
+                                                {{ prof.calificacion }}/5
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ prof.respuestas }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No hay datos suficientes de evaluación a profesores</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // Gráfico de tendencias
+        var ctx = document.getElementById('tendenciaChart').getContext('2d');
+        var tendenciaChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [{% for dato in metricas.tendencias.datos %}"{{ dato.fecha|date:'d M' }}"{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Calificación Promedio',
+                    data: [{% for dato in metricas.tendencias.datos %}{{ dato.promedio }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 1,
+                        max: 5
+                    }
+                }
+            }
+        });
+
+        // Gráfico de distribución
+        var ctx2 = document.getElementById('distribucionChart').getContext('2d');
+        var distribucionChart = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: ['1 estrella', '2 estrellas', '3 estrellas', '4 estrellas', '5 estrellas'],
+                datasets: [{
+                    label: 'N° de Calificaciones',
+                    data: [
+                        {{ metricas.calificaciones.distribucion.1 }},
+                        {{ metricas.calificaciones.distribucion.2 }},
+                        {{ metricas.calificaciones.distribucion.3 }},
+                        {{ metricas.calificaciones.distribucion.4 }},
+                        {{ metricas.calificaciones.distribucion.5 }}
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(255, 205, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(54, 162, 235, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgb(255, 99, 132)',
+                        'rgb(255, 159, 64)',
+                        'rgb(255, 205, 86)',
+                        'rgb(75, 192, 192)',
+                        'rgb(54, 162, 235)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}

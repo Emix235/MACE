@@ -1,0 +1,81 @@
+{% extends base_template %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2>{{ nota.titulo }}</h2>
+                <span class="badge badge-{{ nota.tipo_css }}">
+    {{ nota.get_tipo_display }}
+</span>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <p class="text-muted">
+                        <strong>Creada por:</strong> {{ nota.get_creador_display }} |
+                        <strong>Fecha:</strong> {{ nota.fecha_creacion|date:"d M Y H:i" }}
+                    </p>
+                    {% if nota.fecha_actualizacion != nota.fecha_creacion %}
+                        <p class="text-muted">
+                            <strong>Última actualización:</strong> {{ nota.fecha_actualizacion|date:"d M Y H:i" }}
+                        </p>
+                    {% endif %}
+                </div>
+
+                <div class="mb-4">
+                    <h4>Contenido</h4>
+                    <div class="border p-3 bg-light">
+                        {{ nota.contenido|linebreaks }}
+                    </div>
+                </div>
+
+                {% if nota.imagen %}
+                    <div class="mb-4">
+                        <h4>Imagen adjunta</h4>
+                        <img src="{{ nota.imagen.url }}" class="img-fluid rounded" alt="Imagen adjunta">
+                        <a href="{{ nota.imagen.url }}" download class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="fas fa-download"></i> Descargar imagen
+                        </a>
+                    </div>
+                {% endif %}
+
+                {% if nota.documento %}
+                    <div class="mb-4">
+                        <h4>Documento adjunto</h4>
+                        <a href="{{ nota.documento.url }}" class="btn btn-outline-primary" download>
+                            <i class="fas fa-file-download"></i> Descargar documento
+                        </a>
+                    </div>
+                {% endif %}
+
+                {% if nota.audio %}
+                    <div class="mb-4">
+                        <h4>Audio adjunto</h4>
+                        <audio controls class="w-100">
+                            <source src="{{ nota.audio.url }}" type="audio/mpeg">
+                            Tu navegador no soporta el elemento de audio.
+                        </audio>
+                        <a href="{{ nota.audio.url }}" download class="btn btn-sm btn-outline-secondary mt-2">
+                            <i class="fas fa-download"></i> Descargar audio
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+                <a href="{% url 'notas:lista_notas' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver a la lista
+                </a>
+                {% if puede_editar %}
+                    <div>
+                        <a href="#" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Editar
+                        </a>
+                        <a href="{% url 'eliminar_nota' nota.id %}" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

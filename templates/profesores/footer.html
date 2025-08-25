@@ -1,0 +1,61 @@
+{% load static %}
+<!-- Tus estilos personalizados DEBEN ir después de Bootstrap -->
+    {% if profesor.personal_theme %}
+        <!-- NO FALLO LA CONDICION -->
+        <link rel="stylesheet" href="{% static profesor.personal_theme %}" id="theme-stylesheet">
+    {% else %}
+        <!-- FALLO LA CONDICION -->
+        <link rel="stylesheet" href="{% static 'css/themes/default.css' %}"/>
+    {% endif %}
+
+<footer class="bg-dark text-white pt-4 pb-2 mt-5">
+    <div class="container">
+        <div class="row">
+            <!-- Contacto -->
+            <div class="col-md-4 mb-3">
+                <h5 class="text-primary mb-3"><i class="bi bi-telephone"></i> Contacto</h5>
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-envelope me-2"></i> servicios.escolares@escuela.edu</li>
+                    <li><i class="bi bi-phone me-2"></i> (55) 1234-5678</li>
+                    <li><i class="bi bi-clock me-2"></i> Lunes a Viernes: 8:00 - 16:00 hrs</li>
+                </ul>
+            </div>
+
+            <!-- Enlaces Rápidos -->
+            <div class="col-md-4 mb-3">
+                <h5 class="text-primary mb-3"><i class="bi bi-link-45deg"></i> Enlaces</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#" class="text-white text-decoration-none"><i class="bi bi-file-earmark-text me-2"></i> Reglamento Escolar</a></li>
+                    <li><a href="#" class="text-white text-decoration-none"><i class="bi bi-calendar-event me-2"></i> Calendario Académico</a></li>
+                    <li><a href="#" class="text-white text-decoration-none"><i class="bi bi-question-circle me-2"></i> Preguntas Frecuentes</a></li>
+                </ul>
+            </div>
+
+            <!-- Sistema -->
+            <div class="col-md-4 mb-3">
+                <h5 class="text-primary mb-3"><i class="bi bi-info-circle"></i> Sistema</h5>
+                <p>Versión 2.1.0</p>
+                <div class="d-flex gap-2">
+                    <a href="#" class="text-white"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="text-white"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-white"><i class="bi bi-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-3 bg-light">
+
+        <!-- Copyright -->
+        <div class="row">
+            <div class="col-md-6 text-center text-md-start">
+                <p class="small mb-0">© 2025, MACE (Manejo y Administración de Citas Escolares). Todos los derechos reservados.</p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+                <p class="small mb-0">
+                    <a href="#" class="text-white text-decoration-none">Políticas de Privacidad</a> | 
+                    <a href="#" class="text-white text-decoration-none">Términos de Uso</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>

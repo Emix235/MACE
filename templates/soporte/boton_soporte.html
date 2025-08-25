@@ -1,0 +1,57 @@
+{% load static %}
+<!-- Botón Ticket -->
+<div class="ticket-flotante">
+    <button type="button" class="btn btn-danger btn-flotante" data-bs-toggle="modal"
+            data-bs-target="#ticketSoporteModal">
+        <i class="fas fa-ticket-alt"></i>
+        <span class="texto-boton">Ticket</span>
+    </button>
+</div>
+
+<!-- Incluye el modal -->
+{% include 'soporte/crear_ticket_modal.html' %}
+
+<style>
+    .ticket-flotante {
+        position: relative;
+    }
+
+    .btn-flotante-ticket {
+        border-radius: 50px;
+        padding: 10px 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        font-size: 16px;
+    }
+
+    .btn-flotante-ticket:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        background-color: #c82333;
+    }
+
+    .texto-boton {
+        margin-left: 8px;
+        display: none;
+    }
+
+    @media (min-width: 768px) {
+        .texto-boton {
+            display: inline;
+        }
+    }
+</style>
+
+<script>
+
+    // Función auxiliar para mostrar notificaciones
+    function mostrarNotificacion(tipo, mensaje) {
+        // Implementa esto según tu sistema de mensajes (Toast, SweetAlert, etc.)
+        alert(mensaje); // Ejemplo básico
+    }
+</script>

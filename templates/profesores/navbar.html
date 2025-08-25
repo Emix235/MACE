@@ -1,0 +1,294 @@
+{% url 'logout' as logout %}
+{% load static %}
+{% if request.session.credenciales_profesor %}
+    <nav class="navbar navbar-expand-lg shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'profesores:dashboard_profesor' %}">
+                <img src="{% static 'img/school-logo.png' %}" alt="Logo" width="40" class="me-2">
+                <span class="fw-bold">Panel Profesor</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarProfPrivate">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarProfPrivate">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_profesor' %}active{% endif %}"
+                           href="{% url 'profesores:dashboard_profesor' %}">
+                            <i class="bi bi-speedometer2 me-1"></i> Inicio
+                        </a>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if 'citas' in request.resolver_match.url_name %}active{% endif %}"
+                           href="#" id="citasDropdown" data-bs-toggle="dropdown">
+                            <i class="bi bi-calendar-check me-1"></i> Citas
+                            {% if citas_pendientes > 0 %}
+                                <span class="badge bg-danger ms-1">{{ citas_pendientes }}</span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'profesores:calendario_citas' %}">
+                                <i class="bi bi-list-check me-2"></i>Mis Citas
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'profesores:panel_citas' %}">
+                                <i class="bi bi-plus-circle me-2"></i>Nueva Cita
+                            </a></li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item">
+                        {# {% if 'asignaturas' in request.resolver_match.url_name %}active{% endif %}" #}
+                        <a class="nav-link" href="{% url 'profesores:panel_horario' %}">
+                            <i class="bi bi-journal-bookmark me-1"></i> Clases
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'asignaturas' in request.resolver_match.url_name %}active{% endif %}"
+                           href="#">
+                            <i class="bi bi-file-earmark-post me-1"></i> Reportes
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <!-- Nuevo ícono de notificaciones -->
+                    <!-- En la barra de navegación -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="notificacionesDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bell-fill"></i>
+                            {% if contador_no_leidas > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {{ contador_no_leidas }}
+            </span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notificacionesDropdown" style="margin: 0; overflow-x: hidden;">
+                            <li><h6 class="dropdown-header">Notificaciones recientes</h6></li>
+
+                            <!-- Botón para marcar todas como leídas -->
+                            {% if notificaciones_recientes %}
+                                <li>
+                                    <button class="dropdown-item text-center text-primary" id="marcar-todas-leidas">
+                                        <i class="bi bi-check-all me-2"></i>Marcar todas como leídas
+                                    </button>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                            {% endif %}
+
+                            {% with notificaciones_no_leidas=notificaciones_recientes|dictsortreversed:"created_at" %}
+                                {% if notificaciones_no_leidas %}
+                                    {% for notificacion in notificaciones_no_leidas %}
+                                        {% if not notificacion.is_read %}
+                                            <li>
+                                                <a class="dropdown-item fw-bold"
+                                                   href="{{ notificacion.url }}"
+                                                   data-notificacion-id="{{ notificacion.id }}">
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>{{ notificacion.title }}</span>
+                                                        <small class="text-muted">{{ notificacion.created_at }}</small>
+                                                    </div>
+                                                    <small class="text-muted">{{ notificacion.message|truncatechars:30 }}</small>
+                                                </a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-center"
+                                           href="{% url 'profesores:panel_notificaciones' %}">Ver todas</a>
+                                    </li>
+                                {% else %}
+                                    <li><a class="dropdown-item text-muted">No hay notificaciones</a></li>
+                                {% endif %}
+                            {% endwith %}
+                        </ul>
+                    </li>
+
+                    <!-- Menú desplegable del perfil (existente) -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="profDropdown" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-badge me-1"></i>
+                            {{ request.session.credenciales_profesor.nombre_completo|default:"Profesor" }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'profesores:editar_perfil_profesor' %}">
+                                <i class="bi bi-person-lines-fill me-2"></i>Perfil
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'notas:lista_notas' %}">
+                                <i class="bi bi-journal-check me-2"></i>Apuntes
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'preguntas:preguntas_frecuentes' %}">
+                                <i class="bi bi-question-octagon me-2"></i>Preguntas Frecuentes
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'profesores:configuracion_profesor' %}">
+                                <i class="bi bi-sliders me-2"></i>Configuración
+                            </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'profesores:logout_profesor' %}">
+                                <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+{% else %}
+    {% load static %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'profesores:login_profesor' %}">
+                <img src="{% static 'img/school-logo.png' %}" alt="Logo" width="40" class="me-2">
+                <span class="fw-bold">Control Escolar</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarProfPublic">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarProfPublic">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'profesores:login_profesor' %}">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Acceso Profesores
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'padres:login_padre' %}">
+                            <i class="bi bi-people me-1"></i> Zona Padres
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+{% endif %}
+<script>
+    // Marcar una por una como leídas y remover de la lista
+    document.querySelectorAll('.dropdown-item[data-notificacion-id]').forEach(item => {
+        item.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const notificacionId = this.getAttribute('data-notificacion-id');
+            const urlDestino = this.getAttribute('href');
+            const notificationItem = this.closest('li');
+            const dropdownMenu = this.closest('.dropdown-menu');
+
+            fetch(`{% url 'notificaciones:marcar_notificacion_leida' 0 %}`.replace('0', notificacionId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // 1. Eliminar el elemento de la lista
+                        notificationItem.remove();
+
+                        // 2. Actualizar contador
+                        const badgeCounter = document.querySelector('.badge.bg-danger');
+                        if (badgeCounter) {
+                            const newCount = data.nuevo_contador;
+                            if (newCount > 0) {
+                                badgeCounter.textContent = newCount;
+                            } else {
+                                badgeCounter.remove();
+                                document.querySelector('.bi-bell-fill').classList.remove('animate-bell');
+
+                                // Ocultar el botón "Marcar todas"
+                                const markAllButton = document.getElementById('marcar-todas-leidas');
+                                if (markAllButton) {
+                                    markAllButton.closest('li').remove();
+                                    document.querySelector('.dropdown-divider').remove();
+                                }
+                            }
+                        }
+
+                        // 3. Redirigir después de la animación
+                        setTimeout(() => {
+                            window.location.href = urlDestino;
+                        }, 300);
+
+                    } else {
+                        window.location.href = urlDestino;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    window.location.href = urlDestino;
+                });
+        });
+    });
+
+    // Marcar todas como leídas y limpiar la lista
+    document.getElementById('marcar-todas-leidas')?.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        fetch('{% url "notificaciones:marcar_todas_leidas" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 1. Eliminar todas las notificaciones de la lista
+                    const notificationsList = document.querySelectorAll('.dropdown-item[data-notificacion-id]');
+                    notificationsList.forEach(item => {
+                        item.closest('li').remove();
+                    });
+
+                    // 2. Mostrar mensaje de "No hay notificaciones"
+                    const emptyMessage = document.createElement('li');
+                    emptyMessage.innerHTML = '<a class="dropdown-item" href="#">No hay notificaciones nuevas</a>';
+                    document.querySelector('.dropdown-menu').insertBefore(
+                        emptyMessage,
+                        document.querySelector('.dropdown-divider:last-of-type')
+                    );
+
+                    // 3. Actualizar UI
+                    document.querySelector('.bi-bell-fill').classList.remove('animate-bell');
+                    const badgeCounter = document.querySelector('.badge.bg-danger');
+                    if (badgeCounter) badgeCounter.remove();
+
+                    // 4. Ocultar el botón "Marcar todas"
+                    this.closest('li').remove();
+                    document.querySelector('.dropdown-divider').remove();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    });
+
+    // Función para obtener el token CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
+

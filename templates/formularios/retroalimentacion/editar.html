@@ -1,0 +1,522 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+
+    <style>
+        /* Estilos mejorados */
+        .form-container {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-title {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 12px;
+            margin-bottom: 30px;
+        }
+
+        .question-card {
+            border-left: 4px solid #3498db;
+            margin-bottom: 25px;
+            transition: all 0.3s;
+            background-color: white;
+        }
+
+        .question-card.to-delete {
+            border-left-color: #dc3545;
+            background-color: #fff8f8;
+        }
+
+        .question-header {
+            background-color: #f1f9ff;
+            border-bottom: 1px solid #e9ecef;
+            padding: 15px 20px;
+        }
+
+        .badge-tipo {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .badge-escala_5 {
+            background-color: #17a2b8;
+        }
+
+        .badge-si_no {
+            background-color: #28a745;
+        }
+
+        .badge-texto {
+            background-color: #6c757d;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #3498db;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .alert-version {
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+
+    <div class="container py-5">
+        <div class="form-container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="form-title">
+                    <i class="fas fa-edit me-2"></i>
+                    Editar Plantilla: {{ retroalimentacion.titulo }}
+                </h1>
+                <div>
+                    <a href="{% url 'formularios:gestionar_retroalimentacion' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Volver
+                    </a>
+                </div>
+            </div>
+
+            {% if messages %}
+                <div class="container mt-3 ps-0 pe-0">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Alerta para plantillas con respuestas existentes -->
+            {% if retroalimentacion.aplicaciones.exists %}
+                <div class="alert alert-warning alert-version mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle me-3 fs-4"></i>
+                        <div>
+                            <h5 class="alert-heading mb-2">¡Atención!</h5>
+                            <p class="mb-0">
+                                Esta plantilla tiene <strong>{{ retroalimentacion.aplicaciones.count }}</strong>
+                                formularios de retroalimentación aplicados. Se recomienda crear una nueva versión
+                                para preservar los datos históricos.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="post" id="edit-form">
+                {% csrf_token %}
+
+                <!-- Información General -->
+                <div class="card mb-4 border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información General</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <!-- Título -->
+                                <div class="mb-4">
+                                    <label for="{{ form.titulo.id_for_label }}" class="form-label fw-bold">
+                                        Título de la Plantilla
+                                    </label>
+                                    <input type="text" class="form-control" id="{{ form.titulo.id_for_label }}"
+                                           name="{{ form.titulo.name }}" value="{{ form.titulo.value|default:'' }}"
+                                           placeholder="Ej: Retroalimentación de Cita con Profesor">
+                                </div>
+
+                                <!-- Descripción -->
+                                <div class="mb-3">
+                                    <label for="{{ form.descripcion.id_for_label }}" class="form-label fw-bold">
+                                        Descripción/Instrucciones
+                                    </label>
+                                    <textarea class="form-control" id="{{ form.descripcion.id_for_label }}"
+                                              name="{{ form.descripcion.name }}" rows="3"
+                                              placeholder="Ej: Por favor evalúe su experiencia con el profesor">{{ form.descripcion.value|default:'' }}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><i class="fas fa-cog me-2"></i>Opciones</h5>
+
+                                        <!-- Versión Actual -->
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <span class="fw-bold">Versión Actual:</span>
+                                            <span class="badge bg-primary">v{{ retroalimentacion.version }}</span>
+                                        </div>
+
+                                        <!-- Tipo de Plantilla -->
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <span class="fw-bold">Tipo:</span>
+                                            <span class="badge {% if retroalimentacion.es_para_profesor %}bg-info{% else %}bg-secondary{% endif %}">
+                                                {% if retroalimentacion.es_para_profesor %}Profesor{% else %}Servicio
+                                                    Escolar{% endif %}
+                                            </span>
+                                        </div>
+
+                                        <!-- Nueva Versión -->
+                                        <div class="form-check form-switch d-flex align-items-center mb-0">
+                                            <label class="toggle-switch me-3">
+                                                <input type="checkbox" class="form-check-input"
+                                                       id="{{ form.crear_nueva_version.id_for_label }}"
+                                                       name="{{ form.crear_nueva_version.name }}"
+                                                       {% if form.crear_nueva_version.value %}checked{% endif %}>
+                                                <span class="toggle-slider"></span>
+                                            </label>
+                                            <label class="form-check-label fw-bold"
+                                                   for="{{ form.crear_nueva_version.id_for_label }}">
+                                                Crear Nueva Versión
+                                            </label>
+                                        </div>
+                                        <small class="text-muted d-block mt-1">
+                                            Marque esta opción para crear una nueva versión editable
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preguntas -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4 class="mb-0"><i class="fas fa-question-circle me-2"></i>Preguntas</h4>
+                            <button type="button" id="add-pregunta" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-1"></i> Añadir Pregunta
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="preguntas-container">
+                            {{ formset.management_form }} {# 👈 Necesario para que Django maneje bien el formset #}
+
+                            {% for form in formset %}
+                                <div class="card question-card mb-3" id="pregunta-{{ forloop.counter0 }}">
+                                    <div class="card-header question-header d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-grip-vertical text-muted me-3 handle"
+                                               style="cursor: move;"></i>
+                                            <h5 class="mb-0">Pregunta #{{ forloop.counter }}</h5>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input type="checkbox" name="preguntas-{{ forloop.counter0 }}-DELETE"
+                                                   id="id_preguntas-{{ forloop.counter0 }}-DELETE"
+                                                   class="form-check-input delete-checkbox"
+                                                   {% if form.DELETE.value %}checked{% endif %}>
+                                            <label class="form-check-label text-danger"
+                                                   for="id_preguntas-{{ forloop.counter0 }}-DELETE">Eliminar</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="card-body">
+                                        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+                                        <div class="row mb-3">
+                                            <div class="col-md-8">
+                                                <!--<label class="form-label fw-bold">Texto de la pregunta</label>-->
+                                                <label for="id_preguntas-{{ forloop.counter0 }}-texto"></label>
+                                                <textarea name="preguntas-{{ forloop.counter0 }}-texto"
+                                                          id="id_preguntas-{{ forloop.counter0 }}-texto"
+                                                          class="form-control form-control-enhanced"
+                                                          rows="3"
+                                                          style="resize: vertical;">{{ form.texto.value|default:'' }}</textarea>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <!--<label class="form-label fw-bold">Tipo</label>-->
+                                                <label for="id_preguntas-{{ forloop.counter0 }}-tipo"></label><select
+                                                    name="preguntas-{{ forloop.counter0 }}-tipo"
+                                                    id="id_preguntas-{{ forloop.counter0 }}-tipo"
+                                                    class="form-select form-control-enhanced"
+                                                    onchange="updatePermiteExplicacion(this)">
+                                                {% for value, label in form.fields.tipo.choices %}
+                                                    <option value="{{ value }}"
+                                                            {% if form.tipo.value == value %}selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label fw-bold"
+                                                       for="id_preguntas-{{ forloop.counter0 }}-orden">Orden</label>
+                                                <input type="number"
+                                                       name="preguntas-{{ forloop.counter0 }}-orden"
+                                                       id="id_preguntas-{{ forloop.counter0 }}-orden"
+                                                       value="{{ form.orden.value|default:'0' }}"
+                                                       class="form-control form-control-enhanced"
+                                                       style="width: 80px;">
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <div class="form-check form-switch">
+                                                    <input type="checkbox"
+                                                           name="preguntas-{{ forloop.counter0 }}-obligatoria"
+                                                           id="id_preguntas-{{ forloop.counter0 }}-obligatoria"
+                                                           class="form-check-input"
+                                                           {% if form.obligatoria.value %}checked{% endif %}>
+                                                    <label class="form-check-label"
+                                                           for="id_preguntas-{{ forloop.counter0 }}-obligatoria">
+                                                        Obligatoria
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <div class="form-check form-switch">
+                                                    <label class="form-check-label"
+                                                           for="id_preguntas-{{ forloop.counter0 }}-permite_explicacion">
+                                                        Permite explicación
+                                                    </label>
+                                                    <input type="checkbox"
+                                                           name="preguntas-{{ forloop.counter0 }}-permite_explicacion"
+                                                           id="id_preguntas-{{ forloop.counter0 }}-permite_explicacion"
+                                                           class="form-check-input permite-explicacion"
+                                                           {% if form.permite_explicacion.value %}checked{% endif %}>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'formularios:gestionar_retroalimentacion' %}"
+                       class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Cancelar
+                    </a>
+                    <div>
+                        <button type="submit" name="guardar" class="btn btn-primary me-2">
+                            <i class="fas fa-save me-1"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        $(document).ready(function () {
+            // 1. Funciones principales
+            function updatePermiteExplicacion(selectElement) {
+                const formItem = $(selectElement).closest('.question-card');
+                const permiteExplicacion = formItem.find('[id$="-permite_explicacion"]');
+                const tipo = selectElement.value;
+
+                if (tipo === 'si_no_explicacion') {
+                    permiteExplicacion.prop('checked', true).prop('disabled', true);
+                } else {
+                    permiteExplicacion.prop('disabled', false);
+                }
+            }
+
+            function toggleDeleteFields(checkbox) {
+                const formItem = $(checkbox).closest('.question-card');
+                if (checkbox.checked) {
+                    formItem.addClass('to-delete');
+                    formItem.find('input:not([type="checkbox"]), select, textarea')
+                } else {
+                    formItem.removeClass('to-delete');
+                    formItem.find('input:not([type="checkbox"]), select, textarea')
+                }
+            }
+
+            function updateQuestionNumbers() {
+                $('#preguntas-container .question-card:not(.to-delete)').each(function (index) {
+                    const questionNumber = index + 1;
+                    $(this).find('.card-header h5').text(`Pregunta #${questionNumber}`);
+                    $(this).find('[id$="-orden"]').val(questionNumber);
+                });
+            }
+
+            // 2. Inicialización de eventos
+            function initializeEvents() {
+                // Actualizar campos "Permite explicación" al inicio
+                $('select[id$="-tipo"]').each(function () {
+                    updatePermiteExplicacion(this);
+                });
+
+                // Manejar checkboxes de eliminación
+                $('input[id$="-DELETE"]').each(function () {
+                    toggleDeleteFields(this);
+                    $(this).off('change').on('change', function () {
+                        toggleDeleteFields(this);
+                        updateQuestionNumbers();
+                    });
+                });
+
+                // Evento para actualizar "Permite explicación" cuando cambia el tipo
+                $(document).on('change', 'select[id$="-tipo"]', function () {
+                    updatePermiteExplicacion(this);
+                });
+            }
+
+            // 3. Añadir nueva pregunta
+            $('#add-pregunta').click(function () {
+                const totalForms = $('#id_preguntas-TOTAL_FORMS');
+                const formIdx = parseInt(totalForms.val());
+                const container = $('#preguntas-container');
+
+                const newForm = $(`
+            <div class="card question-card mb-3" id="pregunta-${formIdx}">
+                <div class="card-header question-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-grip-vertical text-muted me-3 handle" style="cursor: move;"></i>
+                        <h5 class="mb-0">Pregunta #${formIdx + 1}</h5>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input type="checkbox" name="preguntas-${formIdx}-DELETE"
+                               id="id_preguntas-${formIdx}-DELETE" class="form-check-input delete-checkbox">
+                        <label class="form-check-label text-danger"
+                               for="id_preguntas-${formIdx}-DELETE">Eliminar</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <input type="hidden" name="preguntas-${formIdx}-id" id="id_preguntas-${formIdx}-id">
+
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Texto de la Pregunta</label>
+                            <textarea name="preguntas-${formIdx}-texto" id="id_preguntas-${formIdx}-texto"
+                                      class="form-control" rows="3" required></textarea>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Tipo</label>
+                            <select name="preguntas-${formIdx}-tipo" id="id_preguntas-${formIdx}-tipo"
+                                    class="form-select" required>
+                                <option value="escala_5">Escala 1-5</option>
+                                <option value="si_no">Sí/No</option>
+                                <option value="si_no_explicacion">Sí/No con explicación</option>
+                                <option value="texto">Texto</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Orden</label>
+                            <input type="number" name="preguntas-${formIdx}-orden"
+                                   id="id_preguntas-${formIdx}-orden" value="${formIdx + 1}"
+                                   class="form-control" min="1" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" name="preguntas-${formIdx}-obligatoria"
+                                       id="id_preguntas-${formIdx}-obligatoria" class="form-check-input" checked>
+                                <label class="form-check-label"
+                                       for="id_preguntas-${formIdx}-obligatoria">Obligatoria</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" name="preguntas-${formIdx}-permite_explicacion"
+                                       id="id_preguntas-${formIdx}-permite_explicacion" class="form-check-input">
+                                <label class="form-check-label"
+                                       for="id_preguntas-${formIdx}-permite_explicacion">Permite explicación</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+
+                container.append(newForm);
+                totalForms.val(formIdx + 1);
+
+                // Inicializar eventos para la nueva pregunta
+                updatePermiteExplicacion(newForm.find('select')[0]);
+                initializeEvents();
+                updateQuestionNumbers();
+            });
+
+            // 4. Manejo del envío del formulario
+            $('#edit-form').on('submit', function (e) {
+                // Validar que al menos haya una pregunta no eliminada
+                const preguntasActivas = $('.question-card:not(.to-delete)').length;
+                if (preguntasActivas === 0) {
+                    e.preventDefault();
+                    alert('Debe haber al menos una pregunta activa en el formulario');
+                    return false;
+                }
+
+                // Limpiar preguntas vacías nuevas antes de enviar
+                $('.question-card').each(function () {
+                    const idField = $(this).find('[id$="-id"]');
+                    const texto = $(this).find('[id$="-texto"]').val().trim();
+
+                    if (!idField.val() && !texto) {
+                        $(this).remove();
+                        const totalForms = $('#id_preguntas-TOTAL_FORMS');
+                        totalForms.val(parseInt(totalForms.val()) - 1);
+                    }
+                });
+            });
+
+            // 5. Botón "Guardar y Crear Nueva Versión"
+            $('button[name="guardar_y_crear"]').click(function () {
+                $('#{{ form.crear_nueva_version.id_for_label }}').prop('checked', true);
+            });
+
+            // Inicialización al cargar la página
+            initializeEvents();
+            updateQuestionNumbers();
+        });
+    </script>
+{% endblock %}

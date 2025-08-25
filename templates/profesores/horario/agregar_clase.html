@@ -1,0 +1,304 @@
+{% extends 'profesores/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 bg-primary text-white">
+                        <h4 class="m-0 font-weight-bold">
+                            <i class="fas fa-plus-circle"></i> Agregar Nueva Clase
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <strong>Ciclo escolar actual:</strong> {{ ciclo_actual.nombre }}
+                        </div>
+                        {% if messages %}
+                            <div class="container mt-3 ps-0 pe-0"> <!-- Bootstrap 5 -->
+                                {% for message in messages %}
+                                    <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                aria-label="Cerrar"></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Mostrar errores no relacionados con campos específicos -->
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                <strong>Errores generales:</strong>
+                                <ul>
+                                    {% for error in form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                        <form method="post" id="clase-form">
+                            {% csrf_token %}
+
+                            <!-- Datos básicos de la clase -->
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>{{ form.nombre.label }}</label>
+                                    {{ form.nombre }}
+                                    {% if form.nombre.errors %}
+                                        <div class="text-danger small">{{ form.nombre.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="form-group col-md-6">
+                                    <label>{{ form.grupo.label }}</label>
+                                    {{ form.grupo }}
+                                    {% if form.grupo.errors %}
+                                        <div class="text-danger small">{{ form.grupo.errors }}</div>
+                                    {% endif %}
+                                    {% if not form.grupo.field.queryset.exists %}
+                                        <div class="text-danger small">No hay grupos disponibles para el ciclo actual
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <!-- Campo nivel_educativo oculto -->
+                                {{ form.nivel_educativo }}
+
+                                <div class="form-group col-md-6">
+                                    <label>Tipo de Asignatura</label>  <!-- Cambiado de form.tipo_asignatura.label -->
+                                    {{ form.tipo_asignatura }}
+                                    {% if form.tipo_asignatura.errors %}
+                                        <div class="text-danger small">{{ form.tipo_asignatura.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Mostrar el nivel educativo como texto (no editable) -->
+                                <div class="form-group col-md-6">
+                                    <label>Nivel Educativo</label>
+                                    <input type="text" class="form-control"
+                                           value="{{ form.initial.nivel_educativo|default:'No especificado' }}"
+                                           readonly>
+                                </div>
+                            </div>
+
+                            <!-- Horarios -->
+                            <div class="card mt-4 mb-4">
+                                <div class="card-header bg-secondary text-white">
+                                    <h5 class="m-0">Horarios de Clase</h5>
+                                </div>
+                                <div class="card-body">
+                                    {{ formset.management_form }}
+
+                                    <!-- Mostrar errores generales del formset -->
+                                    {% if formset.non_form_errors %}
+                                        <div class="alert alert-danger">
+                                            <strong>Errores en horarios:</strong>
+                                            <ul>
+                                                {% for error in formset.non_form_errors %}
+                                                    <li>{{ error }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+
+                                    <div id="horarios-container">
+                                        {% for form in formset %}
+                                            <div class="horario-form mb-3 p-3 border rounded">
+                                                {{ form.id }}
+                                                <div class="form-row">
+                                                    <div class="form-group col-md-3">
+                                                        <label>Día</label>
+                                                        {{ form.dia_semana }}
+                                                        {% if form.dia_semana.errors %}
+                                                            <div class="text-danger small">{{ form.dia_semana.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="form-group col-md-3">
+                                                        <label>Hora Inicio</label>
+                                                        {{ form.hora_inicio }}
+                                                        {% if form.hora_inicio.errors %}
+                                                            <div class="text-danger small">{{ form.hora_inicio.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="form-group col-md-3">
+                                                        <label>Hora Fin</label>
+                                                        {{ form.hora_fin }}
+                                                        {% if form.hora_fin.errors %}
+                                                            <div class="text-danger small">{{ form.hora_fin.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="form-group col-md-2">
+                                                        <label>Aula</label>
+                                                        {{ form.aula }}
+                                                        {% if form.aula.errors %}
+                                                            <div class="text-danger small">{{ form.aula.errors }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="form-group col-md-1 d-flex align-items-end justify-content-center">
+                                                        <button type="button"
+                                                                class="btn btn-danger btn-sm remove-horario"
+                                                                {% if forloop.first %}disabled{% endif %}>
+                                                            <i class="fas fa-trash"></i> Eliminar
+                                                        </button>
+                                                        {% if form.DELETE %}
+                                                            {{ form.DELETE }}
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                {% if form.non_field_errors %}
+                                                    <div class="alert alert-danger">
+                                                        {% for error in form.non_field_errors %}
+                                                            {{ error }}
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+                                    <button type="button" id="add-horario" class="btn btn-sm btn-info mt-2">
+                                        <i class="fas fa-plus"></i> Agregar otro horario
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-group text-right mt-4">
+                                <a href="{% url 'profesores:panel_horario' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar Clase
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function () {
+            // Manejo de formularios dinámicos de horarios
+            $('#add-horario').click(function () {
+                const totalForms = $('#id_horarios-TOTAL_FORMS');
+                const formIdx = parseInt(totalForms.val());
+                const newForm = $('.horario-form:first').clone();
+
+                // Limpiar valores
+                newForm.find('input, select').val('');
+                newForm.find('.errorlist').remove();
+                newForm.find('.alert').remove();
+
+                // Actualizar IDs y names
+                newForm.find(':input').each(function () {
+                    const name = $(this).attr('name').replace(/-\d+-/, '-' + formIdx + '-');
+                    const id = $(this).attr('id').replace(/-\d+-/, '-' + formIdx + '-');
+                    $(this).attr({'name': name, 'id': id}).val('');
+                });
+
+                // Habilitar botón de eliminar
+                newForm.find('.remove-horario').removeAttr('disabled');
+
+                // Agregar al contenedor
+                $('#horarios-container').append(newForm);
+                totalForms.val(formIdx + 1);
+            });
+
+            // Eliminar horario
+            $(document).on('click', '.remove-horario', function () {
+                const form = $(this).closest('.horario-form');
+                const deleteField = form.find('input[name$="-DELETE"]');
+
+                if (deleteField.length) {
+                    // Si es un formulario existente (con ID), marcamos para borrar y ocultamos
+                    deleteField.val('on');
+                    form.hide();
+                } else {
+                    // Si es un nuevo formulario, lo eliminamos completamente
+                    form.remove();
+                    // Actualizar el contador TOTAL_FORMS
+                    const totalForms = $('#id_horarios-TOTAL_FORMS');
+                    totalForms.val(parseInt(totalForms.val()) - 1);
+                    // Actualizar índices de los formularios restantes
+                    $('.horario-form').each(function (index) {
+                        $(this).find(':input').each(function () {
+                            const name = $(this).attr('name').replace(/-\d+-/, '-' + index + '-');
+                            const id = $(this).attr('id').replace(/-\d+-/, '-' + index + '-');
+                            $(this).attr({'name': name, 'id': id});
+                        });
+                    });
+                }
+            });
+
+            // Validación de horarios
+            $('form').on('submit', function (e) {
+                let isValid = true;
+                const horarios = [];
+
+                $('.horario-form').each(function (index) {
+                    // Saltar formularios marcados para borrar
+                    if ($(this).find('input[name$="-DELETE"]').val() === 'on') {
+                        return true; // continuar con la siguiente iteración
+                    }
+
+                    const dia = $(this).find('select[name$="-dia_semana"]').val();
+                    const inicio = $(this).find('input[name$="-hora_inicio"]').val();
+                    const fin = $(this).find('input[name$="-hora_fin"]').val();
+
+                    // Validar campos requeridos
+                    if (!dia || !inicio || !fin) {
+                        alert(`Por favor complete todos los campos del horario ${index + 1}`);
+                        isValid = false;
+                        return false; // Salir del each
+                    }
+
+                    // Validar que hora fin > hora inicio
+                    if (fin <= inicio) {
+                        alert(`En el horario ${index + 1}, la hora de fin debe ser posterior a la de inicio`);
+                        isValid = false;
+                        return false;
+                    }
+
+                    // Validar solapamiento
+                    for (const h of horarios) {
+                        if (h.dia === dia && (
+                            (h.inicio <= inicio && h.fin > inicio) ||
+                            (h.inicio < fin && h.fin >= fin) ||
+                            (h.inicio >= inicio && h.fin <= fin)
+                        )) {
+                            alert(`Horario solapado: ${getDiaNombre(dia)} ${inicio}-${fin} con ${getDiaNombre(h.dia)} ${h.inicio}-${h.fin}`);
+                            isValid = false;
+                            return false;
+                        }
+                    }
+
+                    horarios.push({dia, inicio, fin});
+                });
+
+                if (!isValid) {
+                    e.preventDefault(); // Evitar envío del formulario
+                }
+
+                return isValid;
+            });
+
+            // Función auxiliar para obtener nombre del día
+            function getDiaNombre(diaValue) {
+                const dias = {
+                    '1': 'Lunes',
+                    '2': 'Martes',
+                    '3': 'Miércoles',
+                    '4': 'Jueves',
+                    '5': 'Viernes',
+                    '6': 'Sábado'
+                };
+                return dias[diaValue] || diaValue;
+            }
+        });
+    </script>
+{% endblock %}

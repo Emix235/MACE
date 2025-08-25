@@ -1,0 +1,228 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container-fluid">
+        {% if mostrar_form_nivel %}
+            <!-- Formulario para crear nivel (solo se muestra si no existe) -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 bg-primary text-white">
+                    <h6 class="m-0 font-weight-bold">Configuración Inicial - Crear Nivel Educativo</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form_nivel.codigo.label_tag }}
+                                    {{ form_nivel.codigo }}
+                                    <small class="form-text text-muted">Seleccione el tipo de nivel educativo</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form_nivel.orden.label_tag }}
+                                    {{ form_nivel.orden }}
+                                    <small class="form-text text-muted">Orden de visualización</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button type="submit" name="guardar_nivel" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Nivel Educativo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        {% else %}
+            <!-- Panel normal (cuando ya existe nivel) -->
+            <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                <h1 class="h3 mb-0 text-gray-800">
+                    Panel de Control - {{ nivel_actual.nombre }}
+                    <button class="btn btn-sm btn-link" data-toggle="modal" data-target="#editarNivelModal"
+                            onclick="window.location.href='{% url 'servicios_escolares:editar_nivel' nivel_actual.pk %}'">
+                        <i class="fas fa-edit"></i> Editar
+                    </button>
+                </h1>
+            </div>
+
+            <!-- Modal para editar nivel -->
+            <div class="modal fade" id="editarNivelModal" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Editar Nivel Educativo</h5>
+                            <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">×</span>
+                            </button>
+                        </div>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    {{ form_nivel.codigo.label_tag }}
+                                    {{ form_nivel.codigo }}
+                                    <small class="form-text text-muted">Cambiará automáticamente el nombre</small>
+                                </div>
+                                <div class="form-group">
+                                    {{ form_nivel.nombre_mostrar.label_tag }}
+                                    {{ form_nivel.nombre_mostrar }}
+                                </div>
+                                <div class="form-group">
+                                    {{ form_nivel.orden.label_tag }}
+                                    {{ form_nivel.orden }}
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                                <button type="submit" name="guardar_nivel" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resto de tu contenido original (ciclos) -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Crear Nuevo Ciclo Escolar</h6>
+                    <button type="button" class="btn btn-success"
+                            onclick="window.location.href='{% url 'servicios_escolares:gestion_ciclos' %}'">
+                        <i class="fas fa-plus-circle"></i> Nuevo Ciclo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tarjeta del Ciclo Actual -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Ciclo Escolar Actual</h6>
+                </div>
+                <div class="card-body">
+                    {% if ciclo_actual %}
+                        <div class="alert alert-success">
+                            <h4 class="alert-heading">{{ ciclo_actual.nombre }}</h4>
+                            <p>
+                                <strong>Periodo:</strong> {{ ciclo_actual.periodo.nombre }}<br>
+                                <strong>Duración:</strong> {{ ciclo_actual.meses }}<br>
+                                <strong>Fechas:</strong> {{ ciclo_actual.fecha_inicio|date:"d/m/Y" }}
+                                al {{ ciclo_actual.fecha_fin|date:"d/m/Y" }}
+                            </p>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            No hay ciclo escolar actual configurado
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Listado de Ciclos -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Todos los Ciclos Escolares</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="thead-dark">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Tipo de Duración</th>
+                                <th>Duración Total</th>
+                                <th>Fechas</th>
+                                <th>Periodos</th>
+                                <th>Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for ciclo in ciclos %}
+                                <tr {% if ciclo.actual %}class="table-success"{% endif %}>
+                                    <td>{{ ciclo.nombre }}</td>
+                                    <td>{{ ciclo.get_tipo_duracion_display }}</td>
+                                    <td>{{ ciclo.duracion_formateada }}</td>
+                                    <td>{{ ciclo.fecha_inicio|date:"d/m/Y" }} - {{ ciclo.fecha_fin|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <!-- Aquí mostramos los periodos asociados -->
+                                        {% if ciclo.periodos_reales.all %}
+                                            <ul class="list-unstyled mb-0">
+                                                {% for periodo in ciclo.periodos_reales.all %}
+                                                    <li>
+                                                        <small>
+                                                            {{ periodo.nombre }}:
+                                                            {{ periodo.fecha_inicio|date:"d/m/Y" }} -
+                                                            {{ periodo.fecha_fin|date:"d/m/Y" }}
+                                                            ({{ periodo.duracion_en_meses }} meses)
+                                                        </small>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% else %}
+                                            <span class="text-muted">Sin periodos definidos</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if not ciclo.actual %}
+                                            <form method="post" style="display:inline;">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="ciclo_id" value="{{ ciclo.id }}">
+                                                <button type="submit" name="cambiar_ciclo_actual"
+                                                        class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-check-circle"></i> Establecer como actual
+                                                </button>
+                                            </form>
+                                            {# {% url 'servicios_escolares:editar_ciclo' ciclo.id %} #}
+                                            <a href="{% url 'servicios_escolares:editar_ciclo' ciclo.id %}"
+                                               class="btn btn-sm btn-info mt-1">
+                                                <i class="fas fa-edit"></i> Editar
+                                            </a>
+                                        {% else %}
+                                            <span class="badge badge-success">ACTUAL</span>
+                                            {# {% url 'servicios_escolares:editar_ciclo' ciclo.id %} #}
+                                            <a href="{% url 'servicios_escolares:editar_ciclo' ciclo.id %}"
+                                               class="btn btn-sm btn-info mt-1">
+                                                <i class="fas fa-edit"></i> Editar
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No hay ciclos escolares registrados</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        $(document).ready(function () {
+            // Confirmación para cambiar ciclo actual
+            $('button[name="cambiar_ciclo_actual"]').click(function () {
+                return confirm('¿Estás seguro de cambiar el ciclo actual?');
+            });
+
+            // Actualizar nombre cuando cambia el código en el modal
+            $('#id_codigo').change(function () {
+                var nombres = {
+                    'PRI': 'Primaria',
+                    'SEC': 'Secundaria',
+                    'BAC': 'Bachillerato',
+                    'LIC': 'Licenciatura'
+                };
+                $('#id_nombre_mostrar').val(nombres[$(this).val()] || '');
+            });
+        });
+    </script>
+{% endblock %}

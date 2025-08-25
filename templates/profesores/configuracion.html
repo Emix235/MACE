@@ -1,0 +1,100 @@
+{% extends 'profesores/base.html' %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5>Configuración</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'profesores:editar_perfil_profesor' %}"
+                           class="list-group-item list-group-item-action active">
+                            <i class="fas fa-user-edit me-2"></i>Editar Perfil
+                        </a>
+                        <a href="{% url 'profesores:panel_notificaciones' %}"
+                           class="list-group-item list-group-item-action">
+                            <i class="fas fa-bell me-2"></i>Notificaciones
+                        </a>
+                        <a href="{% url 'profesores:theme_settings' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-palette me-2"></i>Apariencia
+                        </a>
+                        <a href="{% url 'profesores:panel_tickets' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-bell me-2"></i>Tickets de Soporte
+                        </a>
+                        {# <a href="#" class="list-group-item list-group-item-action"> #}
+                        {# <i class="fas fa-lock me-2"></i>Seguridad #}
+                        {#                        </a> #}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5>Panel de Configuración</h5>
+                            <span class="badge bg-light text-dark">Profesor</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            {% if profesor.imagen_usuario %}
+                                <img src="{{ profesor.imagen_usuario.url }}" class="rounded-circle mb-3" width="150"
+                                     height="150" alt="Foto de perfil">
+                            {% else %}
+                                <div class="rounded-circle bg-secondary mb-3 d-inline-flex align-items-center justify-content-center"
+                                     style="width: 150px; height: 150px;">
+                                    <span class="text-white fs-1">{{ profesor.nombre_completo|first }}{{ profesor.apellidos|first }}</span>
+                                </div>
+                            {% endif %}
+                            <h4>Prof. {{ profesor.nombre_completo }} {{ profesor.apellidos }}</h4>
+                            <p class="text-muted">{{ profesor.correo_electronico }}</p>
+                        </div>
+
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Desde aquí puedes administrar todas las configuraciones de tu cuenta.
+                        </div>
+
+                        <div class="mt-4">
+                            <h5><i class="fas fa-user-cog me-2"></i>Opciones de Cuenta</h5>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Información Personal</h6>
+                                            <p class="card-text">Actualiza tu nombre, apellidos y datos de contacto.</p>
+                                            <a href="{% url 'profesores:editar_perfil_profesor' %}"
+                                               class="btn btn-sm btn-outline-primary">Editar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-title">Seguridad</h6>
+                                            <p class="card-text">Cambia tu contraseña y configura la autenticación.</p>
+                                            <a href="#" class="btn btn-sm btn-outline-primary">Configurar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

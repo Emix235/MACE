@@ -1,0 +1,346 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Servicios Escolares</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <!-- Bootstrap Icons (solo uno, evita duplicados) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"/>
+
+    <!-- Alpine.js -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <!-- Bootstrap JS Bundle con Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% if request.session.credenciales %}
+        <!-- Usuario logueado -->
+        <link rel="stylesheet" href="{% static active_theme %}"/>
+    {% else %}
+        <!-- Usuario no logueado o sesión no iniciada -->
+        <link rel="stylesheet" href="{% static 'css/themes/default.css' %}"/>
+    {% endif %}
+
+    <style>
+        /* Estilos base - Solo estructura */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Layout principal */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-wrapper {
+            flex: 1;
+            padding: 2rem 0;
+        }
+
+        .centered-content {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Navbar - Solo estructura */
+        .navbar-custom {
+            padding: 0.5rem 0;
+        }
+
+        .navbar-custom .navbar-brand {
+            font-weight: 600;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-custom .navbar-brand img {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .navbar-custom .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s;
+        }
+
+        .navbar-custom .nav-link.active {
+            font-weight: 600;
+        }
+
+        /* Footer - Solo estructura */
+        .footer-custom {
+            padding: 2rem 0 1rem;
+            margin-top: auto;
+        }
+
+        .footer-custom h5 {
+            margin-bottom: 1.25rem;
+            font-weight: 600;
+        }
+
+        .footer-custom ul {
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .footer-custom ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-custom a {
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-custom .social-icons a {
+            display: inline-block;
+            margin-right: 1rem;
+            font-size: 1.25rem;
+        }
+
+        .footer-custom .copyright {
+            padding-top: 1rem;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+        }
+
+        /* Contenido principal */
+        .main-content {
+            border-radius: 8px;
+            padding: 70px 40px;
+            margin-bottom: 2rem;
+        }
+
+        /* Login específico */
+        .login-container {
+            max-width: 450px;
+            margin: 0 auto;
+            padding: 2rem;
+            border-radius: 8px;
+        }
+
+        .login-container h2 {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .day-events {
+            min-height: 60px;
+            font-size: 0.8rem;
+        }
+
+        .table td {
+            height: 100px;
+            vertical-align: top;
+        }
+
+        .table td:hover {
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-custom .navbar-collapse {
+                padding-top: 1rem;
+            }
+
+            .footer-custom .col-md-4 {
+                margin-bottom: 1.5rem;
+            }
+
+            .main-content,
+            .login-container {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .login-container {
+                padding: 1.5rem;
+                border-radius: 0;
+            }
+        }
+
+        /* Estilos existentes... */
+
+        .calendar-nav-btn {
+            min-width: 120px;
+        }
+
+        @media (max-width: 768px) {
+            .calendar-header {
+                flex-direction: column;
+            }
+
+            .calendar-nav-btns {
+                margin-top: 1rem;
+                justify-content: center;
+            }
+        }
+
+        /* Animación para el icono de campana */
+        .animate-bell {
+            animation: ring 0.5s ease-in-out 2;
+            transform-origin: top center;
+        }
+
+        @keyframes ring {
+            0% {
+                transform: rotate(0);
+            }
+            25% {
+                transform: rotate(15deg);
+            }
+            50% {
+                transform: rotate(-15deg);
+            }
+            75% {
+                transform: rotate(10deg);
+            }
+            100% {
+                transform: rotate(0);
+            }
+        }
+
+        /* Efecto de pulso para el badge */
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        body.fade-out {
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        body.fade-in {
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+
+        .theme-transition {
+            animation: themeFadeZoom 0.4s ease;
+        }
+
+        @keyframes themeFadeZoom {
+            0% {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+    </style>
+</head>
+<body>
+{% include 'servicios_escolares/navbar.html' %}
+
+{% if request.session.credenciales %}
+    <div class="contenedor-botones-flotantes">
+        {% include 'preguntas/boton_ayuda.html' %}
+        {% include 'soporte/boton_soporte.html' %}
+    </div>
+{% endif %}
+
+<style>
+    .contenedor-botones-flotantes {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Estilos responsivos */
+    @media (max-width: 767px) {
+        .btn-flotante-ayuda,
+        .btn-flotante-ticket {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            padding: 0;
+            justify-content: center;
+        }
+
+        .btn-flotante-ayuda i,
+        .btn-flotante-ticket i {
+            margin: 0;
+        }
+    }
+
+    /* Agrega esto a tu CSS */
+    .modal-backdrop {
+        z-index: 900; /* Asegúrate que esté debajo del modal pero encima del contenido */
+        background-color: rgba(0, 0, 0, 0.5); /* Opacidad del 50% */
+    }
+
+    .modal {
+        z-index: 1050; /* Mayor que el backdrop */
+    }
+
+    /* Para el modal de ayuda específicamente (por el chat) */
+    #ayudaModal .modal-content {
+        height: 80vh; /* Altura del modal */
+        display: flex;
+        flex-direction: column;
+    }
+
+    #ayudaModal .chat-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #ayudaModal .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+    }
+</style>
+
+<main class="main-content">
+    <div class="centered-content">
+        {% block content %}
+            <!-- El contenido específico de cada página irá aquí -->
+        {% endblock %}
+    </div>
+</main>
+
+{% include 'servicios_escolares/footer.html' %}
+
+</body>
+</html>

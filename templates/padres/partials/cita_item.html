@@ -1,0 +1,228 @@
+{% load static %}
+{% if padre.personal_theme %}
+    <link rel="stylesheet" href="{% static padre.personal_theme %}" id="theme-stylesheet">
+{% else %}
+    <link rel="stylesheet" href="{% static 'css/themes/default.css' %}" id="theme-stylesheet">
+    {# <link rel="stylesheet" href="{% static active_theme %}" id="theme-stylesheet"> #}
+{% endif %}
+<li class="list-group-item p-0 mb-3 border-0">
+    <div class="card border-0 shadow-sm hover-shadow transition-all">
+        <div class="card-body p-3">
+            <!-- Encabezado simplificado -->
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="mb-1 fw-bold">
+                        <i class="far fa-calendar-alt text-primary me-2"></i>
+                        {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}
+                    </h6>
+                    <p class="mb-0 text-muted small">{{ cita.titulo }}</p>
+                </div>
+
+                <!-- Botón para abrir modal -->
+                <button class="btn btn-sm btn-outline-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#detalleCitaModal{{ cita.id }}">
+                    <i class="fas fa-eye me-1"></i> Ver
+                </button>
+            </div>
+
+            <!-- Badges de estado -->
+            <div class="mt-2">
+                {% if cita.estado == 'pendiente' or cita.estado == 'reprogramada' %}
+                    <span class="badge bg-warning bg-opacity-15 text-black me-1">
+                    <i class="fas fa-clock me-1"></i> Por confirmar
+                </span>
+                {% endif %}
+
+                {% if cita.id in citas_prioritarias_dict %}
+                    <span class="badge bg-danger bg-opacity-15 text-danger">
+                    <i class="fas fa-exclamation-triangle me-1"></i> Prioritaria
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</li>
+
+<!-- Modal de Detalles -->
+<div class="modal fade" id="detalleCitaModal{{ cita.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <!-- Encabezado del Modal -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="far fa-calendar-check me-2"></i>
+                    Detalles de la Cita
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <!-- Cuerpo del Modal -->
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Columna Izquierda -->
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-primary border-bottom pb-2">Información Principal</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-3">
+                                    <i class="far fa-calendar-alt text-muted me-2"></i>
+                                    <strong>Fecha/Hora:</strong><br>
+                                    {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }} - {{ cita.fecha_hora_fin|date:"H:i" }}
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-stopwatch text-muted me-2"></i>
+                                    <strong>Duración:</strong> {{ cita.duracion }} minutos
+                                </li>
+                                <li class="mb-3">
+                                    <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                    <strong>Ubicación:</strong> {{ cita.ubicacion|default:"Por definir" }}
+                                </li>
+                                <li>
+                                    <i class="fas fa-info-circle text-muted me-2"></i>
+                                    <strong>Tipo:</strong> {{ cita.get_tipo_display }}
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-primary border-bottom pb-2">Participantes</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-user-tie text-muted me-2"></i>
+                                    <strong>Solicitante:</strong> {{ cita.solicitante }}
+                                </li>
+                                {% if cita.profesor %}
+                                    <li class="mb-2">
+                                        <i class="fas fa-chalkboard-teacher text-muted me-2"></i>
+                                        <strong>Profesor:</strong> {{ cita.profesor }}
+                                    </li>
+                                {% endif %}
+                                <li>
+                                    <i class="fas fa-users text-muted me-2"></i>
+                                    <strong>Estudiantes:</strong><br>
+                                    {% for e in cita.estudiantes.all %}
+                                        <span class="badge bg-light text-dark me-1 mb-1">{{ e }}</span>
+                                    {% endfor %}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Columna Derecha -->
+                    <div class="col-md-6">
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-primary border-bottom pb-2">Estado</h6>
+                            <div class="d-flex align-items-center mb-3">
+                                <span class="badge bg-{{ cita.get_badge_color }} me-2">
+                                    {{ cita.get_estado_display }}
+                                </span>
+                                {% if cita.id in citas_prioritarias_dict %}
+                                    <span class="badge bg-danger bg-opacity-15 text-danger">
+                                    <i class="fas fa-exclamation-triangle me-1"></i> Prioritaria
+                                </span>
+                                {% endif %}
+                            </div>
+
+                            {% if es_profesor or es_servicio %}
+                                <p class="small text-muted">
+                                    <i class="fas fa-user-edit me-1"></i>
+                                    Creada por {% if es_profesor %}{{ cita.creador }}{% endif %}
+                                    {% if es_servicio %}Servicio Escolar{% endif %}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold text-primary border-bottom pb-2">Motivo</h6>
+                            <p class="text-muted">{{ cita.motivo }}</p>
+                        </div>
+
+                        {% if cita.observaciones %}
+                            <div class="mb-4">
+                                <h6 class="fw-bold text-primary border-bottom pb-2">Observaciones</h6>
+                                <p class="text-muted">{{ cita.observaciones }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie del Modal con Acciones -->
+            <div class="modal-footer">
+                <div class="d-flex flex-wrap justify-content-between w-100">
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i> Cerrar
+                        </button>
+                    </div>
+                    <div class="d-flex gap-2">
+                        {% if es_creador or es_solicitante %}
+                            <form method="get" action="{% url 'padres:reprogramar_cita' cita.id %}" class="d-inline">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-calendar-edit me-1"></i> Reprogramar
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'citas:cancelar_cita' cita.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="fas fa-times-circle me-1"></i> Cancelar
+                                </button>
+                            </form>
+                        {% endif %}
+
+                        {% if es_invitado or es_profesor or es_servicio %}
+                            <form method="post" action="{% url 'padres:confirmar_cita' cita.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check-circle me-1"></i> Confirmar
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'citas:cancelar_cita' cita.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-secondary">
+                                    <i class="fas fa-ban me-1"></i> Rechazar
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos Personalizados -->
+<style>
+    .modal-content {
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        padding: 1.2rem 1.5rem;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.5rem;
+    }
+
+    .hover-shadow {
+        transition: all 0.3s ease;
+    }
+
+    .hover-shadow:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .badge {
+        padding: 0.35em 0.65em;
+        font-weight: 500;
+    }
+</style>

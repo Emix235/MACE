@@ -1,0 +1,145 @@
+{% extends 'padres/base.html' %}
+{% load filtros_personalizados %}
+{% load static %}
+
+{% block content %}
+    <div class="container py-5">
+        <h2 class="mb-4">{{ titulo }}</h2>
+
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Por favor califica tu experiencia</h4>
+            </div>
+            {% if messages %}
+                <div class="container mt-3 ps-0 pe-0"> <!-- Bootstrap 5 -->
+                    {% for message in messages %}
+                        <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Cerrar"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Al inicio del template, después del form -->
+            <div class="debug-info bg-light p-3 mt-4" style="display: none;">
+                <h4>Debug Information</h4>
+                <pre>Management form: {{ formset.management_form.as_p }}</pre>
+                <h5>Forms:</h5>
+                {% for form in formset.forms %}
+                    <div class="mb-3">
+                        <strong>Form {{ forloop.counter }} ({{ form.prefix }})</strong>
+                        <pre>Fields: {{ form.fields.keys }}</pre>
+                        <pre>Initial: {{ form.initial }}</pre>
+                        <pre>Hidden fields: {% for field in form.hidden_fields %}{{ field }}{% endfor %}</pre>
+                    </div>
+                {% endfor %}
+                <h5>Preguntas:</h5>
+                <pre>{{ preguntas|pprint }}</pre>
+            </div>
+
+            <script>
+                // Para ver la info de debug, abre la consola y ejecuta:
+                document.querySelector('.debug-info').style.display = 'block';
+            </script>
+
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    {{ formset.management_form }}
+
+                    {% for form in formset.forms %}
+                        {% with pregunta=formset.preguntas|index:forloop.counter0 %}
+                            <div class="card mb-3 p-3">
+                                <h5>Pregunta {{ forloop.counter }}: {{ form.pregunta.texto }}</h5>
+
+                                {# ESTA ES LA ÚNICA LÍNEA QUE CAMBIA EN EL TEMPLATE #}
+                                {{ form.pregunta_id }} {# Renderiza el campo oculto #}
+                                {# Renderiza todos los campos ocultos primero #}
+                                {% for hidden in form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+
+                                {% if form.fields.valor_numero %}
+                                    <div class="mb-3">
+                                        {{ form.valor_numero.label_tag }}
+                                        {{ form.valor_numero }}
+                                        {% if form.valor_numero.errors %}
+                                            <div class="text-danger small">{{ form.valor_numero.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+
+                                {% if form.fields.respuesta_si_no %}
+                                    <div class="mb-3">
+                                        <label>{{ form.respuesta_si_no.label }}</label>
+                                        <div>
+                                            {% for radio in form.respuesta_si_no %}
+                                                <div class="form-check form-check-inline">
+                                                    {{ radio.tag }}
+                                                    {{ radio.choice_label }}
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% if form.respuesta_si_no.errors %}
+                                            <div class="text-danger small">{{ form.respuesta_si_no.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+
+                                {% if form.fields.explicacion %}
+                                    <div class="mb-3">
+                                        {{ form.explicacion.label_tag }}
+                                        {{ form.explicacion }}
+                                        {% if form.explicacion.errors %}
+                                            <div class="text-danger small">{{ form.explicacion.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+
+                                {% if form.fields.respuesta_texto %}
+                                    <div class="mb-3">
+                                        {{ form.respuesta_texto.label_tag }}
+                                        {{ form.respuesta_texto }}
+                                        {% if form.respuesta_texto.errors %}
+                                            <div class="text-danger small">{{ form.respuesta_texto.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endwith %}
+                    {% empty %}
+                        <p>No hay preguntas para responder.</p>
+                    {% endfor %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">Enviar Retroalimentación</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        $(document).ready(function () {
+            // Estilo para radio buttons
+            $('.btn-group input[type="radio"]').each(function () {
+                $(this).addClass('btn-check');
+                $(this).next('label').addClass('btn btn-outline-primary');
+            });
+
+            // Mostrar/ocultar explicación para si_no_explicacion
+            $('input[name$="-respuesta_si_no"]').change(function () {
+                const container = $(this).closest('.pregunta-retroalimentacion');
+                const explicacionDiv = container.find('div[id$="-explicacion"]').parent();
+                if ($(this).val() === 'True') {
+                    explicacionDiv.show();
+                } else {
+                    explicacionDiv.hide();
+                }
+            }).trigger('change');
+        });
+    </script>
+{% endblock %}

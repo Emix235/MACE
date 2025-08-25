@@ -1,0 +1,187 @@
+{% extends 'padres/base.html' %}
+{% load filtros_personalizados %}
+{% load static %}
+{% block content %}
+
+    <div class="container py-4">
+        <h2 class="mb-4">Agendar cita con profesores</h2>
+
+        {% if padre %}
+            <div class="alert alert-info">
+                <strong>Bienvenido, {{ padre.nombre_completo }}</strong>
+                <div class="mt-2">
+                    <span class="fw-bold">Estudiantes a tu cargo:</span>
+                    <ul class="mb-0">
+                        {% for estudiante in estudiantes %}
+                            <li>{{ estudiante.nombre_completo }} - {{ estudiante.grupo_actual.nombre_completo }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Sección de Servicio Escolar -->
+        {% if servicio_escolar %}
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Servicio Escolar</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            {% if servicio_escolar.imagen_usuario %}
+                                <img src="{{ servicio_escolar.imagen_usuario.url }}"
+                                     class="rounded-circle me-3" width="80" height="80"
+                                     alt="Servicio Escolar">
+                            {% else %}
+                                <img src="{% static 'img/default-user.png' %}"
+                                     class="rounded-circle me-3" width="80" height="80"
+                                     alt="Servicio Escolar">
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="card-title">
+                                {{ servicio_escolar.nombre_completo }}
+                            </h5>
+                            <p class="text-muted mb-2">{{ servicio_escolar.correo_electronico }}</p>
+                            <p class="mb-3">Puedes agendar una cita para temas administrativos, becas, documentación,
+                                etc.</p>
+                            <a href="{% url 'padres:crear_cita_servicio' servicio_escolar.id %}"
+                               class="btn btn-primary">
+                                <i class="fas fa-calendar-plus"></i> Agendar cita con Servicio Escolar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Sección de Profesores por Grado y Grupo -->
+        {% if profesores %}
+            <div class="accordion" id="profesoresAccordion">
+                {% for grupo in estudiantes|unique_by_field:"grupo_actual"|dictsort:"grupo_actual.grado.nivel.orden"|dictsort:"grupo_actual.grado.numero"|dictsort:"grupo_actual.letra" %}
+                    <div class="accordion-item mb-3 shadow-sm">
+                        <h2 class="accordion-header" id="heading{{ grupo.grupo_actual.id }}">
+                            <button class="accordion-button collapsed" type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#collapse{{ grupo.grupo_actual.id }}"
+                                    aria-expanded="false"
+                                    aria-controls="collapse{{ grupo.grupo_actual.id }}">
+                                {{ grupo.grupo_actual.grado.numero }}° {{ grupo.grupo_actual.grado.nivel.nombre }} {{ grupo.grupo_actual.letra }}
+                                - {{ grupo.grupo_actual.get_turno_display }}
+                            </button>
+                        </h2>
+                        <div id="collapse{{ grupo.grupo_actual.id }}"
+                             class="accordion-collapse collapse"
+                             aria-labelledby="heading{{ grupo.grupo_actual.id }}"
+                             data-bs-parent="#profesoresAccordion">
+                            <div class="accordion" id="profesoresAccordion">
+                                {% for grupo in estudiantes|unique_by_field:"grupo_actual"|dictsort:"grupo_actual.grado.nivel.orden"|dictsort:"grupo_actual.grado.numero"|dictsort:"grupo_actual.letra" %}
+                                    <div class="accordion-item mb-3 shadow-sm">
+                                        <h2 class="accordion-header" id="heading{{ grupo.grupo_actual.id }}">
+                                            <button class="accordion-button collapsed" type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#collapse{{ grupo.grupo_actual.id }}"
+                                                    aria-expanded="false"
+                                                    aria-controls="collapse{{ grupo.grupo_actual.id }}">
+                                                {{ grupo.grupo_actual.grado.numero }}° {{ grupo.grupo_actual.grado.nivel.nombre }}
+                                                -
+                                                Grupo {{ grupo.grupo_actual.letra }}
+                                                ({{ grupo.grupo_actual.get_turno_display }})
+                                            </button>
+                                        </h2>
+                                        <div id="collapse{{ grupo.grupo_actual.id }}"
+                                             class="accordion-collapse collapse"
+                                             aria-labelledby="heading{{ grupo.grupo_actual.id }}"
+                                             data-bs-parent="#profesoresAccordion">
+                                            <div class="accordion-body">
+                                                <div class="row">
+                                                    {% with profesores_grupo=profesores|filter_profesores_por_grupo:grupo.grupo_actual.id %}
+                                                        {% if profesores_grupo %}
+                                                            {% for profesor in profesores_grupo %}
+                                                                <div class="col-md-6 mb-3">
+                                                                    <div class="card h-100">
+                                                                        <div class="card-body d-flex">
+                                                                            <!-- Contenido de la tarjeta del profesor -->
+                                                                            <div class="flex-shrink-0">
+                                                                                {% if profesor.imagen_usuario %}
+                                                                                    <img src="{{ profesor.imagen_usuario.url }}"
+                                                                                         class="rounded-circle me-3"
+                                                                                         width="80" height="80"
+                                                                                         alt="Foto de {{ profesor.nombre_completo }}">
+                                                                                {% else %}
+                                                                                    <img src="{% static 'img/default-user.png' %}"
+                                                                                         class="rounded-circle me-3"
+                                                                                         width="80" height="80"
+                                                                                         alt="Foto de {{ profesor.nombre_completo }}">
+                                                                                {% endif %}
+                                                                            </div>
+                                                                            <div>
+                                                                                <h5 class="card-title">{{ profesor.nombre_completo }}</h5>
+                                                                                <p class="text-muted mb-1">
+                                                                                    <i class="fas fa-envelope"></i> {{ profesor.correo_electronico }}
+                                                                                </p>
+
+                                                                                <h6 class="mt-3">Materias:</h6>
+                                                                                <ul class="list-unstyled">
+                                                                                    {% for clase in profesor.clases.all|dictsort:"nombre" %}
+                                                                                        {% if clase.grupo.id == grupo.grupo_actual.id %}
+                                                                                            <li>{{ clase.nombre }}</li>
+                                                                                        {% endif %}
+                                                                                    {% endfor %}
+                                                                                </ul>
+
+
+                                                                                <a href="{% url 'padres:seleccionar_fecha_cita' profesor.id %}"
+                                                                                   class="btn btn-primary btn-sm mt-2">
+                                                                                    <i class="fas fa-calendar-plus me-1"></i>
+                                                                                    Agendar cita
+                                                                                </a>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            <div class="col-12">
+                                                                <div class="alert alert-info">
+                                                                    No hay profesores asignados a este grupo
+                                                                </div>
+                                                            </div>
+                                                        {% endif %}
+                                                    {% endwith %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                No hay profesores disponibles para agendar citas en este momento.
+            </div>
+        {% endif %}
+
+    <style>
+        .accordion-button:not(.collapsed) {
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+
+        .accordion-button:focus {
+            box-shadow: none;
+            border-color: rgba(0, 0, 0, .125);
+        }
+    </style>
+{% endblock %}
+
+<a href="{% url 'padres:crear_cita_profesor' profesor.id %}"
+   class="btn btn-primary btn-sm mt-2">
+    <i class="fas fa-calendar-plus me-1"></i>
+    Agendar cita
+</a>

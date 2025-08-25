@@ -1,0 +1,202 @@
+{% load static %}
+<div class="modal fade" id="ayudaModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Asistente Virtual de Ayuda</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <div class="chat-container">
+          <!-- Historial del chat -->
+          <div class="chat-messages p-3" id="chatMessages" style="height: 60vh; overflow-y: auto;">
+            <div class="alert alert-info mb-2">
+              <strong>Asistente:</strong> ¡Hola! Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?
+            </div>
+            <!-- Preguntas frecuentes se cargarán aquí -->
+            <div id="preguntasFrecuentes"></div>
+          </div>
+          
+          <!-- Formulario de pregunta -->
+          <div class="chat-input p-3 bg-light">
+            <form id="chatHelpForm">
+              {% csrf_token %}
+              <input type="hidden" id="current_url" name="current_url">
+              <div class="input-group">
+                <input type="text" class="form-control" id="preguntaInput" placeholder="Escribe tu pregunta..." required>
+                <button class="btn btn-primary" type="submit">
+                  <i class="fas fa-paper-plane"></i> Enviar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .chat-message {
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    max-width: 80%;
+  }
+  
+  .user-message {
+    background-color: #e3f2fd;
+    margin-left: auto;
+    border-bottom-right-radius: 0;
+  }
+  
+  .bot-message {
+    background-color: #f8f9fa;
+    margin-right: auto;
+    border-bottom-left-radius: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  .pregunta-rapida {
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .pregunta-rapida:hover {
+    background-color: #f0f0f0;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Configurar el modal al mostrarse
+  $('#ticketSoporteModal').on('show.bs.modal', function() {
+    // Cargar preguntas frecuentes
+    cargarPreguntasFrecuentes();
+  });
+
+  // Función para cargar preguntas frecuentes
+  function cargarPreguntasFrecuentes() {
+    fetch('/ayuda/preguntas-frecuentes/')
+      .then(response => response.json())
+      .then(data => {
+        const container = document.getElementById('preguntasFrecuentes');
+        let html = '';
+        
+        // Mostrar preguntas específicas del rol
+        if (data.preguntas_especificas.length > 0) {
+          html += `
+            <div class="mb-3">
+              <h6>Preguntas para ${data.rol_usuario}:</h6>
+              <div class="list-group">
+          `;
+          data.preguntas_especificas.forEach(p => {
+            html += `
+              <a href="#" class="list-group-item list-group-item-action pregunta-rapida" 
+                 data-pregunta="${p.pregunta.replace(/"/g, '&quot;')}">
+                ${p.pregunta}
+              </a>
+            `;
+          });
+          html += `</div></div>`;
+        }
+        
+        // Mostrar preguntas generales
+        if (data.preguntas_generales.length > 0) {
+          html += `
+            <div class="mb-3">
+              <h6>Preguntas generales:</h6>
+              <div class="list-group">
+          `;
+          data.preguntas_generales.forEach(p => {
+            html += `
+              <a href="#" class="list-group-item list-group-item-action pregunta-rapida" 
+                 data-pregunta="${p.pregunta.replace(/"/g, '&quot;')}">
+                ${p.pregunta}
+              </a>
+            `;
+          });
+          html += `</div></div>`;
+        }
+        
+        container.innerHTML = html;
+        
+        // Agregar eventos a las preguntas rápidas
+        document.querySelectorAll('.pregunta-rapida').forEach(item => {
+          item.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('preguntaInput').value = this.getAttribute('data-pregunta');
+          });
+        });
+      });
+  }
+
+  // Función para agregar mensaje al chat
+  function agregarMensaje(autor, mensaje, esSistema = false) {
+    const chat = document.getElementById('chatMessages');
+    const mensajeDiv = document.createElement('div');
+    
+    if (esSistema) {
+      mensajeDiv.className = 'alert alert-secondary mb-2 text-center';
+      mensajeDiv.innerHTML = `<small>${mensaje}</small>`;
+    } else {
+      mensajeDiv.className = `chat-message ${autor}-message`;
+      const autorSpan = document.createElement('strong');
+      autorSpan.textContent = autor === 'user' ? 'Tú: ' : 'Asistente: ';
+      const contenido = document.createElement('span');
+      contenido.innerHTML = mensaje;
+      mensajeDiv.appendChild(autorSpan);
+      mensajeDiv.appendChild(contenido);
+    }
+    
+    chat.appendChild(mensajeDiv);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  // Manejar el envío del formulario
+  document.getElementById('chatHelpForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const input = document.getElementById('preguntaInput');
+    const pregunta = input.value.trim();
+    
+    if (pregunta) {
+      // Mostrar pregunta del usuario
+      agregarMensaje('user', pregunta);
+      input.value = '';
+      
+      // Mostrar mensaje de "escribiendo..."
+      agregarMensaje('bot', 'Buscando información...', true);
+      
+      // Enviar pregunta al servidor
+      fetch('/ayuda/buscar-respuesta/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': this.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({ pregunta: pregunta })
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Eliminar mensaje de "escribiendo..."
+        const chat = document.getElementById('chatMessages');
+        chat.removeChild(chat.lastChild);
+        
+        if (data.error) {
+          agregarMensaje('bot', '⚠️ ' + data.error);
+        } else {
+          // Mostrar la respuesta con indicación del rol
+          let respuesta = data.respuesta;
+          if (data.rol_usuario) {
+            respuesta += `<div class="mt-2 text-end"><small class="text-muted">Respuesta para ${data.rol_usuario}</small></div>`;
+          }
+          agregarMensaje('bot', respuesta);
+        }
+      })
+      .catch(error => {
+        agregarMensaje('bot', '🔴 Error de conexión. Intenta nuevamente.');
+      });
+    }
+  });
+});
+</script>

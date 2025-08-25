@@ -1,0 +1,66 @@
+{% extends 'padres/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <!-- Mostrar mensajes -->
+        {% if messages %}
+            <div class="mt-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <h2 class="my-4">Mis Notificaciones</h2>
+
+        <div class="list-group">
+            <div class="d-flex justify-content-end mb-3">
+                <form method="post" action="{% url 'padres:marcar_todas_leidas' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn btn-outline-primary">
+                        <i class="bi bi-check-all me-1"></i> Marcar todas como leídas
+                    </button>
+                </form>
+            </div>
+            {% for notificacion in notificaciones %}
+                <form method="post" action="{% url 'padres:marcar_notificacion_leida' notificacion.id %}"
+                      class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit"
+                            class="list-group-item list-group-item-action {% if not notificacion.is_read %}list-group-item-primary{% endif %} border-0">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1 {% if not notificacion.is_read %}fw-bold{% endif %}">
+                                <i class="bi 
+                        {% if 'cita' in notificacion.event_type %}bi-calendar-check
+                        {% elif 'ticket' in notificacion.event_type %}bi-ticket-detailed
+                        {% elif 'feedback' in notificacion.event_type %}bi-chat-left-text
+                        {% else %}bi-bell
+                        {% endif %} me-2"></i>
+                                {{ notificacion.title }}
+                            </h5>
+                            <small>{{ notificacion.created_at|timesince }}</small>
+                        </div>
+                        <p class="mb-1">{{ notificacion.message }}</p>
+                        <small class="text-muted">
+                            {{ notificacion.get_event_type_display }} ·
+                            {{ notificacion.created_at|date:"d M Y H:i" }}
+                            {% if not notificacion.is_read %}
+                                <span class="badge bg-primary ms-2">Nueva</span>
+                            {% endif %}
+                        </small>
+                    </button>
+                </form>
+            {% empty %}
+                <div class="list-group-item">
+                    <p class="text-center text-muted my-3">No hay notificaciones</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

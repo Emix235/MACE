@@ -1,0 +1,319 @@
+{% extends 'profesores/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2 class="mb-4">Historial de Citas</h2>
+
+
+        <!-- Filtro de estado -->
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="estado" class="form-label">Filtrar por estado:</label>
+                        <select name="estado" id="estado" class="form-select">
+                            <option value="">Todos los estados</option>
+                            {% for value, label in estados_cita %}
+                                <option value="{{ value }}"
+                                        {% if filtro_estado == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">Filtrar</button>
+                        {% if filtro_estado %}
+                            <a href="?" class="btn btn-outline-secondary ms-2">Limpiar</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Lista de citas normales -->
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="far fa-calendar-alt me-2"></i>
+                    Todas las Citas ({{ total_citas }})
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for cita in page_obj %}
+                        <div class="list-group-item {% if cita.fecha_hora_inicio < timezone.now %}list-group-item-light{% endif %}">
+                            <!-- Encabezado -->
+                            <div class="d-flex justify-content-between align-items-start"
+                                 onclick="toggleCitaDetails('details-{{ cita.id }}')"
+                                 style="cursor: pointer;">
+                                <div>
+                                    <h5 class="mb-1">
+                                        {{ cita.titulo }}
+                                        <span class="badge bg-{{ cita.get_badge_color }} ms-2">
+                                            {{ cita.get_estado_display }}
+                                        </span>
+                                        {% if cita.creador_tipo.model == 'profesor' %}
+                                            <span class="badge bg-info ms-2">Creada por mí</span>
+                                        {% else %}
+                                            <span class="badge bg-success ms-2">Solicitada por padre</span>
+                                        {% endif %}
+                                    </h5>
+                                    <small class="text-muted">
+                                        {{ cita.fecha_hora_inicio|date:"l, d F Y H:i" }} -
+                                        {{ cita.fecha_hora_fin|date:"H:i" }}
+                                    </small>
+                                </div>
+                                <span class="badge {% if cita.fecha_hora_inicio < timezone.now %}bg-secondary{% else %}bg-primary{% endif %}">
+                                    {% if cita.fecha_hora_inicio < timezone.now %}Pasada{% else %}Próxima{% endif %}
+                                </span>
+                            </div>
+
+                            <!-- Detalles -->
+                            <div id="details-{{ cita.id }}" class="mt-3 px-3" style="display: none;">
+                                <div class="border-top pt-2">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p><strong>Padre:</strong> {{ cita.solicitante.nombre_completo }}</p>
+                                            {% if cita.creador_tipo.model == 'padre' %}
+                                                <p><strong>Solicitada por:</strong> {{ cita.creador.nombre_completo }}
+                                                </p>
+                                            {% endif %}
+                                            <p><strong>Tipo:</strong> {{ cita.get_tipo_display }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            {% if cita.estudiantes.exists %}
+                                                <p><strong>Estudiantes:</strong></p>
+                                                <ul>
+                                                    {% for estudiante in cita.estudiantes.all %}
+                                                        <li>{{ estudiante.nombre_completo }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-2">
+                                        <p><strong>Motivo:</strong></p>
+                                        <div class="bg-light p-2 rounded">
+                                            {{ cita.motivo|linebreaks }}
+                                        </div>
+                                    </div>
+
+                                    {% if cita.observaciones %}
+                                        <div class="mt-2">
+                                            <p><strong>Observaciones:</strong></p>
+                                            <div class="bg-light p-2 rounded">
+                                                {{ cita.observaciones|linebreaks }}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="list-group-item text-center py-4">
+                            <i class="far fa-calendar-alt fa-3x text-muted mb-3"></i>
+                            <h5>No hay citas registradas</h5>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Paginación -->
+                {% if page_obj.has_other_pages %}
+                    <nav aria-label="Page navigation" class="mt-4 px-3">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                       href="?page=1{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}"
+                                       aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=
+                                            
+                                            
+                                            {{ page_obj.previous_page_number }}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}"
+                                       aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item"><a class="page-link" href="?page=
+                                            
+                                            
+                                            {{ num }}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=
+                                            
+                                            
+                                            {{ page_obj.next_page_number }}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}"
+                                       aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=
+                                            
+                                            
+                                            {{ page_obj.paginator.num_pages }}{% if filtro_estado %}&estado={{ filtro_estado }}{% endif %}"
+                                       aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            </div>
+
+        </div>
+        <br><br><br>
+        <!-- Sección de Citas Prioritarias -->
+        {% if lista_citas_prioritarias %}
+            <div class="card shadow mb-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Citas Prioritarias ({{ lista_citas_prioritarias.count }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" style="max-height: 500px; overflow-y: auto;">
+                        {% for cita in lista_citas_prioritarias %}
+                            <div class="list-group-item list-group-item-danger">
+                                <!-- Encabezado -->
+                                <div class="d-flex justify-content-between align-items-start"
+                                     onclick="toggleCitaDetails('priority-details-{{ cita.id }}')"
+                                     style="cursor: pointer;">
+                                    <div>
+                                        <h5 class="mb-1">
+                                            <i class="fas fa-exclamation-circle me-2"></i>
+                                            {{ cita.titulo }}
+                                            <span class="badge bg-{{ cita.get_badge_color }} ms-2">
+                                    {{ cita.get_estado_display }}
+                                </span>
+                                            <span class="badge bg-danger ms-2">
+                                    {{ cita.citaprioritaria.get_nivel_prioridad_display }}
+                                </span>
+                                        </h5>
+                                        <small class="text-muted">
+                                            {{ cita.fecha_hora_inicio|date:"l, d F Y H:i" }} -
+                                            {{ cita.fecha_hora_fin|date:"H:i" }}
+                                            ({{ cita.citaprioritaria.get_tipo_urgencia_display }})
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-dark">
+                            {% if cita.fecha_hora_inicio < timezone.now %}Pasada{% else %}Próxima{% endif %}
+                        </span>
+                                </div>
+
+                                <!-- Detalles -->
+                                <div id="priority-details-{{ cita.id }}" class="mt-3 px-3" style="display: none;">
+                                    <div class="border-top pt-2">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p><strong>Padre:</strong> {{ cita.solicitante.nombre_completo }}</p>
+                                                <p>
+                                                    <strong>Prioridad:</strong> {{ cita.citaprioritaria.get_nivel_prioridad_display }}
+                                                </p>
+                                                <p><strong>Tipo de
+                                                    urgencia:</strong> {{ cita.citaprioritaria.get_tipo_urgencia_display }}
+                                                </p>
+                                                <p><strong>Resolución requerida
+                                                    en:</strong> {{ cita.citaprioritaria.tiempo_max_resolucion }} horas
+                                                </p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                {% if cita.estudiantes.exists %}
+                                                    <p><strong>Estudiantes:</strong></p>
+                                                    <ul>
+                                                        {% for estudiante in cita.estudiantes.all %}
+                                                            <li>{{ estudiante.nombre_completo }}</li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-2">
+                                            <p><strong>Motivo:</strong></p>
+                                            <div class="bg-light p-2 rounded">
+                                                {{ cita.motivo|linebreaks }}
+                                            </div>
+                                        </div>
+
+                                        {% if cita.observaciones %}
+                                            <div class="mt-2">
+                                                <p><strong>Observaciones:</strong></p>
+                                                <div class="bg-light p-2 rounded">
+                                                    {{ cita.observaciones|linebreaks }}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if cita.citaprioritaria.escalado_autoridades %}
+                                            <div class="alert alert-warning mt-2">
+                                                <i class="fas fa-user-shield me-2"></i>
+                                                <strong>Escalado a autoridades superiores</strong>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleCitaDetails(detailsId) {
+            const detailsElement = document.getElementById(detailsId);
+            if (detailsElement.style.display === 'none') {
+                detailsElement.style.display = 'block';
+            } else {
+                detailsElement.style.display = 'none';
+            }
+        }
+    </script>
+
+    <style>
+        .list-group-item {
+            transition: all 0.3s ease;
+        }
+
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        [onclick] {
+            transition: all 0.2s;
+        }
+
+        [onclick]:hover {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+
+        /* Estilo especial para citas prioritarias */
+        .list-group-item-danger {
+            border-left: 4px solid #dc3545;
+        }
+
+        .list-group-item-danger:hover {
+            background-color: rgba(220, 53, 69, 0.1);
+        }
+    </style>
+{% endblock %}

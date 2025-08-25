@@ -1,0 +1,81 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4><i class="fas fa-share-alt"></i> Compartir Registro de Profesores</h4>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle"></i> Instrucciones</h5>
+                <p class="mb-1">1. Copia el enlace y compártelo directamente con los profesores</p>
+                <p class="mb-1">2. O ingresa su correo electrónico para enviar una invitación automática</p>
+                <p class="mb-0">3. El enlace será válido por 7 días</p>
+            </div>
+            
+            <div class="form-group">
+                <label for="registro-link"><strong>Enlace de registro:</strong></label>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="registro-link" 
+                           value="{{ registro_url }}" readonly>
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-primary" onclick="copiarLink()" type="button">
+                            <i class="fas fa-copy"></i> Copiar
+                        </button>
+                    </div>
+                </div>
+                <small class="form-text text-muted">Haz clic en "Copiar" y comparte este enlace</small>
+            </div>
+            
+            <div class="alert alert-success d-none" id="copy-success">
+                <i class="fas fa-check-circle"></i> ¡Enlace copiado al portapapeles!
+            </div>
+            
+            <hr>
+            
+            <h5 class="mt-4"><i class="fas fa-paper-plane"></i> Enviar invitación por correo</h5>
+            <form method="post" action="{% url 'servicios_escolares:enviar_invitacion' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="email">Correo electrónico del profesor:</label>
+                    <input type="email" class="form-control" id="email" name="email" required
+                           placeholder="correo@ejemplo.com">
+                </div>
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-paper-plane"></i> Enviar Invitación
+                </button>
+            </form>
+        </div>
+        <div class="card-footer text-muted">
+            Último acceso: {{ ultimo_acceso }} | Rol: {{ rol }}
+        </div>
+    </div>
+</div>
+
+<script>
+function copiarLink() {
+    var copyText = document.getElementById("registro-link");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    document.execCommand("copy");
+    
+    var copySuccess = document.getElementById("copy-success");
+    copySuccess.classList.remove("d-none");
+    setTimeout(function() {
+        copySuccess.classList.add("d-none");
+    }, 3000);
+}
+</script>
+{% endblock %}

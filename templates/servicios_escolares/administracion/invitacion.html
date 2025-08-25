@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Invitación Plataforma Educativa</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+        .invitacion-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            color: #333;
+        }
+        .btn-unirse {
+            background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .btn-unirse:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="invitacion-card">
+        <h2>¡Te estamos esperando!</h2>
+        <p>Padre/Tutor de <strong>{{ estudiante.nombre_completo }}</strong></p>
+        <p>Únete a nuestra plataforma educativa para estar al tanto del progreso académico</p>
+        
+        <form method="POST" action="{% url 'procesar_invitacion' token=token %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-unirse">
+                UNIRME A LA PLATAFORMA
+            </button>
+        </form>
+    </div>
+</body>
+</html>

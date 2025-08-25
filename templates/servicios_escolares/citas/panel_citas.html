@@ -1,0 +1,207 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="mb-3">
+                    <i class="fas fa-calendar-alt"></i> Gestión de Citas - {{ ciclo_actual.nombre }}
+                </h2>
+
+                {% if messages %}
+                    <div class="container mt-3 ps-0 pe-0"> <!-- Bootstrap 5 -->
+                        {% for message in messages %}
+                            <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                        aria-label="Cerrar"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Tarjeta de Grados -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Grados Disponibles</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for grado in grados %}
+                                <div class="col-md-3 mb-3">
+                                    <a href="?grado_id={{ grado.id }}"
+                                       class="card grado-card text-decoration-none
+                               {% if grado_seleccionado and grado_seleccionado.id == grado.id %}border-primary border-2{% endif %}">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title">{{ grado.nombre }}</h5>
+                                            <div class="d-flex justify-content-around">
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-door-open"></i> {{ grado.num_grupos }} grupos
+                                        </span>
+                                                <span class="badge bg-warning">
+                                            <i class="fas fa-clock"></i> {{ grado.num_citas_pendientes }} citas pendientes
+                                        </span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            {% empty %}
+                                <div class="col-12">
+                                    <div class="alert alert-warning">No hay grados registrados</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección de Grupos -->
+                {% if grado_seleccionado %}
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h4 class="mb-0">Grupos de {{ grado_seleccionado.nombre }}</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="thead-dark">
+                                    <tr>
+                                        <th>Grupo</th>
+                                        <th>Turno</th>
+                                        <th>Estudiantes</th>
+                                        <th>Citas Pendientes</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for grupo in grupos %}
+                                        <tr class="{% if grupo_seleccionado and grupo_seleccionado.id == grupo.id %}table-active{% endif %}">
+                                            <td><strong>{{ grupo.grado.numero }}°{{ grupo.letra }}</strong></td>
+                                            <td>{{ grupo.get_turno_display }}</td>
+                                            <td>{{ grupo.num_estudiantes }}</td>
+                                            <td>
+                                        <span class="badge bg-{% if grupo.num_citas_pendientes > 0 %}warning{% else %}success{% endif %}">
+                                            {{ grupo.num_citas_pendientes }}
+                                        </span>
+                                            </td>
+                                            <td>
+                                                <a href="?grado_id={{ grado_seleccionado.id }}&grupo_id={{ grupo.id }}#detalle-grupo"
+                                                   class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-search"></i> Ver citas
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Sección de Estudiantes -->
+                {% if grupo_seleccionado %}
+                    <div class="card shadow-sm" id="detalle-grupo">
+                        <div class="card-header bg-info text-white">
+                            <h4 class="mb-0">
+                                Citas con Padres - {{ grupo_seleccionado.grado.numero }}°{{ grupo_seleccionado.letra }}
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>Estudiante</th>
+                                        <th>Padre/Tutor</th>
+                                        <th>Citas Totales</th>
+                                        <th>Pendientes</th>
+                                        <th>Última Cita</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for estudiante in estudiantes %}
+                                        <tr>
+                                            <td>{{ estudiante.nombre_completo }}</td>
+                                            <td>
+                                                {% if estudiante.padre %}
+                                                    {{ estudiante.padre.nombre_completo }}
+                                                {% else %}
+                                                    <span class="text-danger">Sin padre asignado</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ estudiante.num_citas }}</td>
+                                            <td>
+                                        <span class="badge bg-{% if estudiante.citas_pendientes > 0 %}warning{% else %}success{% endif %}">
+                                            {{ estudiante.citas_pendientes }}
+                                        </span>
+                                            </td>
+                                            <td>
+                                                {% with ultima_cita=estudiante.padre.citas_solicitadas.first %}
+                                                    {% if ultima_cita %}
+                                                        {{ ultima_cita.fecha_hora_inicio|date:"d/m/Y" }}
+                                                    {% else %}
+                                                        Nunca
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </td>
+                                            <td>
+                                                {% if estudiante.padre %}
+                                                    <div class="btn-group">
+                                                        {# {% url 'servicios_escolares:agendar_cita' estudiante.id %} #}
+                                                        <a href="{% url 'servicios_escolares:agendar_cita' estudiante.id %}"
+                                                           class="btn btn-sm btn-success">
+                                                            <i class="fas fa-plus"></i> Nueva
+                                                        </a>
+                                                        {# {% url 'servicios_escolares:historial_citas' estudiante.padre.id %} #}
+                                                        <a href="{% url 'servicios_escolares:historial_citas' estudiante.id %}"
+                                                           class="btn btn-sm btn-info">
+                                                            <i class="fas fa-history"></i> Historial
+                                                        </a>
+                                                    </div>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center">No hay estudiantes en este grupo</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .grado-card {
+            transition: all 0.3s ease;
+        }
+
+        .grado-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        #detalle-grupo {
+            border-top: 3px solid #17a2b8;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Si hay un hash en la URL (como #detalle-grupo) y el elemento existe
+            if (window.location.hash) {
+                const element = document.querySelector(window.location.hash);
+                if (element) {
+                    // Desplazamiento suave al elemento
+                    element.scrollIntoView({behavior: 'smooth'});
+                }
+            }
+        });
+    </script>
+{% endblock %}

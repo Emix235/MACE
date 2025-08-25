@@ -1,0 +1,173 @@
+<!-- templates/servicios/panel_notificaciones.html -->
+{% extends 'servicios_escolares/base.html' %}
+{% load notificaciones_tags %}
+{% load humanize %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header del Panel -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="mb-0">
+                    <i class="fas fa-bell"></i> Panel de Notificaciones
+                    <small class="fas fa-bell">Servicio Escolar</small>
+                </h1>
+                <div>
+                    {# {% url 'crear_notificacion' %} #}
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> Crear Nueva Notificación
+                    </a>
+                    <a href="{% url 'servicios_escolares:notification_types' %}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> Tipos de Notificación
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Estado:</label>
+                            <select name="estado" class="form-select">
+                                <option value="todas" {% if filtro_actual.estado == 'todas' %}selected{% endif %}>Todas</option>
+                                <option value="leidas" {% if filtro_actual.estado == 'leidas' %}selected{% endif %}>Leídas</option>
+                                <option value="no_leidas" {% if filtro_actual.estado == 'no_leidas' %}selected{% endif %}>No leídas</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo:</label>
+                            <select name="tipo" class="form-select">
+                                <option value="todas">Todas</option>
+                                {% for codigo, nombre in tipos_notificaciones %}
+                                <option value="{{ codigo }}" {% if filtro_actual.tipo == codigo %}selected{% endif %}>{{ nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-filter"></i> Filtrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas Rápidas -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Notificaciones</h5>
+                    <p class="display-4">{{ total_notificaciones|intcomma }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pendientes</h5>
+                    <p class="display-4">{{ no_leidas_count|intcomma }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Tipos Activos</h5>
+                    <p class="display-4">{{ tipos_notificaciones|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listado de Notificaciones -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for notificacion in notificaciones %}
+                        <a href="{{ notificacion.get_absolute_url }}" 
+                           class="list-group-item list-group-item-action d-flex justify-content-between align-items-center 
+                                  {% if not notificacion.is_read %}list-group-item-warning{% endif %}">
+                            <div class="flex-grow-1">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">
+                                        <i class="fas {{ notificacion.event_type|icono_tipo_notificacion }} me-2"></i>
+                                        {{ notificacion.title }}
+                                    </h5>
+                                    <small>{{ notificacion.created_at|timesince }}</small>
+                                </div>
+                                <p class="mb-1">{{ notificacion.message|truncatechars:100 }}</p>
+                                <small class="text-muted">Tipo: {{ notificacion.get_event_type_display }}</small>
+                            </div>
+                            <div class="ms-3">
+                                {% if not notificacion.is_read %}
+                                <span class="badge bg-danger rounded-pill">No leída</span>
+                                {% else %}
+                                <span class="badge bg-success rounded-pill">Leída</span>
+                                {% endif %}
+                            </div>
+                        </a>
+                        {% empty %}
+                        <div class="list-group-item">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                <h4>No hay notificaciones</h4>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paginación -->
+    {% if page_obj %}
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <nav aria-label="Paginación">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">&laquo; Primera</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Última &raquo;</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

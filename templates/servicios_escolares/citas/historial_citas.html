@@ -1,0 +1,232 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>
+                    <i class="fas fa-history"></i> Historial de Citas - {{ estudiante.nombre_completo }}
+                </h2>
+                <a href="{% url 'servicios_escolares:panel_citas' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al panel
+                </a>
+            </div>
+
+            <!-- Resumen Estadístico -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total de Citas</h5>
+                            <p class="display-4">{{ total_citas }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Citas Completadas</h5>
+                            <p class="display-4">{{ citas_completadas }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Citas Pendientes</h5>
+                            <p class="display-4">{{ citas_pendientes }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Citas -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Detalle de Citas</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Fecha/Hora</th>
+                                    <th>Tipo</th>
+                                    <th>Profesor</th>
+                                    <th>Duración</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cita in citas %}
+                                <tr>
+                                    <td>
+                                        {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}
+                                        <br>
+                                        <small class="text-muted d-block">{{ cita.fecha_hora_fin|date:"H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ cita.get_badge_color }}">
+                                            {{ cita.get_tipo_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if cita.profesor %}
+                                            {{ cita.profesor.nombre_completo }}
+                                        {% else %}
+                                            <span class="text-muted">Servicio Escolar</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ cita.duracion }} min</td>
+                                    <td>
+                                        <span class="badge bg-{{ cita.get_badge_color }}">
+                                            {{ cita.get_estado_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#detalleCita{{ cita.id }}">
+                                            <i class="fas fa-eye"></i> Detalles
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No hay citas registradas</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modales para detalles de cada cita -->
+{% for cita in citas %}
+<div class="modal fade" id="detalleCita{{ cita.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-{{ cita.get_badge_color }} text-white">
+                <h5 class="modal-title">
+                    {{ cita.titulo }} - {{ cita.fecha_hora_inicio|date:"d/m/Y" }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Información Básica</h6>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <strong>Tipo:</strong> {{ cita.get_tipo_display }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Estado:</strong> 
+                                <span class="badge bg-{{ cita.get_badge_color }}">
+                                    {{ cita.get_estado_display }}
+                                </span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Horario:</strong> 
+                                {{ cita.fecha_hora_inicio|date:"H:i" }} - {{ cita.fecha_hora_fin|date:"H:i" }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Duración:</strong> {{ cita.duracion }} minutos
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Participantes</h6>
+                        <ul class="list-group">
+                            <li class="list-group-item">
+                                <strong>Solicitante:</strong> {{ cita.solicitante.nombre_completo }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Estudiante:</strong> {{ estudiante.nombre_completo }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Atendido por:</strong> 
+                                {% if cita.profesor %}
+                                    {{ cita.profesor.nombre_completo }} (Profesor)
+                                {% elif cita.servicio_escolar %}
+                                    {{ cita.servicio_escolar.nombre_completo }} (Servicio Escolar)
+                                {% else %}
+                                    No asignado
+                                {% endif %}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Ubicación:</strong> {{ cita.ubicacion|default:"No especificada" }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <h6>Motivo</h6>
+                    <div class="card">
+                        <div class="card-body">
+                            {{ cita.motivo|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+
+                {% if cita.observaciones %}
+                <div class="mb-3">
+                    <h6>Observaciones</h6>
+                    <div class="card">
+                        <div class="card-body">
+                            {{ cita.observaciones|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Evidencias -->
+                <div class="mb-3">
+                    <h6>Evidencias</h6>
+                    {% if cita.evidencias.all %}
+                    <div class="row">
+                        {% for evidencia in cita.evidencias.all %}
+                        <div class="col-md-4 mb-2">
+                            <div class="card">
+                                
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">No hay evidencias adjuntas</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                {% if cita.evento_url %}
+                <a href="{{ cita.evento_url }}" target="_blank" class="btn btn-info">
+                    <i class="fas fa-calendar-day"></i> Ver en Calendario
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Estilos personalizados -->
+<style>
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+    .file-icon {
+        font-size: 1.2rem;
+        margin-right: 5px;
+    }
+</style>
+{% endblock %}

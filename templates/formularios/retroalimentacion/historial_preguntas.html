@@ -1,0 +1,111 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <h2>Historial de Preguntas</h2>
+
+        {% if messages %}
+            <div class="container mt-3 ps-0 pe-0">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Filtros -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label>Estado:</label>
+                            <select name="estado" class="form-control">
+                                <option value="todas" {% if estado == 'todas' %}selected{% endif %}>Todas</option>
+                                <option value="activas" {% if estado == 'activas' %}selected{% endif %}>Activas</option>
+                                <option value="inactivas" {% if estado == 'inactivas' %}selected{% endif %}>Inactivas
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Tipo:</label>
+                            <select name="tipo" class="form-control">
+                                <option value="">Todos</option>
+                                {% for tipo, nombre in tipos_preguntas %}
+                                    <option value="{{ tipo }}"
+                                            {% if tipo == request.GET.tipo %}selected{% endif %}>{{ nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary mt-4">Filtrar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabla de preguntas -->
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>Texto</th>
+                        <th>Tipo</th>
+                        <th>Estado</th>
+                        <th>Plantilla</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for pregunta in page_obj %}
+                        <tr>
+                            <td>{{ pregunta.texto|truncatechars:50 }}</td>
+                            <td>{{ pregunta.get_tipo_display }}</td>
+                            <td>
+                                {% if pregunta.activa %}
+                                    <span class="badge bg-success">Activa</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactiva</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ pregunta.retroalimentacion.titulo }}</td>
+                            <td>
+                                <a href="{% url 'formularios:detalle_pregunta' pregunta.id %}"
+                                   class="btn btn-sm btn-info">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                                {% if not pregunta.activa %}
+                                    <form method="post" action="{% url 'formularios:activar_pregunta' pregunta.id %}"
+                                          style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="fas fa-check"></i> Activar
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                <form method="post" action="{% url 'formularios:eliminar_pregunta' pregunta.id %}"
+                                      style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-danger"
+                                            onclick="return confirm('¿Eliminar permanentemente esta pregunta?')">
+                                        <i class="fas fa-trash"></i> Eliminar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- Paginación -->
+                {% include 'formularios/retroalimentacion/paginacion.html' with page_obj=page_obj %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

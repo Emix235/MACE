@@ -1,0 +1,111 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Detalle de Pregunta</h3>
+            </div>
+            {% if messages %}
+                <div class="container mt-3 ps-0 pe-0">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h4>{{ pregunta.texto }}</h4>
+                        <p>
+                            <strong>Tipo:</strong> {{ pregunta.get_tipo_display }}<br>
+                            <strong>Plantilla:</strong> {{ pregunta.retroalimentacion.titulo }}<br>
+                            <strong>Estado:</strong>
+                            {% if pregunta.activa %}
+                                <span class="badge bg-success">Activa</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactiva</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        {% if not pregunta.activa %}
+                            <form method="post" action="{% url 'formularios:activar_pregunta' pregunta.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success mb-2">
+                                    <i class="fas fa-check"></i> Reactivar Pregunta
+                                </button>
+                            </form>
+                        {% endif %}
+                        <form method="post" action="{% url 'formularios:eliminar_pregunta' pregunta.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger"
+                                    onclick="return confirm('¿Eliminar permanentemente esta pregunta?')">
+                                <i class="fas fa-trash"></i> Eliminar Permanente
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {% if pregunta.tipo == 'escala_5' and estadisticas %}
+                    <div class="alert alert-info">
+                        <h5>Estadísticas (últimas 100 respuestas):</h5>
+                        <p>
+                            <strong>Promedio:</strong> {{ estadisticas.promedio|floatformat:2 }}<br>
+                            <strong>Total respuestas:</strong> {{ estadisticas.total }}<br>
+                            <strong>Máxima calificación:</strong> {{ estadisticas.maximo }}<br>
+                            <strong>Mínima calificación:</strong> {{ estadisticas.minimo }}
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4>Respuestas Históricas</h4>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Padre</th>
+                        <th>Cita</th>
+                        <th>Respuesta</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for respuesta in respuestas %}
+                        <tr>
+                            <td>{{ respuesta.fecha_respuesta|date:"d/m/Y H:i" }}</td>
+                            <td>{{ respuesta.padre.nombre_completo }}</td>
+                            <td>{{ respuesta.retroalimentacion_aplicada.cita.titulo }}</td>
+                            <td>
+                                {% if respuesta.pregunta.tipo == 'escala_5' %}
+                                    {{ respuesta.valor_numero }}/5
+                                {% elif respuesta.pregunta.tipo == 'si_no' or respuesta.pregunta.tipo == 'si_no_explicacion' %}
+                                    {% if respuesta.respuesta_si_no %}Sí{% else %}No{% endif %}
+                                    {% if respuesta.explicacion %}:
+                                        {{ respuesta.explicacion|truncatechars:50 }}{% endif %}
+                                {% else %}
+                                    {{ respuesta.respuesta_texto|truncatechars:50 }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No hay respuestas registradas para esta pregunta</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

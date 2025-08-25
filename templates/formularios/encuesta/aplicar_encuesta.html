@@ -1,0 +1,42 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h3><i class="bi bi-send-check"></i> Publicar Encuesta</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Estás a punto de publicar: <strong>{{ encuesta.titulo }}</strong>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ form.ciclo_escolar.label_tag }}
+                        {{ form.ciclo_escolar }}
+                        <div class="form-text">{{ form.ciclo_escolar.help_text }}</div>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        {{ form.confirmar }}
+                        <label class="form-check-label" for="{{ form.confirmar.id_for_label }}">
+                            {{ form.confirmar.label }}
+                        </label>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'formularios:lista_encuestas_servicio' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-send-check"></i> Publicar Encuesta
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

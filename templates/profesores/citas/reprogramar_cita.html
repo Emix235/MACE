@@ -1,0 +1,196 @@
+<!-- templates/profesores/citas/reprogramar_cita.html -->
+{% extends 'profesores/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="card border-0 shadow-lg">
+            <!-- Card Header -->
+            <div class="card-header bg-primary text-white py-3">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-calendar-edit fa-lg me-3"></i>
+                    <h4 class="mb-0 fw-bold">Reprogramar Cita con Alumno</h4>
+                </div>
+            </div>
+
+            <!-- Card Body -->
+            <div class="card-body p-4">
+                <!-- Alert with Restrictions -->
+                <div class="alert alert-info border-0 bg-light-info shadow-sm mb-4">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-info-circle fs-4 me-3 mt-1 text-info"></i>
+                        <div>
+                            <h5 class="alert-heading fw-bold mb-2">Consideraciones importantes</h5>
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-1"><i class="fas fa-clock me-2 text-info"></i>Mínimo 30 minutos de
+                                    anticipación
+                                </li>
+                                <li class="mb-1"><i class="fas fa-calendar-times me-2 text-info"></i>Horario laboral:
+                                    8:00 - 17:00
+                                </li>
+                                <li class="mb-1"><i class="fas fa-user-clock me-2 text-info"></i>Verifique
+                                    disponibilidad en su agenda
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Info -->
+                <div class="card mb-4 border-primary">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="card-title text-primary mb-3">
+                                    <i class="fas fa-user-graduate me-2"></i>
+                                    Información del Alumno
+                                </h5>
+                                <p class="mb-1"><strong>Nombre:</strong> {{ cita.solicitante.nombre_completo }}</p>
+                                <p class="mb-1"><strong>Asunto:</strong> {{ cita.titulo }}</p>
+                            </div>
+                            <div class="col-md-4 text-md-end">
+                                <p class="mb-1"><strong>Estado actual:</strong>
+                                    <span class="badge bg-{% if cita.estado == 'pendiente' %}warning{% elif cita.estado == 'confirmada' %}info{% else %}secondary{% endif %}">
+                                    {{ cita.get_estado_display }}
+                                </span>
+                                </p>
+                                <p class="mb-0"><strong>Duración:</strong> {{ cita.duracion }} minutos</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form -->
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Date/Time Section -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="card h-100 border-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted mb-3">
+                                        <i class="far fa-calendar me-2"></i>Fecha y hora actual
+                                    </h6>
+                                    <div class="d-flex align-items-center">
+                                        <i class="far fa-clock text-primary me-2 fs-5"></i>
+                                        <span class="fs-5 fw-bold">{{ cita.fecha_hora_inicio|date:'d/m/Y H:i' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.fecha_hora_inicio }}
+                                <label for="{{ form.fecha_hora_inicio.id_for_label }}">Nueva fecha y hora</label>
+                                <small class="text-muted">Seleccione dentro del horario laboral</small>
+                                {% if form.fecha_hora_inicio.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        {{ form.fecha_hora_inicio.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Duration Section -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="card h-100 border-light">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted mb-3">
+                                        <i class="far fa-hourglass me-2"></i>Duración actual
+                                    </h6>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-stopwatch text-primary me-2 fs-5"></i>
+                                        <span class="fs-5 fw-bold">{{ cita.duracion }} minutos</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                {{ form.duracion }}
+                                <label for="{{ form.duracion.id_for_label }}">Nueva duración (minutos)</label>
+                                <small class="text-muted">Entre 15 y 240 minutos</small>
+                                {% if form.duracion.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                        {{ form.duracion.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reason Section -->
+                    <div class="mb-4">
+                        <div class="form-floating">
+                            {{ form.motivo_reprogramacion }}
+                            <label for="{{ form.motivo_reprogramacion.id_for_label }}">Motivo de la
+                                reprogramación</label>
+                            <small class="text-muted">Este motivo será enviado al padre/tutor</small>
+                            {% if form.motivo_reprogramacion.errors %}
+                                <div class="invalid-feedback d-block">
+                                    <i class="fas fa-exclamation-circle me-1"></i>
+                                    {{ form.motivo_reprogramacion.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                        <a href="{% url 'profesores:dashboard_profesor' %}" class="btn btn-outline-secondary px-4">
+                            <i class="fas fa-times me-2"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for Date Picker -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Set minimum date/time (now + 30 minutes)
+            const now = new Date();
+            const minDate = new Date(now.getTime() + 30 * 60000);
+            document.getElementById('{{ form.fecha_hora_inicio.id_for_label }}').min = minDate.toISOString().slice(0, 16);
+
+            // Validate working hours (8am-5pm)
+            const dateInput = document.getElementById('{{ form.fecha_hora_inicio.id_for_label }}');
+            dateInput.addEventListener('change', function () {
+                const selectedDate = new Date(this.value);
+                const hours = selectedDate.getHours();
+
+                if (hours < 8 || hours >= 17) {
+                    alert('Por favor seleccione un horario entre 8:00 y 17:00');
+                    this.value = '';
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .card {
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .form-floating textarea {
+            height: 120px !important;
+        }
+
+        .badge {
+            font-size: 0.85em;
+        }
+    </style>
+{% endblock %}

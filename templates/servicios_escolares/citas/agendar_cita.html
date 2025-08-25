@@ -1,0 +1,176 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <div class="container">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">{{ titulo }}</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Mensajes de error generales -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Error en el formulario:</strong>
+                            <ul class="mb-0">
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+
+                    <!-- Información del estudiante y padre -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card h-100 border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0"><i class="fas fa-user-graduate me-2"></i>Información del
+                                        Estudiante</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">
+                                        <strong>Nombre:</strong> {{ estudiante.nombre_completo }}<br>
+                                        <strong>Matrícula:</strong> {{ estudiante.matricula }}<br>
+                                        <strong>Grupo:</strong> {{ estudiante.grupo_actual|default:"No asignado" }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="card-title mb-0"><i class="fas fa-user-tie me-2"></i>Información del
+                                        Padre/Tutor</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">
+                                        <strong>Nombre:</strong> {{ padre.nombre_completo }}<br>
+                                        <strong>Teléfono:</strong> {{ padre.telefono_principal }}<br>
+                                        <strong>Correo:</strong> {{ padre.correo_electronico }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulario de cita -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Detalles de la Cita</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    {{ form.tipo|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.estado|as_crispy_field }}
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    {{ form.fecha_hora_inicio|as_crispy_field }}
+                                    <div id="fecha_hora_inicio-help" class="form-text">
+                                        <i class="fas fa-info-circle"></i> Horario de atención: Lunes a Viernes de 8:00
+                                        am a 6:00 pm
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    {{ form.duracion|as_crispy_field }}
+                                    <div id="duracion-help" class="form-text">
+                                        <i class="fas fa-info-circle"></i> Duración mínima: 15 min, máxima: 4 hrs (en
+                                        múltiplos de 5)
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Selección opcional de profesor -->
+                            {% if tiene_profesores %}
+                                <div class="card mb-3 border-secondary">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0"><i class="fas fa-chalkboard-teacher me-2"></i>Incluir profesor
+                                            en la cita</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        {{ profesor_form.profesor|as_crispy_field }}
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle"></i> Selecciona un profesor si deseas
+                                            incluirlo en la cita
+                                        </small>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <div class="mb-3">
+                                {{ form.ubicacion|as_crispy_field }}
+                            </div>
+
+                            <div class="mb-3">
+                                {{ form.motivo|as_crispy_field }}
+                            </div>
+
+                            <div class="mb-0">
+                                {{ form.observaciones|as_crispy_field }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'servicios_escolares:panel_citas' %}" class="btn btn-outline-secondary me-md-2">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-calendar-check"></i> Agendar Cita
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-4 text-end"
+                     style="padding: 15px 20px; display: flex; justify-content: center; transition: transform 0.2s;">
+                    <a href="{% url 'servicios_escolares:crear_cita_prioritaria' estudiante_id=estudiante.id %}"
+                       class="btn btn-danger btn-lg fw-bold shadow-sm border-0 d-inline-flex align-items-center gap-2">
+                        <i class="fas fa-exclamation-triangle fa-lg"></i>
+                        ¿Es una cita urgente? Use el formulario prioritario
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script simplificado para validación en tiempo real -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Configuración mínima para el datetime-local
+            const fechaInput = document.querySelector('input[name="fecha_hora_inicio"]');
+            if (fechaInput) {
+                // Establecer el mínimo como ahora mismo
+                const now = new Date();
+                fechaInput.min = now.toISOString().slice(0, 16);
+
+                // Mostrar advertencia si selecciona fin de semana
+                fechaInput.addEventListener('change', function () {
+                    const selectedDate = new Date(this.value);
+                    if (selectedDate.getDay() >= 5) {
+                        alert("Recuerda que el horario de atención es de Lunes a Viernes");
+                    }
+                });
+            }
+
+            // Validación simple de duración
+            const duracionInput = document.querySelector('input[name="duracion"]');
+            if (duracionInput) {
+                duracionInput.addEventListener('change', function () {
+                    const value = parseInt(this.value);
+                    if (value % 5 !== 0) {
+                        alert("La duración debe ser múltiplo de 5 (15, 20, 25, etc.)");
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

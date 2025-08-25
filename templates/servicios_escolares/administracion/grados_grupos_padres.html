@@ -1,0 +1,114 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% block content %}
+    <div class="container-fluid">
+        <h1 class="my-4 text-center">Padres por Grado y Grupo</h1>
+
+        <!-- Filtros rápidos (opcional) -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <input type="text" id="searchInput" class="form-control" placeholder="Buscar padre o estudiante...">
+            </div>
+        </div>
+
+        <!-- Lista de grados y grupos -->
+        <div class="accordion" id="gradosAccordion">
+            {% for nivel in estructura %}
+                <div class="accordion-item mb-3">
+                    <h2 class="accordion-header" id="heading{{ nivel.grado.id }}">
+                        <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse"
+                                data-bs-target="#collapseGrado{{ nivel.grado.id }}" aria-expanded="false"
+                                aria-controls="collapseGrado{{ nivel.grado.id }}">
+                            <strong>{{ nivel.grado.nivel.nombre }} - {{ nivel.grado.nombre }}</strong>
+                            <span class="badge bg-primary ms-2">{{ nivel.grupos|length }} grupos</span>
+                        </button>
+                    </h2>
+                    <div id="collapseGrado{{ nivel.grado.id }}" class="accordion-collapse collapse"
+                         aria-labelledby="heading{{ nivel.grado.id }}" data-bs-parent="#gradosAccordion">
+                        <div class="accordion-body p-0">
+                            <div class="accordion" id="gruposAccordion{{ nivel.grado.id }}">
+                                {% for grupo_data in nivel.grupos %}
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="headingGrupo{{ grupo_data.grupo.id }}">
+                                            <button class="accordion-button collapsed" type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#collapseGrupo{{ grupo_data.grupo.id }}"
+                                                    aria-expanded="false"
+                                                    aria-controls="collapseGrupo{{ grupo_data.grupo.id }}">
+                                                <span class="me-2">Grupo {{ grupo_data.grupo.letra }}</span>
+                                                <span class="badge bg-secondary me-2">{{ grupo_data.grupo.get_turno_display }}</span>
+                                                <span class="badge bg-info">{{ grupo_data.padres|length }} padres</span>
+                                            </button>
+                                        </h2>
+                                        <div id="collapseGrupo{{ grupo_data.grupo.id }}"
+                                             class="accordion-collapse collapse"
+                                             aria-labelledby="headingGrupo{{ grupo_data.grupo.id }}"
+                                             data-bs-parent="#gruposAccordion{{ nivel.grado.id }}">
+                                            <div class="accordion-body">
+                                                {% if grupo_data.padres %}
+                                                    <div class="list-group">
+                                                        {% for padre_data in grupo_data.padres %}
+                                                            <div class="list-group-item">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <h5 class="mb-1">
+                                                                        <i class="fas fa-user me-2"></i>
+                                                                        {{ padre_data.padre.nombre_completo }} {{ padre_data.padre.apellidos }}
+                                                                    </h5>
+                                                                    <a href="{% url 'servicios_escolares:detalle_padre' padre_data.padre.id %}"
+                                                                       class="btn btn-sm btn-outline-primary">
+                                                                        <i class="fas fa-eye"></i> Ver detalles
+                                                                    </a>
+                                                                </div>
+                                                                <p class="mb-1">
+                                                                    <i class="fas fa-phone me-2"></i>{{ padre_data.padre.telefono_principal }}
+                                                                </p>
+                                                                <small class="text-muted">
+                                                                    <i class="fas fa-users me-1"></i>
+                                                                    {{ padre_data.estudiantes|length }} estudiante(s)
+                                                                </small>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    <div class="alert alert-warning mb-0">
+                                                        <i class="fas fa-exclamation-circle me-2"></i>
+                                                        No hay padres registrados en este grupo.
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Script para búsqueda dinámica -->
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function () {
+            const searchTerm = this.value.toLowerCase();
+            const accordionItems = document.querySelectorAll('.list-group-item');
+
+            accordionItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    item.style.display = 'block';
+                    // Asegurarse de que los acordeones padres estén abiertos
+                    let parentCollapse = item.closest('.accordion-collapse');
+                    if (parentCollapse && !parentCollapse.classList.contains('show')) {
+                        const collapseBtn = parentCollapse.previousElementSibling.querySelector('.accordion-button');
+                        if (collapseBtn) {
+                            new bootstrap.Collapse(parentCollapse, {toggle: true});
+                        }
+                    }
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    </script>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'padres/base.html' %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-calendar-plus me-2"></i>
+                    Agendar cita con {{ profesor.nombre_completo }}
+                    <span class="badge bg-light text-primary ms-2">
+                    {{ fecha_seleccionada }} a las {{ request.GET.hora_inicio|default:"--:--" }}
+                </span>
+                </h4>
+            </div>
+
+            <div class="card-body">
+                <form method="post" id="citaForm" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Mostrar la fecha y hora seleccionada -->
+                    <div class="alert alert-primary mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-calendar-check fa-2x me-3"></i>
+                            <div>
+                                <h5 class="mb-1">Fecha seleccionada: {{ fecha_seleccionada }}</h5>
+                                <p class="mb-0">
+                                    Hora: <span id="hora-inicio">{{ request.GET.hora_inicio|default:"--:--" }}</span> |
+                                    Duración: <span id="duracion-minutos">{{ request.GET.duracion|default:"0" }}</span>
+                                    minutos
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campos ocultos para fecha y hora -->
+                    <input type="hidden" name="fecha_hora_inicio"
+                           value="{{ fecha_seleccionada }} {{ request.GET.hora_inicio|default:'08:00' }}">
+
+                    {% if request.GET.duracion %}
+                        <input type="hidden" name="duracion" value="{{ request.GET.duracion }}">
+                    {% endif %}
+
+                    <!-- Resto del formulario -->
+                    {% include 'padres/citas/cita_form_fields.html' %}
+
+                    <!-- Botones -->
+                    <div class="d-flex justify-content-between border-top pt-3">
+                        <a href="{% url 'padres:seleccionar_fecha_cita' profesor.id %}"
+                           class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-1"></i> Cambiar fecha/hora
+                        </a>
+                        <button type="submit" class="btn btn-primary"
+                                {% if not form.estudiantes.field.queryset.exists %}disabled{% endif %}>
+                            <i class="fas fa-calendar-check me-1"></i> Confirmar cita
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const duracionSelect = document.querySelector('select[name="duracion"]');
+            const horaInicioStr = document.querySelector('input[name="fecha_hora_inicio"]').value.split(' ')[1];
+
+            function calcularHoraFin(horaInicio, duracion) {
+                const [hh, mm] = horaInicio.split(':').map(Number);
+                const start = new Date();
+                start.setHours(hh, mm, 0);
+                start.setMinutes(start.getMinutes() + parseInt(duracion));
+                return start.toTimeString().slice(0, 5); // HH:MM
+            }
+
+            function actualizarVisual() {
+                const duracion = duracionSelect.value;
+                const horaFin = calcularHoraFin(horaInicioStr, duracion);
+
+                // Actualiza duración en el párrafo informativo
+                const duracionElemento = document.getElementById('duracion-minutos');
+                if (duracionElemento) duracionElemento.textContent = duracion;
+
+                // Actualiza hora final si la muestras en otra parte
+                const horaFinElemento = document.getElementById('hora-fin-alert');
+                if (horaFinElemento) horaFinElemento.textContent = horaFin;
+            }
+
+            if (duracionSelect) {
+                duracionSelect.addEventListener('change', actualizarVisual);
+                actualizarVisual(); // Ejecutar al cargar por si cambia el default
+            }
+        });
+    </script>
+{% endblock %}

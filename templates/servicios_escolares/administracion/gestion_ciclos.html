@@ -1,0 +1,188 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header con selector de nivel -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Gestión de Ciclos Escolares</h1>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="nivelDropdown" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                {{ nivel_actual.nombre|default:"Seleccione nivel" }}
+            </button>
+            <div class="dropdown-menu" aria-labelledby="nivelDropdown">
+                {% for nivel in niveles %}
+                    <a class="dropdown-item {% if nivel.codigo == nivel_actual.codigo %}active{% endif %}"
+                       href="?nivel={{ nivel.codigo }}">
+                        {{ nivel.nombre }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón para mostrar formulario de nuevo ciclo -->
+    <div class="mb-4">
+        <button class="btn btn-success" type="button" data-toggle="collapse" 
+                data-target="#formularioCiclo" aria-expanded="false" 
+                aria-controls="formularioCiclo" onclick="window.location.href='{% url 'servicios_escolares:paso1_ciclo' %}'">
+            <i class="fas fa-plus"></i> Nuevo Ciclo Escolar
+        </button>
+    </div>
+
+    <!-- Formulario desplegable para nuevo ciclo -->
+    <div class="collapse {% if mostrar_formulario %}show{% endif %}" id="formularioCiclo">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-primary text-white">
+                <h6 class="m-0 font-weight-bold">Crear Nuevo Ciclo</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" id="cicloForm">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ ciclo_form.nombre.label_tag }}
+                            {{ ciclo_form.nombre }}
+                            <small class="form-text text-muted">Formato: AAAA-AAAA</small>
+                        </div>
+                        <div class="col-md-6">
+                            {{ ciclo_form.nivel.label_tag }}
+                            {{ ciclo_form.nivel }}
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            {{ ciclo_form.fecha_inicio.label_tag }}
+                            {{ ciclo_form.fecha_inicio }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ ciclo_form.fecha_fin.label_tag }}
+                            {{ ciclo_form.fecha_fin }}
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            {{ ciclo_form.periodo.label_tag }}
+                            {{ ciclo_form.periodo }}
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                {{ ciclo_form.activo }}
+                                {{ ciclo_form.activo.label_tag }}
+                            </div>
+                            <div class="form-check">
+                                {{ ciclo_form.actual }}
+                                {{ ciclo_form.actual.label_tag }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" name="crear_ciclo" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar y Continuar
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-toggle="collapse" 
+                                data-target="#formularioCiclo">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Listado de ciclos escolares -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Ciclos Registrados</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Periodo</th>
+                            <th>Fechas</th>
+                            <th>Duración</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ciclo in ciclos %}
+                        <tr class="{% if ciclo.actual %}table-success{% elif not ciclo.activo %}table-secondary{% endif %}">
+                            <td>
+                                {{ ciclo.nombre }}
+                                {% if ciclo.actual %}
+                                    <span class="badge badge-success ml-2">Actual</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ ciclo.periodo }}</td>
+                            <td>{{ ciclo.fecha_inicio|date:"d/m/Y" }} - {{ ciclo.fecha_fin|date:"d/m/Y" }}</td>
+                            <td>{{ ciclo.meses }}</td>
+                            <td>
+                                {% if ciclo.activo %}
+                                    <span class="badge badge-primary">Activo</span>
+                                {% else %}
+                                    <span class="badge badge-secondary">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="#" 
+                                   class="btn btn-sm btn-info">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                {# {% url 'servicios_escolares:editar_ciclo' ciclo.id %} #}
+                                <a  
+                                   class="btn btn-sm btn-warning">
+                                    <i class="fas fa-cog"></i> Configurar
+                                </a>
+                                {# href="{% url 'servicios_escolares:paso2_periodos' ciclo.id %}" #}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No hay ciclos registrados</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Validación de fechas
+    $('#id_fecha_inicio, #id_fecha_fin').change(function() {
+        const inicio = new Date($('#id_fecha_inicio').val());
+        const fin = new Date($('#id_fecha_fin').val());
+        
+        if (inicio && fin && fin <= inicio) {
+            alert('La fecha de término debe ser posterior a la fecha de inicio');
+            $('#id_fecha_fin').val('');
+        }
+    });
+
+    // Validación de formato AAAA-AAAA
+    $('#id_nombre').on('blur', function() {
+        const regex = /^\d{4}-\d{4}$/;
+        if (!regex.test($(this).val())) {
+            alert('Formato incorrecto. Use: AAAA-AAAA (ej: 2023-2024)');
+            $(this).val('');
+        }
+    });
+
+    // Mostrar formulario si hay errores
+    {% if ciclo_form.errors %}
+    $(window).on('load', function() {
+        $('#formularioCiclo').collapse('show');
+    });
+    {% endif %}
+});
+</script>
+{% endblock %}

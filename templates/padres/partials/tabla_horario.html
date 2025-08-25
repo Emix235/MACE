@@ -1,0 +1,69 @@
+<div class="table-responsive">
+    <table class="table table-bordered weekly-calendar">
+        <thead class="thead-dark">
+            <tr>
+                <th style="width: 8%" class="text-center">Hora</th>
+                {% for day in week_days %}
+                    <th class="text-center {% if day.date == current_date %}table-primary{% endif %}" style="width: 15%">
+                        <div class="fw-bold">{{ day|date:"l"|title }}</div>
+                        <div class="small">{{ day|date:"d/m/Y" }}</div>
+                    </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for hora in horas %}
+                <tr>
+                    <td class="text-center hour-cell">{{ hora }}</td>
+                    
+                    {% for dia_num in "123456" %}
+                        <td class="{% if week_days.0.date == current_date %}table-primary{% endif %}">
+                            {% if tipo == 'clases' %}
+                                {% for horario in horarios_por_dia|get_item:dia_num %}
+                                    {% if horario.hora_inicio|time:"H:i" <= hora and horario.hora_fin|time:"H:i" > hora %}
+                                        <div class="card mb-2 calendar-event event-expandible clase-card">
+                                            <div class="card-body p-2">
+                                                <h6 class="card-title mb-1">{{ horario.clase.nombre }}</h6>
+                                                <p class="card-text mb-1 small">
+                                                    {{ horario.hora_inicio|time:"H:i" }} - {{ horario.hora_fin|time:"H:i" }}
+                                                </p>
+                                                <p class="card-text small text-muted mb-0">
+                                                    Prof: {{ horario.clase.profesor.nombre }}
+                                                </p>
+                                                <p class="card-text small text-muted">
+                                                    Aula: {{ horario.aula }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            
+                            {% else %}
+                                {% for descanso in descansos_por_dia|get_item:dia_num %}
+                                    {% if descanso.hora_inicio|time:"H:i" <= hora and descanso.hora_fin|time:"H:i" > hora %}
+                                        <div class="card mb-2 calendar-event event-expandible descanso-card">
+                                            <div class="card-body p-2">
+                                                <h6 class="card-title mb-1">Descanso</h6>
+                                                <p class="card-text mb-1 small">
+                                                    {{ descanso.hora_inicio|time:"H:i" }} - {{ descanso.hora_fin|time:"H:i" }}
+                                                </p>
+                                                <p class="card-text small text-muted mb-0">
+                                                    Prof: {{ descanso.profesor.nombre }}
+                                                </p>
+                                                {% if descanso.motivo %}
+                                                    <p class="card-text small text-muted">
+                                                        {{ descanso.motivo }}
+                                                    </p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

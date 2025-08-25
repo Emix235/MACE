@@ -1,0 +1,85 @@
+{% extends 'padres/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container">
+        <h2>Configuración de Tema</h2>
+
+        {% if messages %}
+            <div class="container mt-3 ps-0 pe-0"> <!-- Bootstrap 5 -->
+                {% for message in messages %}
+                    <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% if not can_change_theme %}
+            <div class="alert alert-warning">
+                No tienes permiso para cambiar el tema
+            </div>
+        {% else %}
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="theme-select">Selecciona tu tema:</label>
+                    <select class="form-control" id="theme-select" name="personal_theme">
+                        <option value="">Usar tema global</option>
+                        {% for theme_value, theme_name in THEME_CHOICES %}
+                            <option value="{{ theme_value }}"
+                                    {% if current_theme == theme_value %}selected{% endif %}>
+                                {{ theme_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            </form>
+
+            <!-- Vista previa de temas -->
+            <div class="card mt-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Vista Previa de Temas</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for theme_value, theme_name in theme_config.THEME_CHOICES %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-header text-center">
+                                        <strong>{{ theme_name }}</strong>
+                                        {% if request.user_obj.personal_theme == theme_value %}
+                                            <span class="badge bg-success float-end">Tu Tema</span>
+                                        {% elif theme_value == theme_config.global_theme %}
+                                            <span class="badge bg-primary float-end">Global</span>
+                                        {% endif %}
+
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <img src="{% static 'img/theme-previews/'|add:theme_name|lower|cut:' '|add:'.jpg' %}"
+                                             alt="{{ theme_name }}" class="img-fluid rounded mb-2"
+                                             style="max-height: 150px;">
+                                        <p class="text-muted">Selecciona para previsualizar</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // JavaScript para vista previa interactiva
+        document.querySelectorAll('.theme-preview').forEach(card => {
+            card.addEventListener('click', function () {
+                const theme = this.getAttribute('data-theme');
+                document.getElementById('theme-select').value = theme;
+            });
+        });
+    </script>
+{% endblock %}

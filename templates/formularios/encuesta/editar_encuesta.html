@@ -1,0 +1,176 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="card border-0 shadow">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">
+                    <i class="bi bi-pencil-square me-2"></i>
+                    Editando Encuesta
+                </h3>
+            </div>
+
+            <div class="card-body">
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Encabezado -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <div class="form-floating mb-3">
+                                {{ form.titulo }}
+                                <label for="{{ form.titulo.id_for_label }}">Título</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-floating mb-3">
+                                {{ form.descripcion }}
+                                <label for="{{ form.descripcion.id_for_label }}">Descripción</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preguntas -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="mb-0">
+                                <i class="bi bi-list-check me-2"></i>
+                                Preguntas
+                            </h4>
+                            <button type="button" class="btn btn-sm btn-success" id="add-question">
+                                <i class="bi bi-plus-lg"></i> Añadir
+                            </button>
+                        </div>
+
+                        <div id="preguntas-container" class="accordion">
+                            {{ formset.management_form }}
+                            {% for form_pregunta in formset %}
+                                <div class="accordion-item mb-3 pregunta-item" data-id="{{ forloop.counter0 }}">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse">
+                                            Pregunta #{{ forloop.counter }}
+                                        </button>
+                                    </h2>
+                                    <div class="accordion-collapse collapse show">
+                                        <div class="accordion-body">
+                                            <div class="row g-3">
+                                                <div class="col-md-8">
+                                                    {{ form_pregunta.texto.label_tag }}
+                                                    {{ form_pregunta.texto }}
+                                                </div>
+                                                <div class="col-md-2">
+                                                    {{ form_pregunta.tipo.label_tag }}
+                                                    {{ form_pregunta.tipo }}
+                                                </div>
+                                                <div class="col-md-2">
+                                                    {{ form_pregunta.orden.label_tag }}
+                                                    {{ form_pregunta.orden }}
+                                                </div>
+                                                <div class="col-12">
+                                                    <div class="form-check form-switch">
+                                                        {{ form_pregunta.obligatoria }}
+                                                        <label class="form-check-label"
+                                                               for="{{ form_pregunta.obligatoria.id_for_label }}">
+                                                            {{ form_pregunta.obligatoria.label }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                {% if form_pregunta.DELETE %}
+                                                    <div class="col-12">
+                                                        <div class="form-check">
+                                                            {{ form_pregunta.DELETE }}
+                                                            <label class="form-check-label text-danger"
+                                                                   for="{{ form_pregunta.DELETE.id_for_label }}">
+                                                                Eliminar esta pregunta
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                                {{ form_pregunta.id }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between border-top pt-3">
+                        <a href="{% url 'formularios:lista_encuestas_servicio' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Estilos personalizados para asegurar la visualización */
+        .form-control, .form-select {
+            display: block;
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #212529;
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .form-control:focus, .form-select:focus {
+            color: #212529;
+            background-color: #fff;
+            border-color: #86b7fe;
+            outline: 0;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        .pregunta-item {
+            transition: all 0.2s ease;
+        }
+
+        .pregunta-item:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Añadir nueva pregunta
+            const addButton = document.getElementById('add-question');
+            if (addButton) {
+                addButton.addEventListener('click', function () {
+                    const totalForms = document.getElementById('id_form-TOTAL_FORMS');
+                    const formIdx = parseInt(totalForms.value);
+                    const container = document.getElementById('preguntas-container');
+                    const emptyForm = document.querySelector('.pregunta-item').cloneNode(true);
+
+                    // Actualizar IDs y names
+                    emptyForm.querySelectorAll('[id]').forEach(el => {
+                        el.id = el.id.replace(/-\d+-/g, `-${formIdx}-`);
+                    });
+
+                    emptyForm.querySelectorAll('[name]').forEach(el => {
+                        el.name = el.name.replace(/-\d+-/g, `-${formIdx}-`);
+                    });
+
+                    // Limpiar valores
+                    emptyForm.querySelectorAll('input:not([type="checkbox"]), textarea').forEach(el => {
+                        el.value = '';
+                    });
+
+                    // Añadir al contenedor
+                    container.appendChild(emptyForm);
+                    totalForms.value = formIdx + 1;
+                });
+            }
+        });
+    </script>
+{% endblock %}

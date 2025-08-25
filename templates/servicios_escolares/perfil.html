@@ -1,0 +1,260 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% load static %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        {% if usuario.imagen_usuario %}
+                            <img src="{{ usuario.imagen_usuario.url }}" class="rounded-circle mb-3" width="120"
+                                 alt="Avatar">
+                        {% else %}
+                            <div class="rounded-circle bg-primary mb-3 mx-auto d-flex align-items-center justify-content-center"
+                                 style="width: 120px; height: 120px;">
+                                <span class="text-white fs-3 fw-bold">{{ usuario.nombre_completo|first }}{{ usuario.apellidos|first }}</span>
+                            </div>
+                        {% endif %}
+                        <h5 class="text-white">{{ usuario.nombre_completo }}</h5>
+                        <span class="badge bg-secondary">{{ usuario.rol_usuario }}</span>
+                    </div>
+
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'servicios_escolares:configuracion' %}">
+                                <i class="bi bi-gear-fill me-2"></i> Configuración
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="bi bi-shield-lock me-2"></i> Seguridad
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'servicios_escolares:panel_notificaciones' %}">
+                                <i class="bi bi-bell-fill me-2"></i> Notificaciones
+                            </a>
+                        </li>
+
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Configuración de Cuenta</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                                    data-bs-target="#avatarModal">
+                                <i class="bi bi-camera-fill me-1"></i> Cambiar foto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mensajes flash -->
+                {% if messages %}
+                    <div class="alert-container">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i> Información Personal</h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="post" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <div class="mb-3">
+                                        <label for="nombre_completo" class="form-label">Nombre completo</label>
+                                        <input type="text" class="form-control" id="nombre_completo"
+                                               value="{{ usuario.nombre_completo }}" disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="apellidos" class="form-label">Apellidos</label>
+                                        <input type="text" class="form-control" id="apellidos"
+                                               value="{{ usuario.apellidos }}" disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">Correo electrónico</label>
+                                        <input type="email" class="form-control" id="email"
+                                               value="{{ usuario.correo_electronico }}" disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="telefono" class="form-label">Teléfono</label>
+                                        {# <input type="tel" class="form-control" id="telefono" #}
+                                        {# value="{{ usuario.telefono|default:'Sin especificar' }}" disabled>  #}
+                                        <input type="tel" class="form-control"
+                                               id="telefono" value="{{ usuario.telefono_principal }}"
+                                               disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="telefono_respaldo" class="form-label">Teléfono de respaldo</label>
+                                        <input type="text" class="form-control" id="apellidos"
+                                               value="{{ usuario.telefono_respaldo }}" disabled>
+                                    </div>
+                                    <button type="button"
+                                            class="btn btn-outline-primary"
+                                            id="editarInfoBtn"
+                                            onclick="window.location.href='{% url 'servicios_escolares:editar' %}'">
+                                        <i class="bi bi-pencil-fill me-1"></i> Editar información
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="bi bi-key-fill me-2"></i> Seguridad</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span>Contraseña</span>
+                                    <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
+                                            data-bs-target="#cambiarPasswordModal">
+                                        Cambiar contraseña
+                                    </button>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>Último acceso</span>
+                                    <span class="text-muted">{{ ultimo_acceso }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="bi bi-info-circle-fill me-2"></i> Información del Sistema
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Rol:</span>
+                                    <span class="text-muted">{{ rol }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Estado de cuenta:</span>
+                                    <span class="badge bg-success">Activo</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Miembro desde:</span>
+                                    <span class="text-muted">{{ usuario.fecha_registro|date:"d/m/Y" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal para cambiar avatar -->
+    <div class="modal fade" id="avatarModal" tabindex="-1" aria-labelledby="avatarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="avatarModalLabel">Cambiar foto de perfil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="avatarForm" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="imagen_usuario" class="form-label">Seleccionar imagen</label>
+                            <input class="form-control" type="file" id="imagen_usuario" name="imagen_usuario"
+                                   accept="image/*">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="avatarForm" class="btn btn-primary">Guardar cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para cambiar contraseña -->
+    <div class="modal fade" id="cambiarPasswordModal" tabindex="-1" aria-labelledby="cambiarPasswordModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cambiarPasswordModalLabel">Cambiar contraseña</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="passwordForm" method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="current_password" class="form-label">Contraseña actual</label>
+                            <input type="password" class="form-control" id="current_password" name="current_password"
+                                   required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">Nueva contraseña</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirmar nueva contraseña</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password"
+                                   required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" form="passwordForm" class="btn btn-primary">Cambiar contraseña</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script para habilitar edición -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const editBtn = document.getElementById('editarInfoBtn');
+            const inputs = document.querySelectorAll('#informacionPersonal input[disabled]');
+
+            editBtn.addEventListener('click', function () {
+                inputs.forEach(input => {
+                    input.disabled = !input.disabled;
+                });
+
+                if (this.textContent.includes('Editar')) {
+                    this.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Guardar cambios';
+                    this.classList.remove('btn-outline-primary');
+                    this.classList.add('btn-primary');
+                } else {
+                    this.innerHTML = '<i class="bi bi-pencil-fill me-1"></i> Editar información';
+                    this.classList.remove('btn-primary');
+                    this.classList.add('btn-outline-primary');
+                    // Aquí podrías agregar una llamada AJAX para guardar los cambios
+                }
+            });
+        });
+    </script>
+{% endblock %}
+
+
+<li class="nav-item">
+    <a class="nav-link" href="#">
+        <i class="bi bi-gear-fill me-2"></i> Preferencias
+    </a>
+</li>

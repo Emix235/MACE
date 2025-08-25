@@ -1,0 +1,794 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container-fluid mt-4">
+        <!-- Encabezado -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">
+                <i class="fas fa-user-tie me-2"></i>
+                {{ padre.nombre_completo }} {{ padre.apellidos }}
+            </h1>
+            <a href="{% url 'servicios_escolares:padres_por_grupo' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Volver
+            </a>
+        </div>
+
+        <!-- Sección principal en pestañas -->
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white p-0">
+                <ul class="nav nav-tabs" id="padreTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info"
+                                type="button">
+                            <i class="fas fa-info-circle me-1"></i> Información
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="citas-tab" data-bs-toggle="tab" data-bs-target="#citas"
+                                type="button">
+                            <i class="fas fa-calendar-alt me-1"></i> Citas
+                            ({{ citas_solicitadas.count|add:citas_como_asistente.count }})
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="notas-tab" data-bs-toggle="tab" data-bs-target="#notas"
+                                type="button">
+                            <i class="fas fa-sticky-note me-1"></i> Notas
+                            ({{ notas_enviadas.count|add:notas_recibidas.count }})
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="notificaciones-tab" data-bs-toggle="tab"
+                                data-bs-target="#notificaciones" type="button">
+                            <i class="fas fa-bell me-1"></i> Notificaciones
+                            <span class="badge bg-{% if notificaciones_unread %}danger{% else %}secondary{% endif %} ms-1">
+            {{ notificaciones.count }}
+        </span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="prioritarias-tab" data-bs-toggle="tab"
+                                data-bs-target="#prioritarias" type="button">
+                            <i class="fas fa-exclamation-triangle me-1"></i> Citas Prioritarias
+                            <span class="badge bg-{% if citas_prioritarias.exists %}danger{% else %}secondary{% endif %} ms-1">
+            {{ citas_prioritarias.count }}
+        </span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="reprogramaciones-tab" data-bs-toggle="tab"
+                                data-bs-target="#reprogramaciones" type="button">
+                            <i class="fas fa-calendar-times me-1"></i> Reprogramaciones
+                            <span class="badge bg-secondary ms-1">{{ reprogramaciones.count }}</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card-body">
+                <div class="tab-content" id="padreTabsContent">
+                    <!-- Pestaña 1: Información básica -->
+                    <div class="tab-pane fade show active" id="info" role="tabpanel">
+                        <div class="row">
+                            <!-- Datos personales -->
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-id-card me-2"></i> Datos Personales
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item">
+                                                <strong><i class="fas fa-envelope me-2"></i> Email:</strong>
+                                                {{ padre.correo_electronico }}
+                                            </li>
+                                            <li class="list-group-item">
+                                                <strong><i class="fas fa-phone me-2"></i> Teléfono:</strong>
+                                                {{ padre.telefono_principal }}
+                                                {% if padre.telefono_respaldo %}
+                                                    <br>
+                                                    <strong class="ms-4"><i class="fas fa-phone-alt me-2"></i> Respaldo:</strong>
+                                                    {{ padre.telefono_respaldo }}
+                                                {% endif %}
+                                            </li>
+                                            <li class="list-group-item">
+                                                <strong><i class="fas fa-calendar-day me-2"></i> Registro:</strong>
+                                                {{ padre.fecha_registro|date:"d/m/Y" }}
+                                            </li>
+                                            <li class="list-group-item">
+                                                <strong><i class="fas fa-user-check me-2"></i> Estado:</strong>
+                                                <span class="badge bg-{% if padre.estado_cuenta == 'Activo' %}success{% else %}warning{% endif %}">
+                                                {{ padre.estado_cuenta }}
+                                            </span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Estudiantes a cargo -->
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header bg-info text-white">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-users me-2"></i> Estudiantes a Cargo
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if estudiantes %}
+                                            <div class="list-group">
+                                                {% for estudiante in estudiantes %}
+                                                    <div class="list-group-item">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div>
+                                                                <h6 class="mb-1">
+                                                                    <i class="fas fa-user-graduate me-2"></i>
+                                                                    {{ estudiante.nombre_completo }}
+                                                                </h6>
+                                                                <p class="mb-1">
+                                                                    <strong>Matrícula:</strong> {{ estudiante.matricula }}
+                                                                </p>
+                                                                <p class="mb-1">
+                                                                    <strong>Grupo:</strong> {{ estudiante.grupo_actual }}
+                                                                </p>
+                                                            </div>
+                                                            <span class="badge bg-primary">
+                                                    {{ estudiante.edad|default:"N/A" }} años
+                                                </span>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-warning mb-0">
+                                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                                No tiene estudiantes registrados.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pestaña 2: Citas -->
+                    <div class="tab-pane fade" id="citas" role="tabpanel">
+                        <div class="row">
+                            <!-- Citas solicitadas -->
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-calendar-plus me-2"></i> Citas Solicitadas
+                                            ({{ citas_solicitadas.count }})
+                                        </h5>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        {% if citas_solicitadas %}
+                                            <div class="list-group list-group-flush">
+                                                {% for cita in citas_solicitadas %}
+                                                    <div class="list-group-item">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div>
+                                                                <h6 class="mb-1">
+                                                                    <i class="fas fa-{{ cita.tipo|slice:':3' }} me-2"></i>
+                                                                    {{ cita.titulo }}
+                                                                </h6>
+                                                                <p class="mb-1">
+                                                                    <strong>Fecha:</strong>
+                                                                    {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}
+                                                                </p>
+                                                                <p class="mb-1">
+                                                                    <strong>Estado:</strong>
+                                                                    <span class="badge bg-{{ cita.get_badge_color }}">
+                                                            {{ cita.get_estado_display }}
+                                                        </span>
+                                                                </p>
+                                                            </div>
+                                                            <a href="#" class="btn btn-sm btn-outline-primary"
+                                                               data-bs-toggle="modal"
+                                                               data-bs-target="#citaModal{{ cita.id }}">
+                                                                <i class="fas fa-search"></i> Ver Cita
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-info m-3">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                No ha solicitado citas.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Citas como asistente -->
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-calendar-check me-2"></i> Citas como Asistente
+                                            ({{ citas_como_asistente.count }})
+                                        </h5>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        {% if citas_como_asistente %}
+                                            <div class="list-group list-group-flush">
+                                                {% for cita in citas_como_asistente %}
+                                                    <div class="list-group-item">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div>
+                                                                <h6 class="mb-1">
+                                                                    <i class="fas fa-{{ cita.tipo|slice:':3' }} me-2"></i>
+                                                                    {{ cita.titulo }}
+                                                                </h6>
+                                                                <p class="mb-1">
+                                                                    <strong>Fecha:</strong>
+                                                                    {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}
+                                                                </p>
+                                                                <p class="mb-1">
+                                                                    <strong>Solicitante:</strong>
+                                                                    {{ cita.solicitante.nombre_completo }}
+                                                                </p>
+                                                            </div>
+                                                            <a href="#" class="btn btn-sm btn-outline-primary"
+                                                               data-bs-toggle="modal"
+                                                               data-bs-target="#citaModal{{ cita.id }}">
+                                                                <i class="fas fa-search"></i> Ver Cita
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-info m-3">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                No participa en citas como asistente.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pestaña 3: Notas -->
+                    <div class="tab-pane fade" id="notas" role="tabpanel">
+                        <div class="row">
+                            <!-- Notas enviadas -->
+                            <div class="col-md-6">
+                                <div class="card mb-4">
+                                    <div class="card-header bg-info text-white">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-paper-plane me-2"></i> Notas Enviadas
+                                            ({{ notas_enviadas.count }})
+                                        </h5>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        {% if notas_enviadas %}
+                                            <div class="list-group list-group-flush">
+                                                {% for nota in notas_enviadas %}
+                                                    <div class="list-group-item">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div>
+                                                                <h6 class="mb-1">
+                                                                    <i class="fas fa-{{ nota.tipo|slice:':3' }} me-2"></i>
+                                                                    {{ nota.titulo }}
+                                                                </h6>
+                                                                <p class="mb-1">
+                                                                    <strong>Destinatario:</strong> {{ nota.get_destinatario }}
+                                                                </p>
+                                                                <p class="mb-1">
+                                                                    <strong>Fecha:</strong> {{ nota.fecha_creacion|date:"d/m/Y" }}
+                                                                </p>
+                                                            </div>
+                                                            <a href="#" class="btn btn-sm btn-outline-primary"
+                                                               data-bs-toggle="modal"
+                                                               data-bs-target="#notaModal{{ nota.id }}">
+                                                                <i class="fas fa-eye"></i> Ver Notas
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-info m-3">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                No ha enviado notas.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notas recibidas -->
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-inbox me-2"></i> Notas Recibidas
+                                            ({{ notas_recibidas.count }})
+                                        </h5>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        {% if notas_recibidas %}
+                                            <div class="list-group list-group-flush">
+                                                {% for nota in notas_recibidas %}
+                                                    <div class="list-group-item">
+                                                        <div class="d-flex justify-content-between align-items-start">
+                                                            <div>
+                                                                <h6 class="mb-1">
+                                                                    <i class="fas fa-{{ nota.tipo|slice:':3' }} me-2"></i>
+                                                                    {{ nota.titulo }}
+                                                                </h6>
+                                                                <p class="mb-1">
+                                                                    <strong>De:</strong> {{ nota.get_creador_display }}
+                                                                </p>
+                                                                <p class="mb-1">
+                                                                    <strong>Tipo:</strong>
+                                                                    <span class="badge bg-{{ nota.tipo_css }}">
+                                                            {{ nota.get_tipo_display }}
+                                                        </span>
+                                                                </p>
+                                                            </div>
+                                                            <a href="#" class="btn btn-sm btn-outline-primary"
+                                                               data-bs-toggle="modal"
+                                                               data-bs-target="#notaModal{{ nota.id }}">
+                                                                <i class="fas fa-eye"></i> Ver Notas
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-info m-3">
+                                                <i class="fas fa-info-circle me-2"></i>
+                                                No tiene notas recibidas.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--Notificaciones-->
+                    <div class="tab-pane fade" id="notificaciones" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-bell me-2"></i> Historial de Notificaciones
+                                    </h5>
+                                    <form method="post"
+                                          action="{% url 'servicios_escolares:marcar_todas_leidas' padre.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-light">
+                                            <i class="fas fa-check-circle me-1"></i> Marcar todas como leídas
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                {% if notificaciones %}
+                                    <div class="list-group list-group-flush">
+                                        {% for notif in notificaciones %}
+                                            <a href="{{ notif.url }}"
+                                               class="list-group-item list-group-item-action {% if notif.is_unread %}list-group-item-warning{% endif %}">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="mb-1">
+                                                            <i class="fas fa-{{ notif.event_type|slice:':3' }} me-2"></i>
+                                                            {{ notif.title }}
+                                                            {% if notif.is_unread %}
+                                                                <span class="badge bg-danger ms-2">Nueva</span>
+                                                            {% endif %}
+                                                        </h6>
+                                                        <p class="mb-1">{{ notif.message|truncatechars:100 }}</p>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-clock me-1"></i>
+                                                            {{ notif.created_at|timesince }} atrás
+                                                        </small>
+                                                    </div>
+                                                    <div>
+                                                        {% if notif.sender %}
+                                                            <small class="text-muted">De: {{ notif.sender }}</small>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-info m-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        No hay notificaciones registradas.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Citas prioritarias -->
+                    <div class="tab-pane fade" id="prioritarias" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-exclamation-triangle me-2"></i> Citas Prioritarias
+                                </h5>
+                            </div>
+                            <div class="card-body p-0">
+                                {% if citas_prioritarias %}
+                                    <div class="list-group list-group-flush">
+                                        {% for cita in citas_prioritarias %}
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="mb-1">
+                                <span class="badge bg-{{ cita.color_prioridad }} me-2">
+                                    {{ cita.get_nivel_prioridad_display }}
+                                </span>
+                                                            {{ cita.titulo }}
+                                                        </h6>
+                                                        <p class="mb-1">
+                                                            <strong>Fecha:</strong> {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}
+                                                        </p>
+                                                        <p class="mb-1">
+                                                            <strong>Motivo
+                                                                prioridad:</strong> {{ cita.motivo_prioridad|truncatechars:50 }}
+                                                        </p>
+                                                    </div>
+                                                    <div class="btn-group">
+                                                        <a href="#" class="btn btn-sm btn-outline-primary"
+                                                           data-bs-toggle="modal"
+                                                           data-bs-target="#prioritariaModal{{ cita.id }}">
+                                                            <i class="fas fa-search"></i>Ver detalles
+                                                        </a>
+                                                        {# <!<a href="{% url 'reprogramar_cita_prioritaria' cita.id %}" #}
+                                                        {# class="btn btn-sm btn-outline-warning"> #}
+                                                        {# <i class="fas fa-calendar-alt"></i> #}
+                                                        {#                                                        </a> #}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-info m-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        No hay citas prioritarias registradas.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Reprogramaciones -->
+                    <div class="tab-pane fade" id="reprogramaciones" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-calendar-times me-2"></i> Historial de Reprogramaciones
+                                </h5>
+                            </div>
+                            <div class="card-body p-0">
+                                {% if reprogramaciones %}
+                                    <div class="list-group list-group-flush">
+                                        {% for repro in reprogramaciones %}
+                                            <div class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <h6 class="mb-1">
+                                                            <i class="fas fa-calendar-alt me-2"></i>
+                                                            {{ repro.cita_original.titulo }}
+                                                        </h6>
+                                                        <p class="mb-1">
+                                                            <strong>Original:</strong> {{ repro.fecha_hora_original|date:"d/m/Y H:i" }}
+                                                        </p>
+                                                        <p class="mb-1">
+                                                            <strong>Nueva:</strong> {{ repro.fecha_hora_nueva|date:"d/m/Y H:i" }}
+                                                        </p>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-user me-1"></i> {{ repro.realizado_por }}
+                                                            <i class="fas fa-clock ms-2 me-1"></i> {{ repro.fecha_reprogramacion|date:"d/m/Y" }}
+                                                        </small>
+                                                    </div>
+                                                    <a href="#" class="btn btn-sm btn-outline-primary"
+                                                       data-bs-toggle="modal"
+                                                       data-bs-target="#reprogramacionModal{{ repro.id }}">
+                                                        <i class="fas fa-search"></i>Ver detalles
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-info m-3">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        No hay reprogramaciones registradas.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modales para detalles completos -->
+    {% for cita in citas_solicitadas %}
+        <div class="modal fade" id="citaModal{{ cita.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-{{ cita.get_badge_color }} text-white">
+                        <h5 class="modal-title">{{ cita.titulo }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Tipo:</strong> {{ cita.get_tipo_display }}</p>
+                                <p><strong>Fecha y hora:</strong> {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}</p>
+                                <p><strong>Duración:</strong> {{ cita.duracion }} minutos</p>
+                                <p><strong>Estado:</strong> <span
+                                        class="badge bg-{{ cita.get_badge_color }}">{{ cita.get_estado_display }}</span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Ubicación:</strong> {{ cita.ubicacion }}</p>
+                                {% if cita.profesor %}
+                                    <p><strong>Profesor:</strong> {{ cita.profesor.nombre_completo }}</p>
+                                {% endif %}
+                                {% if cita.servicio_escolar %}
+                                    <p><strong>Servicio Escolar:</strong> {{ cita.servicio_escolar.nombre_completo }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h6>Motivo:</h6>
+                            <p>{{ cita.motivo }}</p>
+                        </div>
+                        {% if cita.observaciones %}
+                            <div class="mt-3">
+                                <h6>Observaciones:</h6>
+                                <p>{{ cita.observaciones }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    {# PARA NOTAS, LE QUITE ESTO |add:notas_recibidas, PORQUE ESTA LISTA AUN NO ESTA HECHA #}
+    {% for nota in notas_enviadas %}
+        <div class="modal fade" id="notaModal{{ nota.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-{{ nota.tipo_css }} text-white">
+                        <h5 class="modal-title">{{ nota.titulo }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>Tipo:</strong> {{ nota.get_tipo_display }}</p>
+                                <p><strong>Fecha:</strong> {{ nota.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Creada por:</strong> {{ nota.get_creador_display }}</p>
+                                <p><strong>Para:</strong> {{ nota.get_destinatario }}</p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>Contenido:</h6>
+                            <p>{{ nota.contenido }}</p>
+                        </div>
+                        {% if nota.imagen or nota.documento or nota.audio %}
+                            <div class="mb-3">
+                                <h6>Archivos adjuntos:</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% if nota.imagen %}
+                                        <a href="{{ nota.imagen.url }}" class="btn btn-sm btn-outline-primary"
+                                           target="_blank">
+                                            <i class="fas fa-image me-1"></i> Imagen
+                                        </a>
+                                    {% endif %}
+                                    {% if nota.documento %}
+                                        <a href="{{ nota.documento.url }}" class="btn btn-sm btn-outline-primary"
+                                           target="_blank">
+                                            <i class="fas fa-file-alt me-1"></i> Documento
+                                        </a>
+                                    {% endif %}
+                                    {% if nota.audio %}
+                                        <a href="{{ nota.audio.url }}" class="btn btn-sm btn-outline-primary"
+                                           target="_blank">
+                                            <i class="fas fa-volume-up me-1"></i> Audio
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    {% for notif in notificaciones %}
+        <div class="modal fade" id="notifModal{{ notif.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-{% if notif.is_unread %}warning{% else %}info{% endif %} text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-{{ notif.event_type|slice:':3' }} me-2"></i>
+                            {{ notif.title }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>Fecha:</strong> {{ notif.created_at|date:"d/m/Y H:i" }}</p>
+                                <p><strong>Estado:</strong>
+                                    <span class="badge bg-{% if notif.is_unread %}danger{% else %}success{% endif %}">
+                                {% if notif.is_unread %}No leída{% else %}Leída{% endif %}
+                            </span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                {% if notif.sender %}
+                                    <p><strong>Enviada por:</strong> {{ notif.sender }}</p>
+                                {% endif %}
+                                {% if notif.target %}
+                                    <p><strong>Relacionado con:</strong> {{ notif.target }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>Mensaje completo:</h6>
+                            <p>{{ notif.message }}</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="{{ notif.url }}" class="btn btn-primary">
+                            <i class="fas fa-external-link-alt me-1"></i> Ver detalles
+                        </a>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    {# Modal para citas prioritarias #}
+
+    {% for cita in citas_prioritarias %}
+        <div class="modal fade" id="prioritariaModal{{ cita.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-{{ cita.color_prioridad }} text-white">
+                        <h5 class="modal-title">
+                    <span class="badge bg-white text-{{ cita.color_prioridad }} me-2">
+                        {{ cita.get_nivel_prioridad_display }}
+                    </span>
+                            {{ cita.titulo }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Tipo urgencia:</strong> {{ cita.get_tipo_display }}</p>
+                                <p><strong>Fecha y hora:</strong> {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}</p>
+                                <p><strong>Duración:</strong> {{ cita.duracion }} minutos</p>
+                                <p><strong>Estado:</strong> <span
+                                        class="badge bg-{{ cita.get_badge_color }}">{{ cita.get_estado_display }}</span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Prioridad marcada por:</strong> {{ cita.autor_prioridad }}</p>
+                                <p><strong>Fecha prioridad:</strong> {{ cita.fecha_marcado_prioridad|date:"d/m/Y H:i" }}
+                                </p>
+                                {% if cita.evidencia_archivo %}
+                                    <p><strong>Evidencia:</strong>
+                                        <a href="{{ cita.evidencia_archivo.url }}" target="_blank"
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-file-download me-1"></i> Descargar
+                                        </a>
+                                    </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <h6>Motivo de prioridad:</h6>
+                            <p>{{ cita.motivo_prioridad }}</p>
+                        </div>
+                        <div class="mt-3">
+                            <h6>Detalles de la cita:</h6>
+                            <p>{{ cita.motivo }}</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <!--<a href="{#  #} url 'reprogramar_cita_prioritaria' cita.id %}" class="btn btn-warning">
+                            <i class="fas fa-calendar-alt me-1"></i> Reprogramar
+                        </a>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    <!--Modal para reprogramaciones-->
+
+    {% for repro in reprogramaciones %}
+        <div class="modal fade" id="reprogramacionModal{{ repro.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="fas fa-calendar-times me-2"></i>
+                            Reprogramación #{{ repro.id }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6>Original:</h6>
+                                <p><strong>Fecha:</strong> {{ repro.fecha_hora_original|date:"d/m/Y H:i" }}</p>
+                                <p><strong>Título:</strong> {{ repro.titulo_original }}</p>
+                                <p><strong>Tipo:</strong> {{ repro.get_tipo_original_display }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Nueva programación:</h6>
+                                <p><strong>Fecha:</strong> {{ repro.fecha_hora_nueva|date:"d/m/Y H:i" }}</p>
+                                <p><strong>Realizado por:</strong> {{ repro.realizado_por }}</p>
+                                <p><strong>Fecha cambio:</strong> {{ repro.fecha_reprogramacion|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <h6>Motivo de reprogramación:</h6>
+                            <p>{{ repro.motivo }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6>Detalles originales:</h6>
+                            <p><strong>Ubicación:</strong> {{ repro.ubicacion_original }}</p>
+                            <p><strong>Duración:</strong> {{ repro.duracion_original }} minutos</p>
+                            <p><strong>Estado:</strong> {{ repro.get_estado_original_display }}</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    <style>
+        .nav-tabs .nav-link {
+            color: #fff;
+            border: none;
+        }
+
+        .nav-tabs .nav-link:hover {
+            opacity: 0.8;
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}

@@ -1,0 +1,153 @@
+{% extends 'padres/base.html' %}
+
+{% block content %}
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet'/>
+    <style>
+        #calendario {
+            width: 100%;
+            height: 910px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Estilos para eventos */
+        .fc-event-tiempo-libre {
+            background-color: #28a745 !important;
+            border-color: #28a745 !important;
+            color: white !important;
+            padding: 3px;
+            cursor: pointer;
+        }
+
+        .fc-daygrid-event-dot {
+            display: none !important;
+        }
+
+        .fc-event-ocupado {
+            background-color: #dc3545 !important;
+            border-color: #dc3545 !important;
+            color: white !important;
+            pointer-events: none; /* evita clics */
+        }
+    </style>
+    <div class="container py-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Horarios disponibles - Prof. {{ profesor.nombre_completo }}
+                </h4>
+            </div>
+
+            <div class="card-body">
+                <div id="calendario"></div>
+
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Haz clic en los horarios verdes para agendar una cita
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales-all.min.js'></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Inicializando calendario...');
+
+            const calendarEl = document.getElementById('calendario');
+            if (!calendarEl) {
+                console.error('ERROR: No se encontró el elemento del calendario');
+                return;
+            }
+
+            const profesorId = "{{ profesor.id }}";
+            console.log('Configurando calendario para profesor ID:', profesorId);
+
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'es',
+                firstDay: 1, // Lunes como primer día
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                editable: false,
+                selectable: false,
+                eventDisplay: 'block',
+                eventTimeFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                },
+                events: {
+                    url: `/padres/profesores/${profesorId}/horarios-disponibles/`,
+                    method: 'GET',
+                    extraParams: {
+                        fecha: 'all'
+                    },
+                    failure: function (error) {
+                        console.error('Error al cargar eventos:', error);
+                        alert('Error al cargar horarios. Recarga la página.');
+                    }
+                },
+                eventDidMount: function (info) {
+                    console.log('Evento renderizado:', info.event.title, info.event.start, info.event.end);
+                    if (info.event.extendedProps.tipo) {
+                        info.el.classList.add('fc-event-' + info.event.extendedProps.tipo.replace('_', '-'));
+                    }
+                },
+                eventClick: function (info) {
+                    if (info.event.extendedProps.tipo &&
+                        (info.event.extendedProps.tipo === 'tiempo_libre' ||
+                            info.event.extendedProps.tipo === 'tiempo_libre_recurrente')) {
+
+                        const start = info.event.start;
+                        const end = info.event.end;
+                        const fechaStr = start.toISOString().split('T')[0];
+                        const horaInicio = start.toLocaleTimeString('es-MX', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                        }).replace(/\./g, '');
+
+                        const duracion = Math.round((end - start) / (1000 * 60));
+
+                        console.log('Navegando a formulario con:', {
+                            fecha: fechaStr,
+                            hora: horaInicio,
+                            duracion: duracion
+                        });
+
+                        window.location.href = `{% url 'padres:crear_cita_calendario' profesor.id %}?` +
+                            `fecha_seleccionada=${fechaStr}&` +
+                            `hora_inicio=${horaInicio}&` +
+                            `duracion=${duracion}`;
+                    }
+                },
+                loading: function (isLoading) {
+                    if (isLoading) {
+                        console.log('Cargando eventos...');
+                    } else {
+                        console.log('Eventos cargados');
+                        // Forzar redibujado si los eventos no se ven
+                        setTimeout(() => calendar.updateSize(), 100);
+                    }
+                }
+            });
+
+            calendar.render();
+            console.log('Calendario renderizado');
+
+            // Forzar redibujado después de 1 segundo por si acaso
+            setTimeout(() => {
+                console.log('Actualizando tamaño del calendario...');
+                calendar.updateSize();
+            }, 1000);
+        });
+    </script>
+{% endblock %}

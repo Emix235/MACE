@@ -1,0 +1,130 @@
+{# Esto DEBE ser la primera línea del template #}
+{% extends base_template %}
+{% block content %}
+    <div class="container mt-4">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h4 class="m-0 font-weight-bold text-primary">
+                    Ticket #{{ ticket.id }} - {{ ticket.asunto }}
+                </h4>
+                <span class="badge 
+                {% if ticket.estado == 'abierto' %}bg-danger
+                {% elif ticket.estado == 'en_progreso' %}bg-warning text-dark
+                {% else %}bg-success{% endif %}">
+                {{ ticket.get_estado_display }}
+            </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Información del Ticket</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <strong>Usuario:</strong>
+                                {{ ticket.get_tipo_usuario_display }} - {{ ticket.usuario }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Fecha creación:</strong>
+                                {{ ticket.creado_en|date:"d/m/Y H:i" }}
+                            </li>
+                            {% if ticket.asignado_a %}
+                                <li class="list-group-item">
+                                    <strong>Asignado a:</strong>
+                                    {{ ticket.asignado_a.get_full_name }}
+                                </li>
+                            {% endif %}
+                            {% if ticket.url_pagina %}
+                                <div class="mt-4">
+                                    <h5 class="mb-3">Página reportada</h5>
+
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        Esta página requiere autenticación. Para verla completa:
+                                        <a href="{{ ticket.url_pagina }}" target="_blank" class="alert-link">
+                                            Haz clic aquí para abrirla en nueva pestaña
+                                        </a>
+                                    </div>
+
+                                    <div class="card border-secondary">
+                                        <div class="card-header bg-secondary text-white py-2">
+                                            Vista previa estática
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <div style="height: 400px; background: #f8f9fa; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                                                <i class="fas fa-lock fa-3x mb-3 text-muted"></i>
+                                                <h5 class="text-muted">Contenido protegido</h5>
+                                                <p class="text-muted">Esta página requiere credenciales de acceso</p>
+                                                <a href="{{ ticket.url_pagina }}" target="_blank"
+                                                   class="btn btn-primary mt-2">
+                                                    <i class="fas fa-external-link-alt me-1"></i> Acceder a la página
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3">
+                                        <div class="input-group">
+                                            <span class="input-group-text">URL reportada:</span>
+                                            <input type="text" class="form-control" value="{{ ticket.url_pagina }}"
+                                                   readonly>
+                                            <button class="btn btn-outline-secondary" onclick="copyUrl()">
+                                                <i class="far fa-copy"></i> Copiar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <script>
+                                    function copyUrl() {
+                                        const urlInput = document.querySelector('input[type="text"]');
+                                        urlInput.select();
+                                        document.execCommand('copy');
+                                        // Puedes agregar notificación de copiado si usas Toast o similar
+                                    }
+                                </script>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Descripción del problema</h5>
+                        <div class="border p-3 bg-light rounded">
+                            {{ ticket.descripcion|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+
+                {% if ticket.respuesta %}
+                    <div class="alert alert-success mt-4">
+                        <h5>Respuesta de soporte</h5>
+                        <p>{{ ticket.respuesta|linebreaks }}</p>
+                        <small class="text-muted">
+                            Actualizado el {{ ticket.actualizado_en|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                {% elif puede_editar %}
+                    <div class="alert alert-info mt-4">
+                        <p>Este ticket aún no tiene respuesta.</p>
+                    </div>
+                {% endif %}
+
+                <div class="mt-4">
+                    {% if puede_editar %}
+                        <a href="{% url 'editar_ticket' ticket.id %}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Responder/Editar
+                        </a>
+                    {% endif %}
+                    <a href="{% if request.session.credenciales_padre %}
+             {% url 'padres:tickets_padre' %}
+             {% elif request.session.credenciales_profesor %}
+             {% url 'profesores:panel_tickets' %}
+             {% else %}
+             {% url 'servicios_escolares:todos_tickets' %}
+             {% endif %}"
+                       class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

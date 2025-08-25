@@ -1,0 +1,1244 @@
+{% extends 'profesores/base.html' %}
+{% load static %}
+{% block content %}
+    <div class="dashboard-container">
+        <!-- Barra superior -->
+        <div class="dashboard-header">
+            <div class="header-left">
+                <h2>Panel del Profesor</h2>
+                <p class="text-muted">Bienvenido, Prof. {{ profesor.nombre_completo }}</p>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    {% if profesor.imagen_usuario %}
+                        <img src="{{ profesor.imagen_usuario.url }}" class="user-avatar" alt="Foto de perfil">
+                    {% else %}
+                        <div class="avatar-placeholder">
+                            {{ profesor.nombre_completo|first }}{{ profesor.apellidos|first }}
+                        </div>
+                    {% endif %}
+                    <a href="{% url 'profesores:logout_profesor' %}" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <br>
+        <br>
+        {% if messages %}
+            <div class="container mt-3 ps-0 pe-0"> <!-- Bootstrap 5 -->
+                {% for message in messages %}
+                    <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if citas_prioritarias %}
+            <div class="card border-danger mb-4 position-relative overflow-hidden">
+                <!-- Cabecera de alerta -->
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+            <span class="badge bg-white text-danger me-2">
+                <i class="fas fa-exclamation"></i>
+            </span>
+                        <h5 class="mb-0">Citas Prioritarias</h5>
+                    </div>
+                    <span class="badge bg-white text-danger">
+            {{ citas_prioritarias.count }} URGENTE{{ citas_prioritarias.count|pluralize }}
+        </span>
+                </div>
+
+                <!-- Lista de citas con scroll -->
+                <div class="card-body p-0">
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        {% for cita in citas_prioritarias %}
+                            <div class="p-3 border-bottom border-light">
+                                <div class="d-flex align-items-start">
+                        <span class="text-{{ cita.color_prioridad }} fs-5 me-3 mt-1">
+                            <i class="fas fa-{% if cita.nivel_prioridad == 'critica' %}fire{% elif cita.nivel_prioridad == 'alta' %}exclamation-triangle{% else %}exclamation-circle{% endif %}"></i>
+                        </span>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <h6 class="mb-1 fw-bold">{{ cita.titulo }}</h6>
+                                            <span class="badge bg-{{ cita.color_prioridad }}">
+                                    {{ cita.get_nivel_prioridad_display }}
+                                </span>
+                                        </div>
+
+                                        <div class="d-flex flex-wrap gap-2 small mb-2">
+                                <span class="text-muted">
+                                    <i class="far fa-clock me-1"></i>
+                                    {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }} - {{ cita.fecha_hora_fin|date:"H:i" }}
+                                </span>
+                                            <span class="text-muted">
+                                    <i class="fas fa-user-tie me-1"></i>
+                                    {{ cita.profesor|default:"Sin profesor asignado" }}
+                                </span>
+                                            <span class="text-muted">
+                                    <i class="fas fa-{{ cita.get_tipo_urgencia_display|slice:'0:1'|lower }} me-1"></i>
+                                    {{ cita.get_tipo_urgencia_display }}
+                                </span>
+                                        </div>
+
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                                    data-bs-target="#detalleCitaModal{{ cita.id }}">
+                                                <i class="fas fa-eye me-1"></i> Ver detalles
+                                            </button>
+                                            {% if cita.estado == 'pendiente' and not cita.creada_por_profesor %}
+                                                <form method="post" action="#" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-success">
+                                                        <i class="fas fa-check me-1"></i> Confirmar
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Modal de detalles mejorado -->
+                            <div class="modal fade" id="detalleCitaModal{{ cita.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header bg-{{ cita.color_prioridad }} text-white">
+                                            <h5 class="modal-title">
+                                                <i class="fas fa-info-circle me-2"></i>Detalles de Cita Prioritaria
+                                            </h5>
+                                            <button type="button" class="btn-close btn-close-white"
+                                                    data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <p><strong>Título:</strong><br>{{ cita.titulo }}</p>
+                                                    <p><strong>Prioridad:</strong><br>
+                                                        <span class="badge bg-{{ cita.color_prioridad }}">
+                                                {{ cita.get_nivel_prioridad_display }}
+                                            </span>
+                                                    </p>
+                                                    <p><strong>Estado:</strong><br>
+                                                        <span class="badge bg-{{ cita.get_badge_color }}">
+                                                {{ cita.get_estado_display }}
+                                            </span>
+                                                    </p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <p><strong>Fecha/Hora:</strong><br>
+                                                        {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}
+                                                        - {{ cita.fecha_hora_fin|date:"H:i" }}
+                                                    </p>
+                                                    <p><strong>Tipo de urgencia:</strong><br>
+                                                        {{ cita.get_tipo_urgencia_display }}
+                                                    </p>
+                                                    <p><strong>Duración:</strong><br>
+                                                        {{ cita.duracion }} minutos
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <h6 class="border-bottom pb-2">Participantes</h6>
+                                                    <p><strong>Solicitante:</strong><br>
+                                                        {{ cita.solicitante.nombre_completo }}
+                                                    </p>
+                                                    <p><strong>Profesor:</strong><br>
+                                                        {{ cita.profesor|default:"Sin asignar" }}
+                                                    </p>
+                                                    <p><strong>Estudiantes:</strong><br>
+                                                        {% for estudiante in cita.estudiantes.all %}
+                                                            {{ estudiante.nombre_completo }}{% if not forloop.last %},
+                                                            {% endif %}
+                                                        {% empty %}
+                                                            Ningún estudiante asociado
+                                                        {% endfor %}
+                                                    </p>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <h6 class="border-bottom pb-2">Detalles</h6>
+                                                    <p><strong>Ubicación:</strong><br>
+                                                        {{ cita.ubicacion|default:"No especificada" }}
+                                                    </p>
+                                                    <p><strong>Motivo de prioridad:</strong><br>
+                                                        {{ cita.motivo_prioridad|default:"No especificado" }}
+                                                    </p>
+                                                    <p><strong>Autor de prioridad:</strong><br>
+                                                        {{ cita.autor_prioridad|default:"No especificado" }}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <h6 class="border-bottom pb-2">Contenido</h6>
+                                                <p><strong>Motivo:</strong><br>
+                                                    {{ cita.motivo|default:"Sin descripción"|linebreaks }}
+                                                </p>
+                                                <p><strong>Observaciones:</strong><br>
+                                                    {{ cita.observaciones|default:"Ninguna"|linebreaks }}
+                                                </p>
+                                                {% if cita.evidencia_archivo %}
+                                                    <p><strong>Evidencia adjunta:</strong><br>
+                                                        <a href="{{ cita.evidencia_archivo.url }}" target="_blank"
+                                                           class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-file-download me-1"></i>Descargar archivo
+                                                        </a>
+                                                        ({{ cita.evidencia_archivo.size|filesizeformat }})
+                                                    </p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                <i class="fas fa-times me-1"></i> Cerrar
+                                            </button>
+                                            {% if cita.estado == 'pendiente' %}
+                                                <form method="post" action="#" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-success">
+                                                        <i class="fas fa-check me-1"></i> Confirmar atención
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                            <a href="{% url 'profesores:reprogramar_cita' cita.id %}"
+                                               class="btn btn-primary">
+                                                <i class="fas fa-edit me-1"></i> Reprogramar
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Scrollbar styling (sin cambios) -->
+                <style>
+                    .card-body div::-webkit-scrollbar {
+                        width: 8px;
+                    }
+
+                    .card-body div::-webkit-scrollbar-track {
+                        background: #f1f1f1;
+                        border-radius: 4px;
+                    }
+
+                    .card-body div::-webkit-scrollbar-thumb {
+                        background: #dc3545;
+                        border-radius: 4px;
+                    }
+                </style>
+            </div>
+        {% endif %}
+
+        {% if encuesta_pendiente %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <h4 class="alert-heading"><i class="bi bi-clipboard2-pulse"></i> Encuesta Pendiente</h4>
+                <p>Tienes una encuesta de satisfacción pendiente por contestar.</p>
+                <hr>
+                <div class="d-flex justify-content-end">
+                    <a href="{{ encuesta_url }}" class="btn btn-primary">
+                        <i class="bi bi-pencil-square"></i> Contestar Encuesta
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="row mb-4">
+            <!-- Barra de citas para completar -->
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tasks me-2"></i>Citas para completar
+                            <span class="badge bg-light text-dark ms-2">{{ citas_para_completar.count }}</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if citas_para_completar %}
+                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-hover">
+                                    <thead style="position: sticky; top: 0; z-index: 1;">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Hora</th>
+                                        <th>Solicitante</th>
+                                        <th>Título</th>
+                                        <th>Tipo</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for cita in citas_para_completar %}
+                                        <tr>
+                                            <td>{{ cita.fecha_hora_inicio|date:"d/m/Y" }}</td>
+                                            <td>{{ cita.fecha_hora_inicio|time:"H:i" }}</td>
+                                            <td>{{ cita.solicitante.nombre_completo }}</td>
+                                            <td>{{ cita.titulo }}</td>
+                                            <td>{{ cita.get_tipo_display }}</td>
+                                            <td>
+                                                <form method="post"
+                                                      action="{% url 'profesores:completar_cita' cita.id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm"
+                                                            style="background-color: #FFD700; color: #000;">
+                                                        <i class="fas fa-check-circle"></i> Completar
+                                                    </button>
+                                                </form>
+                                                <!-- Botón para ver detalles -->
+                                                <button type="button"
+                                                        class="btn btn-sm btn-info mt-1 ver-detalles"
+                                                        data-cita-id="{{ cita.id }}">
+                                                    <i class="fas fa-eye"></i> Ver
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info mb-0">
+                                No hay citas pendientes por completar.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal único para detalles -->
+        <div class="modal fade" id="modalDetalleCita" tabindex="-1"
+             aria-labelledby="modalDetalleCitaLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title" id="modalDetalleCitaLabel">
+                            Detalles de la Cita
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body" id="citaDetallesContent">
+                        <!-- Contenido se cargará dinámicamente -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary"
+                                data-bs-dismiss="modal">Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para retroalimentación -->
+        <div class="modal fade" id="retroModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Retroalimentación enviada</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            La cita ha sido marcada como completada y se ha enviado la solicitud de retroalimentación al
+                            padre.
+                        </div>
+                        <div id="retroInfo"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <a href="#" id="verRetroLink" class="btn btn-primary">
+                            <i class="fas fa-external-link-alt me-2"></i>Ver retroalimentación
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
+        <br>
+
+        {% if citas_data.creadas or citas_data.solicitadas %}
+            <div class="citas-container-wrapper">
+                <div class="citas-pendientes-container">
+                    <div class="citas-pendientes-header">
+                        <h3 class="text-xl font-bold text-gray-800">Citas pendientes</h3>
+                        <a href="{% url 'profesores:panel_citas' %}"
+                           class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+                            <i class="fas fa-calendar-alt"></i> Ver todas
+                        </a>
+                    </div>
+
+                    <div class="citas-columnas-container">
+                        <!-- Columna 1: Citas creadas por el profesor -->
+                        <div class="citas-columna">
+                            {% if citas_data.creadas %}
+                                <div class="citas-seccion">
+                                    <h4 class="seccion-titulo">
+                                        <i class="fas fa-user-edit mr-2 text-blue-600"></i>
+                                        Citas que usted creó
+                                        <span class="badge-contador">{{ citas_data.creadas.count }}</span>
+                                    </h4>
+                                    <div class="citas-lista-container">
+                                        <ul class="citas-pendientes-list">
+                                            {% for cita in citas_data.creadas %}
+                                                <li class="cita-item {% if cita.estado == 'pendiente' %}cita-pendiente{% else %}cita-confirmada{% endif %}">
+                                                    <div class="cita-contenido">
+                                                        <div class="cita-info">
+                                                            <p class="fecha-titulo">
+                                                                <i class="far fa-calendar-alt mr-1 text-gray-500"></i>
+                                                                {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}
+                                                                <span class="separador">—</span>
+                                                                {{ cita.titulo }}
+                                                                {% if cita.prioritaria %}
+                                                                    <span class="badge-prioritaria">Prioritaria</span>
+                                                                {% endif %}
+                                                            </p>
+                                                            <span class="estado-badge {% if cita.estado == 'pendiente' %}bg-yellow-100 text-yellow-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                            {{ cita.get_estado_display }}
+                                        </span>
+                                                            {% if cita.solicitante %}
+                                                                <p class="solicitante-info">
+                                                                    <i class="fas fa-user mr-1 text-gray-400"></i>
+                                                                    {{ cita.solicitante.nombre_completo }}
+                                                                </p>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="cita-acciones">
+                                                            <a href="{% url 'profesores:reprogramar_cita' cita.id %}"
+                                                               class="btn btn-primary">
+                                                                <i class="fas fa-edit mr-1"></i> Reprogramar
+                                                            </a>
+                                                            <form method="post" action="#" class="ml-2">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn-cancelar">
+                                                                    <i class="fas fa-times mr-1"></i> Cancelar
+                                                                </button>
+                                                            </form>
+                                                            <button class="btn btn-info btn-sm ver-detalles"
+                                                                    data-cita-id="{{ cita.id }}"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#citaDetallesModal">
+                                                                <i class="fas fa-eye mr-1"></i> Ver detalles
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Columna 2: Citas solicitadas por padres -->
+                        <div class="citas-columna">
+                            {% if citas_data.solicitadas %}
+                                <div class="citas-seccion">
+                                    <h4 class="seccion-titulo">
+                                        <i class="fas fa-users mr-2 text-purple-600"></i>
+                                        Citas solicitadas por padres
+                                        <span class="badge-contador">{{ citas_data.solicitadas.count }}</span>
+                                    </h4>
+                                    <div class="citas-lista-container">
+                                        <ul class="citas-pendientes-list">
+                                            {% for cita in citas_data.solicitadas %}
+                                                <li class="cita-item {% if cita.estado == 'pendiente' %}cita-pendiente{% else %}cita-confirmada{% endif %}">
+                                                    <div class="cita-contenido">
+                                                        <div class="cita-info">
+                                                            <p class="fecha-titulo">
+                                                                <i class="far fa-calendar-alt mr-1 text-gray-500"></i>
+                                                                {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}
+                                                                <span class="separador">—</span>
+                                                                {{ cita.titulo }}
+                                                                {% if cita.prioritaria %}
+                                                                    <span class="badge-prioritaria">Prioritaria</span>
+                                                                {% endif %}
+                                                            </p>
+                                                            <span class="estado-badge {% if cita.estado == 'pendiente' %}bg-yellow-100 text-yellow-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                            {{ cita.get_estado_display }}
+                                        </span>
+                                                            <p class="solicitante-info">
+                                                                <i class="fas fa-user mr-1 text-gray-400"></i>
+                                                                {{ cita.solicitante.nombre_completo }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="cita-acciones">
+                                                            {% if cita.estado == 'pendiente' %}
+                                                                <form method="post" action="#" class="mr-2">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn-confirmar">
+                                                                        <i class="fas fa-check mr-1"></i> Confirmar
+                                                                    </button>
+                                                                </form>
+                                                            {% endif %}
+                                                            <form method="post" action="#">
+                                                                {% csrf_token %}
+                                                                <button type="submit" class="btn-cancelar">
+                                                                    <i class="fas fa-times mr-1"></i> Cancelar
+                                                                </button>
+                                                            </form>
+                                                            <button class="btn btn-info btn-sm ver-detalles"
+                                                                    data-cita-id="{{ cita.id }}"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#citaDetallesModal">
+                                                                <i class="fas fa-eye mr-1"></i> Ver detalles
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="bi bi-calendar3"></i> Calendario de Citas - Profesor
+                        </h4>
+                        <div class="btn-group">
+                            <button id="btnFiltrarPendientes" class="btn btn-sm btn-light">
+                                <i class="bi bi-funnel"></i> Mostrar solo pendientes
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="calendar-profesor"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FullCalendar Styles & Scripts -->
+        <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/main.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/locales/es.global.min.js"></script>
+
+        <style>
+            /* Estilos personalizados para el calendario de profesores */
+            #calendar-profesor {
+                background-color: white;
+                border-radius: 0.5rem;
+                padding: 1rem;
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            }
+
+            .fc-daygrid-day {
+                border-width: 1px;
+                border-style: solid;
+                border-color: #e0e0e0;
+            }
+
+            .fc-day-today {
+                background-color: #e8f4ff !important;
+            }
+
+            /* ESTILOS MEJORADOS PARA EVENTOS */
+            .fc-event {
+                border: none !important;
+                border-radius: 0.25rem !important;
+                font-size: 0.85rem !important;
+                padding: 2px 4px !important;
+                cursor: pointer !important;
+                margin: 1px 0 !important;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+            }
+
+            .fc-daygrid-event {
+                margin: 1px 2px !important;
+            }
+
+            .fc-daygrid-dot-event .fc-event-title {
+                white-space: normal !important;
+                word-break: break-word !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                display: -webkit-box !important;
+                -webkit-line-clamp: 2 !important;
+                -webkit-box-orient: vertical !important;
+                font-size: 0.8em !important;
+                line-height: 1.2 !important;
+                padding: 2px 4px !important;
+                text-align: center !important;
+            }
+
+            .fc-daygrid-dotEvent {
+                align-items: center !important;
+                justify-content: center !important;
+            }
+
+            .fc-daygrid-block-event .fc-event-title {
+                white-space: normal !important;
+                word-break: break-word !important;
+                max-height: 2.4em !important;
+                overflow: hidden !important;
+            }
+
+            /* Estilos para eventos especiales */
+            .fc-event-prioritaria {
+                border-left: 4px solid #e74c3c !important;
+                font-weight: bold !important;
+            }
+
+            .fc-event-propia {
+                border-right: 4px solid #2ecc71 !important;
+            }
+
+            .fc-event-asistente {
+                border-right: 4px solid #3498db !important;
+            }
+
+            /* Estilo para eventos de diferentes estados */
+            .fc-event-pendiente {
+                background-color: #f1c40f !important;
+                border-color: #f1c40f !important;
+            }
+
+            .fc-event-confirmada {
+                background-color: #2ecc71 !important;
+                border-color: #2ecc71 !important;
+            }
+
+            .fc-event-completada {
+                background-color: #3498db !important;
+                border-color: #3498db !important;
+            }
+
+            .fc-event-cancelada {
+                background-color: #e74c3c !important;
+                border-color: #e74c3c !important;
+            }
+
+            .fc-event-reprogramada {
+                background-color: #e67e22 !important;
+                border-color: #e67e22 !important;
+            }
+
+            /* Mejoras en la barra de herramientas */
+            .fc-toolbar-title {
+                font-size: 1.25rem !important;
+                font-weight: 600 !important;
+                color: #2c3e50 !important;
+            }
+
+            .fc-button {
+                border: 1px solid #dee2e6 !important;
+                background-color: #f8f9fa !important;
+                color: #212529 !important;
+                transition: all 0.2s !important;
+            }
+
+            .fc-button:hover {
+                background-color: #e9ecef !important;
+            }
+
+            .fc-button-active {
+                background-color: #e9ecef !important;
+                color: #495057 !important;
+            }
+
+            /* Estilos para tooltips */
+            .tooltip-periodo {
+                padding: 3px 8px;
+                border-radius: 12px;
+                font-size: 0.75rem;
+                font-weight: bold;
+                margin-bottom: 8px;
+                display: inline-block;
+            }
+
+            .tooltip-manana {
+                background-color: #fff3cd;
+                color: #856404;
+                border: 1px solid #ffeeba;
+            }
+
+            .tooltip-tarde {
+                background-color: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+
+            /* Responsividad */
+            @media (max-width: 768px) {
+                .fc-toolbar-title {
+                    font-size: 1rem !important;
+                }
+
+                .fc-button {
+                    padding: 0.25rem 0.4rem !important;
+                    font-size: 0.75rem !important;
+                }
+            }
+        </style>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                console.log('DOM completamente cargado');
+
+                const calendarEl = document.getElementById('calendar-profesor');
+                let filtroPendientes = false;
+
+                // Función para generar contenido del modal
+                function getModalContent(event) {
+                    const hora = event.start?.getHours() || 0;
+                    const periodo = hora < 12 ? 'Temprano ☀️' : 'Tarde 🌙';
+                    const horaInicio = event.start?.toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    }) || '';
+
+                    const horaFin = event.end?.toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    }) || '';
+
+                    return `
+                <div class="modal-header ${hora < 12 ? 'bg-warning text-dark' : 'bg-success text-white'}">
+                    <h5 class="modal-title">${periodo} - ${event.title}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Horario:</strong> ${horaInicio} - ${horaFin}</p>
+                    <p><strong>Estado:</strong> ${event.extendedProps.estado}</p>
+                    <p><strong>Tipo:</strong> ${event.extendedProps.tipo}</p>
+                    ${event.extendedProps.creador ? `<p><strong>Creador:</strong> ${event.extendedProps.creador}</p>` : ''}
+                    ${event.extendedProps.asistentes?.length > 0 ? `<p><strong>Asistentes:</strong> ${event.extendedProps.asistentes.join(', ')}</p>` : ''}
+                    ${event.extendedProps.descripcion ? `<p><strong>Descripción:</strong> ${event.extendedProps.descripcion}</p>` : ''}
+                    ${event.extendedProps.ubicacion ? `<p><strong>Ubicación:</strong> ${event.extendedProps.ubicacion}</p>` : ''}
+                    ${event.extendedProps.prioridad ? `<p><strong>Prioridad:</strong> ${event.extendedProps.prioridad}</p>` : ''}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            `;
+                }
+
+                const calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    locale: 'es',
+                    height: 'auto',
+                    aspectRatio: 1.6,
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                    },
+                    buttonText: {
+                        today: 'Hoy',
+                        month: 'Mes',
+                        week: 'Semana',
+                        day: 'Día',
+                        list: 'Lista'
+                    },
+                    events: function (fetchInfo, successCallback, failureCallback) {
+                        const url = filtroPendientes ?
+                            '/profesores/api/profesor/eventos/?estado=pendiente' :
+                            '/profesores/api/profesor/eventos/';
+                        console.log('Cargando eventos desde URL:', url);
+
+                        fetch(url)
+                            .then(response => {
+                                console.log('Respuesta recibida:', response);
+                                return response.json();
+                            })
+                            .then(data => {
+                                console.log('Datos de eventos cargados:', data);
+                                successCallback(data);
+                            })
+                            .catch(error => {
+                                console.error('Error al cargar eventos:', error);
+                                failureCallback(error);
+                            });
+                    },
+                    eventDidMount: function (info) {
+                        console.log('Evento montado:', info.event);
+
+                        // Aplicar clases según propiedades extendidas
+                        if (info.event.extendedProps.es_prioritaria) {
+                            info.el.classList.add('fc-event-prioritaria');
+                        }
+
+                        if (info.event.extendedProps.creador === 'Tú') {
+                            info.el.classList.add('fc-event-propia');
+                        } else if (info.event.extendedProps.asistentes?.length > 0) {
+                            info.el.classList.add('fc-event-asistente');
+                        }
+
+                        // Aplicar clase según estado
+                        const estado = info.event.extendedProps.estado?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+                        if (estado) {
+                            info.el.classList.add(`fc-event-${estado}`);
+                        }
+
+                        // Determinar periodo del día
+                        const hora = info.event.start?.getHours() || 0;
+                        const periodo = hora < 12 ? 'TEMPRANO' : 'TARDE';
+                        const iconoPeriodo = hora < 12 ? '☀️' : '🌙';
+
+                        // Agregar indicador visual al título del evento
+                        const titleEl = info.el.querySelector('.fc-event-title');
+                        if (titleEl) {
+                            titleEl.innerHTML = `${iconoPeriodo} ${info.event.title}`;
+                        }
+
+                        // Construir contenido del tooltip
+                        let tooltipContent = `
+                    <div class="tooltip-periodo ${hora < 12 ? 'tooltip-manana' : 'tooltip-tarde'}">
+                        ${periodo} ${iconoPeriodo}
+                    </div>
+                    <strong>${info.event.title}</strong><br>
+                    <strong>Estado:</strong> ${info.event.extendedProps.estado}<br>
+                    <strong>Tipo:</strong> ${info.event.extendedProps.tipo}`;
+
+                        if (info.event.extendedProps.creador) {
+                            tooltipContent += `<br><strong>Creador:</strong> ${info.event.extendedProps.creador}`;
+                        }
+
+                        if (info.event.extendedProps.asistentes?.length > 0) {
+                            tooltipContent += `<br><strong>Asistentes:</strong> ${info.event.extendedProps.asistentes.join(', ')}`;
+                        }
+
+                        if (info.event.extendedProps.descripcion) {
+                            tooltipContent += `<br><strong>Descripción:</strong> ${info.event.extendedProps.descripcion}`;
+                        }
+
+                        if (info.event.extendedProps.ubicacion) {
+                            tooltipContent += `<br><strong>Ubicación:</strong> ${info.event.extendedProps.ubicacion}`;
+                        }
+
+                        if (info.event.extendedProps.prioridad) {
+                            tooltipContent += `<br><strong>Prioridad:</strong> ${info.event.extendedProps.prioridad}`;
+                        }
+
+                        // Agregar horario al tooltip
+                        if (info.event.start) {
+                            const horaInicio = info.event.start.toLocaleTimeString('es-ES', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            });
+                            tooltipContent += `<br><strong>Horario:</strong> ${horaInicio}`;
+
+                            if (info.event.end) {
+                                const horaFin = info.event.end.toLocaleTimeString('es-ES', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: true
+                                });
+                                tooltipContent += ` - ${horaFin}`;
+                            }
+                        }
+
+                        // Crear tooltip
+                        if (!info.el._tooltip) {
+                            info.el._tooltip = new bootstrap.Tooltip(info.el, {
+                                title: tooltipContent,
+                                html: true,
+                                placement: 'top',
+                                container: 'body'
+                            });
+                        }
+                    },
+                    eventClick: function (info) {
+                        console.log('Evento clickeado:', info.event);
+
+                        const modal = new bootstrap.Modal(document.createElement('div'));
+                        modal._element.className = 'modal fade';
+                        modal._element.innerHTML = `
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            ${getModalContent(info.event)}
+                        </div>
+                    </div>
+                `;
+                        document.body.appendChild(modal._element);
+                        modal.show();
+
+                        modal._element.addEventListener('hidden.bs.modal', function () {
+                            console.log('Modal cerrado');
+                            document.body.removeChild(modal._element);
+                        });
+
+                        info.jsEvent.preventDefault();
+                    },
+                    eventClassNames: function (arg) {
+                        const classNames = [];
+                        const tipo = arg.event.extendedProps.tipo?.toLowerCase() || '';
+                        const estado = arg.event.extendedProps.estado?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+                        const hora = arg.event.start?.getHours() || 0;
+
+                        // Clase por periodo del día
+                        if (hora < 12) {
+                            classNames.push('fc-event-manana');
+                        } else {
+                            classNames.push('fc-event-tarde');
+                        }
+
+                        // Clases por tipo de cita
+                        if (tipo.includes('reunión')) classNames.push('fc-event-reunion');
+                        else if (tipo.includes('tutoría')) classNames.push('fc-event-tutoria');
+                        else if (tipo.includes('entrega')) classNames.push('fc-event-entrega');
+                        else if (tipo === 'clase') classNames.push('fc-event-clase');
+                        else if (tipo === 'descanso') classNames.push('fc-event-descanso');
+                        else classNames.push('fc-event-general');
+
+                        // Clases por estado
+                        if (estado.includes('pendiente')) classNames.push('fc-event-pendiente');
+                        else if (estado.includes('confirmada')) classNames.push('fc-event-confirmada');
+                        else if (estado.includes('completada')) classNames.push('fc-event-completada');
+                        else if (estado.includes('cancelada')) classNames.push('fc-event-cancelada');
+                        else if (estado.includes('reprogramada')) classNames.push('fc-event-reprogramada');
+
+                        // Clase prioritaria
+                        if (arg.event.extendedProps.es_prioritaria) {
+                            classNames.push('fc-event-prioritaria');
+                        }
+
+                        console.log('Clases aplicadas al evento:', classNames);
+                        return classNames;
+                    },
+                    views: {
+                        dayGridMonth: {
+                            dayMaxEventRows: 3,
+                        },
+                        timeGridWeek: {
+                            allDaySlot: false,
+                            slotMinTime: '07:00:00',
+                            slotMaxTime: '21:00:00',
+                            slotLabelInterval: '01:00:00'
+                        },
+                        timeGridDay: {
+                            allDaySlot: false,
+                            slotMinTime: '07:00:00',
+                            slotMaxTime: '21:00:00',
+                            slotLabelInterval: '01:00:00'
+                        },
+                        listWeek: {
+                            listDayFormat: {weekday: 'long', month: 'numeric', day: 'numeric'},
+                            listDaySideFormat: false
+                        }
+                    },
+                    nowIndicator: true,
+                    navLinks: true,
+                    editable: false,
+                    selectable: false,
+                    dayMaxEvents: true
+                });
+
+                calendar.render();
+                console.log('Calendario renderizado');
+
+                // Manejar filtro de pendientes
+                document.getElementById('btnFiltrarPendientes')?.addEventListener('click', function () {
+                    filtroPendientes = !filtroPendientes;
+                    console.log('Filtro de pendientes activado:', filtroPendientes);
+
+                    this.innerHTML = filtroPendientes ?
+                        '<i class="bi bi-funnel-fill"></i> Mostrar todas' :
+                        '<i class="bi bi-funnel"></i> Mostrar solo pendientes';
+
+                    if (filtroPendientes) {
+                        this.classList.add('btn-warning');
+                        this.classList.remove('btn-light');
+                    } else {
+                        this.classList.remove('btn-warning');
+                        this.classList.add('btn-light');
+                    }
+
+                    calendar.refetchEvents();
+                    console.log('Eventos recargados');
+                });
+            });
+        </script>
+    </div>
+
+    <style>
+        /* Estilos generales */
+        .citas-container-wrapper {
+            margin: 1rem 0;
+        }
+
+        .citas-pendientes-container {
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px;
+            overflow: hidden;
+        }
+
+        .citas-pendientes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid;
+        }
+
+        .citas-columnas-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+
+        .citas-columna {
+            flex: 1 1 calc(50% - 0.75rem);
+            min-width: 300px;
+        }
+
+        .citas-seccion {
+            margin-bottom: 1.5rem;
+        }
+
+        .seccion-titulo {
+            display: flex;
+            align-items: center;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid;
+        }
+
+        .badge-contador {
+            margin-left: auto;
+            border-radius: 9999px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .citas-lista-container {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 0.5rem;
+        }
+
+        /* Scrollbar estilizada */
+        .citas-lista-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .citas-lista-container::-webkit-scrollbar-track {
+            border-radius: 3px;
+        }
+
+        .citas-lista-container::-webkit-scrollbar-thumb {
+            border-radius: 3px;
+        }
+
+        .citas-lista-container::-webkit-scrollbar-thumb:hover {
+        }
+
+        /* Estilos de items de cita */
+        .citas-pendientes-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .cita-item {
+            border-radius: 0.375rem;
+            box-shadow: 0 1px 2px;
+            margin-bottom: 1rem;
+            border-left: 4px solid;
+        }
+
+        .cita-pendiente {
+            border-left-color: unset;
+        }
+
+        .cita-confirmada {
+            border-left-color: unset;
+        }
+
+        .cita-contenido {
+            padding: 1rem;
+        }
+
+        .cita-info {
+            margin-bottom: 0.75rem;
+        }
+
+        .fecha-titulo {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .separador {
+            margin: 0 0.5rem;
+        }
+
+        .badge-prioritaria {
+            margin-left: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .estado-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .solicitante-info {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .cita-acciones {
+            display: flex;
+            grid-gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-editar, .btn-confirmar, .btn-cancelar {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid;
+        }
+
+        .btn-editar:hover,
+        .btn-confirmar:hover,
+        .btn-cancelar:hover {
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Inicializar el modal de Bootstrap
+            const detallesModal = new bootstrap.Modal(document.getElementById('modalDetalleCita'));
+
+            // Manejar clic en botones de ver detalles
+            document.querySelectorAll('.ver-detalles').forEach(button => {
+                button.addEventListener('click', function () {
+                    const citaId = this.getAttribute('data-cita-id');
+                    const modalContent = document.getElementById('citaDetallesContent');
+                    const modalTitle = document.getElementById('modalDetalleCitaLabel');
+
+                    // Mostrar carga mientras se obtienen los datos
+                    modalContent.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p>Cargando detalles...</p></div>';
+
+                    // Mostrar el modal inmediatamente
+                    detallesModal.show();
+
+                    // Hacer petición AJAX para obtener los detalles
+                    fetch(`/profesores/citas/${citaId}/detalles/`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Error en la respuesta del servidor');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                // Actualizar título del modal
+                                modalTitle.textContent = `Detalles: ${data.cita.titulo}`;
+
+                                // Construir el HTML con los detalles
+                                let html = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold">Información básica</h6>
+                                    <p><strong>Título:</strong> ${data.cita.titulo}</p>
+                                    <p><strong>Tipo:</strong> ${data.cita.tipo}</p>
+                                    <p><strong>Estado:</strong> ${data.cita.estado}</p>
+                                    <p><strong>Fecha y hora:</strong> ${new Date(data.cita.fecha_hora_inicio).toLocaleString()}</p>
+                                    <p><strong>Duración:</strong> ${data.cita.duracion} minutos</p>
+                                    <p><strong>Ubicación:</strong> ${data.cita.ubicacion || 'No especificada'}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold">Participantes</h6>
+                                    <p><strong>Solicitante:</strong> ${data.cita.solicitante}</p>
+                                    ${data.cita.profesor ? `<p><strong>Profesor:</strong> ${data.cita.profesor}</p>` : ''}
+                                    ${data.cita.servicio_escolar ? `<p><strong>Servicio escolar:</strong> ${data.cita.servicio_escolar}</p>` : ''}
+                                    ${data.estudiantes && data.estudiantes.length > 0 ? `<p><strong>Estudiantes:</strong> ${data.estudiantes.join(', ')}</p>` : ''}
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h6 class="fw-bold">Motivo</h6>
+                                    <p>${data.cita.motivo || 'No especificado'}</p>
+                                </div>
+                            </div>
+                            ${data.cita.observaciones ? `
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <h6 class="fw-bold">Observaciones</h6>
+                                    <p>${data.cita.observaciones}</p>
+                                </div>
+                            </div>` : ''}
+                        `;
+                                modalContent.innerHTML = html;
+                            } else {
+                                modalContent.innerHTML = `<div class="alert alert-danger">${data.message || 'Error al cargar los detalles'}</div>`;
+                            }
+                        })
+                        .catch(error => {
+                            modalContent.innerHTML = `<div class="alert alert-danger">Error al cargar los detalles: ${error.message}</div>`;
+                            console.error('Error:', error);
+                        });
+                });
+            });
+        });
+    </script>
+    <style>
+        /* Estilos para el modal de detalles */
+        #citaDetallesModal .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        /* Estilos para los botones de acciones */
+        .cita-acciones {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .cita-acciones .btn {
+            /*flex: 1 0 auto;*/
+            white-space: nowrap;
+        }
+
+        /* Responsive para pantallas pequeñas */
+        @media (max-width: 576px) {
+            .cita-acciones {
+                flex-direction: column;
+            }
+
+            .cita-acciones .btn {
+                width: 100%;
+            }
+        }
+    </style>
+{% endblock %}

@@ -1,0 +1,51 @@
+<!-- templates/servicios_escolar/email_invitacion.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Invitación para registrarte como profesor</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #f8f9fa; padding: 20px; text-align: center; }
+        .content { padding: 20px; }
+        .button { 
+            display: inline-block; 
+            padding: 10px 20px; 
+            background-color: #007bff; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            margin: 20px 0;
+        }
+        .footer { 
+            margin-top: 20px; 
+            padding-top: 20px; 
+            border-top: 1px solid #eee; 
+            font-size: 12px; 
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Invitación para registrarte como profesor</h2>
+        </div>
+        <div class="content">
+            <p>Hola,</p>
+            <p>{{ nombre_admin }} te ha invitado a registrarte como profesor en nuestro sistema.</p>
+            <p>Por favor haz clic en el siguiente botón para completar tu registro:</p>
+            <p>
+                <a href="{{ registro_url }}" class="button">Completar registro</a>
+            </p>
+            <p>O copia y pega este enlace en tu navegador:</p>
+            <p><small>{{ registro_url }}</small></p>
+            <p>Si no solicitaste este registro, por favor ignora este mensaje.</p>
+        </div>
+        <div class="footer">
+            <p>Este es un mensaje automático, por favor no respondas a este correo.</p>
+        </div>
+    </div>
+</body>
+</html>

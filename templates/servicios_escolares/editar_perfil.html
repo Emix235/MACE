@@ -1,0 +1,232 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        {% if usuario.imagen_usuario %}
+                            <img src="{{ usuario.imagen_usuario.url }}" class="rounded-circle mb-3" width="120"
+                                 alt="Avatar">
+                        {% else %}
+                            <div class="rounded-circle bg-primary mb-3 mx-auto d-flex align-items-center justify-content-center"
+                                 style="width: 120px; height: 120px;">
+                                <span class="text-white fs-3 fw-bold">{{ usuario.nombre_completo|first }}{{ usuario.apellidos|first }}</span>
+                            </div>
+                        {% endif %}
+                        <h5 class="text-white">{{ usuario.nombre_completo }}</h5>
+                        <span class="badge bg-secondary">{{ usuario.rol_usuario }}</span>
+                    </div>
+
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'servicios_escolares:configuracion' %}">
+                                <i class="bi bi-person me-2"></i> Perfil
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{% url 'servicios_escolares:editar' %}">
+                                <i class="bi bi-pencil-square me-2"></i> Editar Información
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="bi bi-shield-lock me-2"></i> Seguridad
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Editar Información de Servicio Escolar</h1>
+                </div>
+
+                <!-- Mensajes flash -->
+                {% if messages %}
+                    <div class="alert-container">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                        aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i> Información Personal</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            <div class="row mb-4">
+                                <div class="col-md-4 text-center">
+                                    {% if usuario.imagen_usuario %}
+                                        <img src="{{ usuario.imagen_usuario.url }}" class="rounded-circle mb-3"
+                                             width="200" alt="Avatar" id="previewImage">
+                                    {% else %}
+                                        <div class="rounded-circle bg-secondary mb-3 mx-auto d-flex align-items-center justify-content-center"
+                                             style="width: 200px; height: 200px;">
+                                            <span class="text-white fs-1">{{ usuario.nombre_completo|first }}{{ usuario.apellidos|first }}</span>
+                                        </div>
+                                    {% endif %}
+                                    <div class="mb-3">
+                                        {{ form.imagen_usuario }}
+                                        <div class="form-text">Formatos soportados: JPG, PNG. Tamaño máximo: 5MB</div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-8">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.nombre_completo.id_for_label }}" class="form-label">Nombre
+                                                Completo</label>
+                                            {{ form.nombre_completo }}
+                                            {% if form.nombre_completo.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.nombre_completo.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.apellidos.id_for_label }}"
+                                                   class="form-label">Apellidos</label>
+                                            {{ form.apellidos }}
+                                            {% if form.apellidos.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.apellidos.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ form.correo_electronico.id_for_label }}" class="form-label">Correo
+                                            Electrónico</label>
+                                        {{ form.correo_electronico }}
+                                        {% if form.correo_electronico.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.correo_electronico.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.telefono_principal.id_for_label }}" class="form-label">Teléfono
+                                                Principal</label>
+                                            {{ form.telefono_principal }}
+                                            {% if form.telefono_principal.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.telefono_principal.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.telefono_respaldo.id_for_label }}" class="form-label">Teléfono
+                                                de Respaldo</label>
+                                            {{ form.telefono_respaldo }}
+                                            {% if form.telefono_respaldo.errors %}
+                                                <div class="invalid-feedback d-block">
+                                                    {{ form.telefono_respaldo.errors.0 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.datos_personales.id_for_label }}" class="form-label">Datos
+                                    Personales</label>
+                                {{ form.datos_personales }}
+                                {% if form.datos_personales.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.datos_personales.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.horario_atencion.id_for_label }}" class="form-label">Horario de
+                                        Atención</label>
+                                    {{ form.horario_atencion }}
+                                    {% if form.horario_atencion.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.horario_atencion.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save-fill me-1"></i> Guardar Cambios
+                                </button>
+                                <a href="{% url 'servicios_escolares:perfil' %}" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle-fill me-1"></i> Cancelar
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Script para previsualizar imagen -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const imagenInput = document.getElementById('{{ form.imagen_usuario.id_for_label }}');
+            const previewImage = document.getElementById('previewImage');
+
+            if (imagenInput && previewImage) {
+                imagenInput.addEventListener('change', function (event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            previewImage.src = e.target.result;
+                            previewImage.style.display = 'block';
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="col-md-6 mb-3">
+    <label for="{{ form.estado_disponibilidad.id_for_label }}" class="form-label">Estado
+        de Disponibilidad</label>
+    {{ form.estado_disponibilidad }}
+    {% if form.estado_disponibilidad.errors %}
+        <div class="invalid-feedback d-block">
+            {{ form.estado_disponibilidad.errors.0 }}
+        </div>
+    {% endif %}
+</div>

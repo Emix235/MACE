@@ -1,0 +1,89 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% block content %}
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    <div class="max-w-3xl mx-auto bg-white shadow-lg p-8 rounded-2xl mt-10 space-y-6" style="padding: 30px;">
+
+        <h2 class="text-3xl font-semibold text-red-600">Cancelar Cita</h2>
+
+        <!-- Información de la cita -->
+        <div class="bg-gray-100 p-6 rounded-xl shadow-inner space-y-2">
+            <p><strong>Fecha y hora:</strong> {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}</p>
+            <p><strong>Título:</strong> {{ cita.titulo }}</p>
+            <p><strong>Profesor:</strong> {{ cita.profesor }}</p>
+            <p><strong>Servicio Escolar:</strong> {{ cita.servicio_escolar|default:"No asignado" }}</p>
+            <p><strong>Solicitante:</strong> {{ cita.solicitante }}</p>
+            <p><strong>Estado actual:</strong>
+                <span class="badge bg-{% if cita.estado == 'pendiente' %}warning{% elif cita.estado == 'confirmada' %}info{% elif cita.estado == 'asignada' %}primary{% else %}secondary{% endif %}">
+                    {{ cita.get_estado_display }}
+                </span>
+            </p>
+        </div>
+
+        <!-- Formulario para cancelar -->
+        <form method="post" class="bg-red-50 p-6 rounded-xl shadow space-y-4 border border-red-200">
+            {% csrf_token %}
+
+            <div class="block">
+                <span class="text-gray-700 font-medium">Motivo de cancelación</span>
+                {{ form.motivo_cancelacion.errors }}
+                <textarea name="motivo_cancelacion" rows="3" required
+                          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+                          placeholder="Explica brevemente el motivo...">{% if form.motivo_cancelacion.value %}
+                    {{ form.motivo_cancelacion.value }}{% endif %}</textarea>
+            </div>
+
+            <div class="flex justify-between mt-6">
+                <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">
+                    Confirmar cancelación
+                </button>
+
+                <a href="{% url 'servicios_escolares:reprogramar_cita' cita.id %}"
+                   class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+                    Reprogramar cita
+                </a>
+            </div>
+        </form>
+
+    </div>
+
+    <!-- JavaScript simplificado -->
+    <script>
+        // Verificar si el formulario se carga correctamente
+        window.onload = function () {
+            const motivoField = document.querySelector('textarea[name="motivo_cancelacion"]');
+            if (!motivoField) {
+                console.error("Error: No se encuentra el campo de motivo de cancelación.");
+            }
+
+            // Verificar errores en el formulario
+            const errors = document.querySelectorAll('.errorlist');
+            if (errors.length > 0) {
+                console.log("Errores en el formulario: ", errors);
+            }
+        };
+    </script>
+
+    <style>
+        .badge {
+            @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+        }
+
+        .bg-warning {
+            @apply bg-yellow-100 text-yellow-800;
+        }
+
+        .bg-info {
+            @apply bg-blue-100 text-blue-800;
+        }
+
+        .bg-primary {
+            @apply bg-purple-100 text-purple-800;
+        }
+
+        .bg-secondary {
+            @apply bg-gray-100 text-gray-800;
+        }
+    </style>
+{% endblock %}

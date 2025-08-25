@@ -1,0 +1,417 @@
+{% extends 'padres/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Tarjeta con estilo dinámico según tipo de cita -->
+                <div class="card border-0 {% if profesor %}shadow-primary{% else %}shadow-warning{% endif %}">
+                    <!-- Encabezado con color diferenciado -->
+                    <div class="card-header {% if profesor %}bg-primary text-white{% else %}bg-warning text-dark{% endif %} py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h4 class="mb-0">
+                                {% if profesor %}
+                                    <i class="fas fa-chalkboard-teacher me-2"></i>Cita con Prof.
+                                    {{ profesor.nombre_completo }}
+                                {% else %}
+                                    <i class="fas fa-user-tie me-2"></i>Cita con Servicio Escolar
+                                {% endif %}
+                            </h4>
+                            <span class="badge {% if profesor %}bg-light text-primary{% else %}bg-light text-dark{% endif %} small">
+                                <i class="far fa-clock me-1 small"></i>
+                                8:00 - 18:00 hrs
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-body px-4 py-3">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show small py-2">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="post" id="citaForm" class="needs-validation" novalidate>
+                            {% csrf_token %}
+
+                            <!-- Información básica - Versión mejorada -->
+                            <div class="row g-2 mb-3">
+                                {% if not servicio_escolar %}
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold {% if profesor %}text-primary{% else %}text-warning{% endif %} mb-1">
+                                            Tipo de cita
+                                        </label>
+                                        <div class="input-group">
+                                            {{ form.tipo }}
+                                            <span class="input-group-text {% if profesor %}bg-primary text-white{% else %}bg-warning text-dark{% endif %}">
+                    <i class="fas fa-tag"></i>
+                </span>
+                                        </div>
+                                        <div class="invalid-feedback small">
+                                            Seleccione un tipo
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <input type="hidden" name="tipo" value="administrativa">
+                                {% endif %}
+
+                                <div class="{% if servicio_escolar %}col-md-12{% else %}col-md-6{% endif %}">
+                                    <label class="form-label small fw-bold {% if profesor %}text-primary{% else %}text-warning{% endif %} mb-1">
+                                        Asunto
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="text"
+                                               name="titulo"
+                                               class="form-control border-2 py-2 {% if profesor %}border-primary{% else %}border-warning{% endif %}"
+                                               value="{{ form.titulo.value|default:'' }}"
+                                               placeholder="Ej: Reunión de seguimiento">
+                                        <span class="input-group-text {% if profesor %}bg-primary text-white{% else %}bg-warning text-dark{% endif %}">
+                <i class="fas fa-heading"></i>
+            </span>
+                                    </div>
+                                    <div class="invalid-feedback small">
+                                        Ingrese un título
+                                    </div>
+                                </div>
+                            </div>
+                            {% if form.titulo.errors %}
+                                <div class="invalid-feedback d-block small">
+                                    {% for error in form.titulo.errors %}
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error|escape }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="invalid-feedback small">
+                                    Ingrese un título válido
+                                </div>
+                            {% endif %}
+                            <!-- Fecha y hora -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold {% if profesor %}text-primary{% else %}text-warning{% endif %} mb-1">
+                                        Fecha y hora
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.fecha_hora_inicio }}
+                                        <span class="input-group-text {% if profesor %}bg-primary text-white{% else %}bg-warning text-dark{% endif %}">
+                    <i class="far fa-calendar-alt"></i>
+                </span>
+                                    </div>
+                                    <small class="text-muted d-block mt-1 small">
+                                        <i class="fas fa-info-circle me-1"></i> Lunes a Viernes, 8:00-18:00
+                                    </small>
+                                    <div class="invalid-feedback small">
+                                        Seleccione fecha válida
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold {% if profesor %}text-primary{% else %}text-warning{% endif %} mb-1">
+                                        Duración
+                                    </label>
+                                    <div class="input-group">
+                                        {{ form.duracion }}
+                                        <span class="input-group-text {% if profesor %}bg-primary text-white{% else %}bg-warning text-dark{% endif %}">
+                    <i class="far fa-clock"></i>
+                </span>
+                                    </div>
+                                    <div class="invalid-feedback small">
+                                        Seleccione duración
+                                    </div>
+                                </div>
+                            </div>
+                            {% if form.titulo.errors %}
+                                <div class="invalid-feedback d-block small">
+                                    {% for error in form.titulo.errors %}
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error|escape }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="invalid-feedback small">
+                                    Ingrese un título válido
+                                </div>
+                            {% endif %}
+
+                            <!-- Ubicación -->
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold {% if profesor %}text-primary{% else %}text-warning{% endif %} mb-1">
+                                    Ubicación
+                                </label>
+                                {% if servicio_escolar %}
+                                    <div class="input-group">
+                                        <input type="text"
+                                               class="form-control border-2 py-2 {% if profesor %}border-primary{% else %}border-warning{% endif %} bg-light"
+                                               value="Oficina de Servicios Escolares" readonly>
+                                        <span class="input-group-text {% if profesor %}bg-primary text-white{% else %}bg-warning text-dark{% endif %}">
+                <i class="fas fa-map-marker-alt"></i>
+            </span>
+                                    </div>
+                                    <input type="hidden" name="ubicacion" value="Oficina de Servicios Escolares">
+                                {% else %}
+                                    <div class="input-group">
+                                        <input type="text" name="ubicacion"
+                                               class="form-control border-2 py-2 {% if profesor %}border-primary{% else %}border-warning{% endif %}"
+                                               value="{{ form.ubicacion.value|default:'' }}"
+                                               placeholder="Ej: Sala de juntas">
+                                        <span class="input-group-text {% if profesor %}bg-primary text-white{% else %}bg-warning text-dark{% endif %}">
+                <i class="fas fa-map-marker-alt"></i>
+            </span>
+                                    </div>
+                                    <small class="text-muted d-block small mt-1">
+                                        <i class="fas fa-info-circle me-1"></i> Ej: Sala de juntas, Aula 12, etc.
+                                    </small>
+                                {% endif %}
+                            </div>
+                            {% if form.titulo.errors %}
+                                <div class="invalid-feedback d-block small">
+                                    {% for error in form.titulo.errors %}
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error|escape }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="invalid-feedback small">
+                                    Ingrese un título válido
+                                </div>
+                            {% endif %}
+
+                            <!-- Estudiantes -->
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold {% if profesor %}text-primary{% else %}text-warning{% endif %} mb-1">
+                                    <i class="fas fa-users me-1"></i> Estudiantes involucrados
+                                </label>
+                                <div class="border rounded p-3 {% if profesor %}bg-primary-light{% else %}bg-warning-light{% endif %}">
+                                    {% if form.estudiantes.field.queryset.exists %}
+                                        <div class="row g-2">
+                                            {% for estudiante in form.estudiantes %}
+                                                <div class="col-12 col-md-6">
+                                                    <div class="form-check">
+                                                        {{ estudiante.tag }}
+                                                        <label class="form-check-label small d-flex align-items-center"
+                                                               for="{{ estudiante.id_for_label }}">
+                            <span class="badge bg-secondary me-2">
+                                <i class="fas fa-user-graduate"></i>
+                            </span>
+                                                            <div>
+                                                                <div>{{ estudiante.choice_label }}</div>
+                                                                <small class="text-muted d-block">Grupo: {{ estudiante.instance.grupo_actual.nombre }}</small>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-warning py-2 small mb-0 d-flex align-items-center">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            No tienes estudiantes disponibles para agendar citas
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="invalid-feedback small">
+                                    Seleccione al menos 1 estudiante
+                                </div>
+                            </div>
+                            {% if form.titulo.errors %}
+                                <div class="invalid-feedback d-block small">
+                                    {% for error in form.titulo.errors %}
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error|escape }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="invalid-feedback small">
+                                    Ingrese un título válido
+                                </div>
+                            {% endif %}
+
+                            <!-- Incluir servicio escolar (solo para profesores) -->
+                            {% if profesor %}
+                                <div class="mb-3 p-3 rounded {% if profesor %}bg-primary-light{% else %}bg-warning-light{% endif %}">
+                                    <div class="form-check form-switch ps-0">
+                                        <div class="d-flex align-items-center">
+                                            <input type="checkbox" class="form-check-input bg-primary mt-0 me-2"
+                                                   id="{{ form.incluir_servicio_escolar.id_for_label }}"
+                                                   name="{{ form.incluir_servicio_escolar.name }}">
+                                            <label class="form-check-label text-dark fw-bold d-flex align-items-center"
+                                                   for="{{ form.incluir_servicio_escolar.id_for_label }}">
+                    <span class="badge bg-warning text-dark me-2">
+                        <i class="fas fa-user-tie"></i>
+                    </span>
+                                                Incluir Servicio Escolar
+                                            </label>
+                                        </div>
+                                        <small class="text-muted d-block small ms-4 mt-1">
+                                            <i class="fas fa-info-circle me-1"></i> Un representante se unirá a la cita
+                                            si está disponible
+                                        </small>
+                                    </div>
+                                </div>
+                                {% if form.titulo.errors %}
+                                    <div class="invalid-feedback d-block small">
+                                        {% for error in form.titulo.errors %}
+                                            <i class="fas fa-exclamation-circle me-1"></i>{{ error|escape }}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="invalid-feedback small">
+                                        Ingrese un título válido
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+
+                            <!-- Motivo -->
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold {% if profesor %}text-primary{% else %}text-warning{% endif %} mb-1">
+                                    <i class="fas fa-comment-dots me-1"></i> Motivo principal
+                                </label>
+                                {{ form.motivo }}
+                                <small class="text-muted d-block small">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    {% if servicio_escolar %}
+                                        Describa el motivo de la cita (documentación requerida, trámites, etc.)
+                                    {% else %}
+                                        Describa brevemente el motivo de la cita (rendimiento académico, comportamiento,
+                                        etc.)
+                                    {% endif %}
+                                </small>
+                                <div class="invalid-feedback small">
+                                    Describa el motivo
+                                </div>
+                            </div>
+                            {% if form.titulo.errors %}
+                                <div class="invalid-feedback d-block small">
+                                    {% for error in form.titulo.errors %}
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error|escape }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="invalid-feedback small">
+                                    Ingrese un título válido
+                                </div>
+                            {% endif %}
+
+                            <!-- Observaciones -->
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold {% if profesor %}text-primary{% else %}text-warning{% endif %} mb-1">
+                                    <i class="fas fa-sticky-note me-1"></i> Observaciones adicionales
+                                </label>
+                                {{ form.observaciones }}
+                                <small class="text-muted d-block small">
+                                    <i class="fas fa-info-circle me-1"></i> Información adicional que considere
+                                    importante
+                                </small>
+                            </div>
+                            {% if form.titulo.errors %}
+                                <div class="invalid-feedback d-block small">
+                                    {% for error in form.titulo.errors %}
+                                        <i class="fas fa-exclamation-circle me-1"></i>{{ error|escape }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="invalid-feedback small">
+                                    Ingrese un título válido
+                                </div>
+                            {% endif %}
+
+                            <!-- Botones -->
+                            <div class="d-flex justify-content-between border-top pt-3">
+                                <a href="
+                                        {% if profesor %}{% url 'padres:profesores_disponibles' %}{% else %}{% url 'padres:profesores_disponibles' %}{% endif %}"
+                                   class="btn btn-sm {% if profesor %}btn-outline-primary{% else %}btn-outline-warning{% endif %}">
+                                    <i class="fas fa-arrow-left me-1"></i> Cancelar
+                                </a>
+                                <button type="submit"
+                                        class="btn btn-sm {% if profesor %}btn-primary{% else %}btn-warning{% endif %}"
+                                        {% if not form.estudiantes.field.queryset.exists %}disabled{% endif %}>
+                                    <i class="fas fa-calendar-check me-1"></i>
+                                    {% if profesor %}Agendar con Profesor{% else %}Solicitar Cita{% endif %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estilos CSS adicionales -->
+    <style>
+        .bg-primary-light {
+            background-color: rgba(13, 110, 253, 0.1);
+            border-left: 3px solid #0d6efd;
+        }
+
+        .bg-warning-light {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-left: 3px solid #ffc107;
+        }
+
+        .form-check-input:checked.bg-primary {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+
+        .shadow-primary {
+            box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.15) !important;
+        }
+
+        .shadow-warning {
+            box-shadow: 0 0.5rem 1rem rgba(255, 193, 7, 0.15) !important;
+        }
+
+        .form-check-input {
+            width: 1.8em;
+            height: 1.8em;
+        }
+
+        .form-control, .form-select {
+            border-radius: 0.25rem !important;
+        }
+    </style>
+
+    <script src="{% static 'vendor/flatpickr/flatpickr.min.js' %}"></script>
+    <script src="{% static 'vendor/flatpickr/l10n/es.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Configuración de Flatpickr con estilo dinámico
+            const fp = flatpickr('#id_fecha_hora_inicio', {
+                enableTime: true,
+                dateFormat: 'Y-m-d H:i',
+                minDate: 'today',
+                minTime: '08:00',
+                maxTime: '18:00',
+                locale: 'es',
+                disable: [
+                    function (date) {
+                        return date.getDay() === 0 || date.getDay() === 6;
+                    },
+                    {% if horarios_ocupados %}
+                        {% for horario in horarios_ocupados %}
+                            {from: '{{ horario.start }}', to: '{{ horario.end }}'},
+                        {% endfor %}
+                    {% endif %}
+                ],
+                defaultHour: {% if profesor %}8{% else %}10{% endif %},
+                theme: '{% if profesor %}primary{% else %}warning{% endif %}'
+            });
+
+            // Validación del formulario
+            const form = document.getElementById('citaForm');
+            form.addEventListener('submit', function (e) {
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            });
+
+            // Asegurar que la ubicación esté configurada para servicio escolar
+            {% if servicio_escolar %}
+                document.getElementById('id_ubicacion').value = "Oficina de Servicios Escolares";
+            {% endif %}
+        });
+    </script>
+{% endblock %}

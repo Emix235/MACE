@@ -1,0 +1,81 @@
+{% extends base %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h2>{{ encuesta.encuesta.titulo }}</h2>
+                <p class="mb-0">{{ encuesta.encuesta.descripcion }}</p>
+            </div>
+
+            <div class="card-body">
+                <!-- Sección de explicación -->
+                <div class="alert alert-info">
+                    <h5 class="mb-2"><i class="bi bi-info-circle-fill"></i> ¿Cómo se interpretan tus respuestas?</h5>
+                    <ul class="mb-0">
+                        <li><strong>Escala del 1 al 5</strong>: 1 significa “Muy en desacuerdo” y 5 “Muy de acuerdo”.
+                            Estas preguntas tienen mayor peso en el análisis de resultados.
+                        </li>
+                        <li><strong>Sí/No</strong>: Estas respuestas se codifican como 1 (Sí) y 0 (No), con valor
+                            binario.
+                        </li>
+                        <li><strong>Respuesta abierta</strong>: Tus comentarios se analizan cualitativamente. No afectan
+                            directamente al puntaje numérico.
+                        </li>
+                    </ul>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for pregunta in preguntas %}
+                        <div class="mb-4 border-bottom pb-3">
+                            <h5>
+                                {{ forloop.counter }}. {{ pregunta.texto }}
+                                {% if pregunta.obligatoria %}
+                                    <span class="text-danger">*</span>
+                                {% endif %}
+                            </h5>
+
+                            {% if pregunta.tipo == 'escala_5' %}
+                                <div class="btn-group" role="group" aria-label="Escala del 1 al 5">
+                                    {% for i in "12345" %}
+                                        <input type="radio" class="btn-check" name="pregunta_{{ pregunta.id }}"
+                                               id="p{{ pregunta.id }}_v{{ i }}" value="{{ i }}"
+                                               {% if pregunta.obligatoria %}required{% endif %}>
+                                        <label class="btn btn-outline-primary" for="p{{ pregunta.id }}_v{{ i }}">
+                                            {{ i }}
+                                        </label>
+                                    {% endfor %}
+                                </div>
+
+                            {% elif pregunta.tipo == 'si_no' %}
+                                <div class="btn-group" role="group" aria-label="Opciones Sí/No">
+                                    <input type="radio" class="btn-check" name="pregunta_{{ pregunta.id }}"
+                                           id="p{{ pregunta.id }}_si" value="1"
+                                           {% if pregunta.obligatoria %}required{% endif %}>
+                                    <label class="btn btn-outline-success" for="p{{ pregunta.id }}_si">Sí</label>
+
+                                    <input type="radio" class="btn-check" name="pregunta_{{ pregunta.id }}"
+                                           id="p{{ pregunta.id }}_no" value="0">
+                                    <label class="btn btn-outline-danger" for="p{{ pregunta.id }}_no">No</label>
+                                </div>
+
+                            {% else %}
+                                <textarea class="form-control" name="pregunta_{{ pregunta.id }}"
+                                          rows="3" {% if pregunta.obligatoria %}required{% endif %}></textarea>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-send-check"></i> Enviar Encuesta
+                        </button>
+                        <a href="{% url dashboard_url %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,380 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load tz %}
+{% block content %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        input.form-control, select.form-select, textarea.form-control {
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+            font-size: 1rem;
+        }
+
+        label.form-label {
+            font-weight: 600;
+        }
+
+        .form-control:focus, .form-select:focus, textarea:focus {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* Estilos para radio buttons prioritarios */
+        .priority-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .priority-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .priority-option label {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            border-radius: 0.5rem;
+            border: 2px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .priority-option label:hover {
+            background-color: #f8f9fa;
+        }
+
+        .priority-option input[type="radio"]:checked + label {
+            border-color: #dc3545;
+            background-color: #fff5f5;
+            font-weight: 600;
+        }
+
+        .priority-media input[type="radio"]:checked + label {
+            border-color: #ffc107;
+            background-color: #fffcf0;
+        }
+
+        .priority-icon {
+            font-size: 1.25rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .priority-alta .priority-icon {
+            color: #dc3545;
+        }
+
+        .priority-media .priority-icon {
+            color: #ffc107;
+        }
+    </style>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i> Cita Prioritaria con {{ estudiante.nombre_completo }}
+            </h2>
+            <a href="{% url 'servicios_escolares:agendar_cita' estudiante.id %}"
+               class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Volver
+            </a>
+        </div>
+
+        {% if messages %}
+            <div class="container mt-3 ps-0 pe-0">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="card border-danger shadow-sm">
+            <div class="card-header bg-danger text-white py-3">
+                <h4 class="mb-0"><i class="fas fa-bolt me-2"></i>Cita Urgente - Configuración</h4>
+            </div>
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-body p-5">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Información de advertencia -->
+                        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                            <i class="fas fa-exclamation-triangle fs-4 me-3"></i>
+                            <div>
+                                <h5 class="mb-1">¡Atención! Uso exclusivo para casos urgentes</h5>
+                                <p class="mb-0">Este formulario debe usarse solo para situaciones que requieren atención
+                                    inmediata (disciplina, emergencias médicas, etc.)</p>
+                            </div>
+                        </div>
+
+                        <!-- Información básica -->
+                        <div class="alert alert-warning mb-4">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-graduate fs-5 me-3 text-warning"></i>
+                                        <div>
+                                            <h6 class="mb-1 text-muted">Estudiante</h6>
+                                            <p class="mb-0 fw-bold">{{ estudiante.nombre_completo }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-id-card fs-5 me-3 text-warning"></i>
+                                        <div>
+                                            <h6 class="mb-1 text-muted">Matrícula</h6>
+                                            <p class="mb-0 fw-bold">{{ estudiante.matricula }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if estudiante.padre %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user-tie fs-5 me-3 text-warning"></i>
+                                            <div>
+                                                <h6 class="mb-1 text-muted">Padre/Tutor</h6>
+                                                <p class="mb-0 fw-bold">{{ estudiante.padre.nombre_completo }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Configuración Prioritaria -->
+                        <div class="mb-5 border-bottom pb-4">
+                            <h5 class="text-danger mb-4">
+                                <span class="bg-danger bg-opacity-10 p-2 rounded me-2"><i
+                                        class="fas fa-bolt"></i></span>
+                                Configuración Prioritaria
+                            </h5>
+
+                            <div class="row g-3">
+                                <!-- Nivel de Prioridad -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold d-block mb-2">
+                                        <i class="fas fa-flag me-2 text-danger"></i> Nivel de Urgencia
+                                    </label>
+                                    {% for radio in form.nivel_prioridad %}
+                                        <div class="form-check mb-2">
+                                            {{ radio.tag }}
+                                            <label for="{{ radio.id_for_label }}" class="form-check-label">
+                                                <i class="fas {% if radio.choice_value == 'alta' %}fa-fire text-danger{% else %}fa-exclamation-circle text-warning{% endif %} me-2"></i>
+                                                {{ radio.choice_label }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                    {% if form.nivel_prioridad.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.nivel_prioridad.errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Motivo -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold" for="{{ form.motivo_prioridad.id_for_label }}">
+                                        <i class="fas fa-comment-medical me-2 text-danger"></i> Justificación de
+                                        Urgencia
+                                    </label>
+                                    <textarea name="{{ form.motivo_prioridad.name }}"
+                                              id="{{ form.motivo_prioridad.id_for_label }}"
+                                              class="form-control {% if form.motivo_prioridad.errors %}is-invalid{% endif %}"
+                                              maxlength="500"
+                                              rows="4"
+                                              placeholder="Describa la urgencia...">{{ form.motivo_prioridad.value|default_if_none:'' }}</textarea>
+
+                                    {% if form.motivo_prioridad.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.motivo_prioridad.errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detalles de la Cita -->
+                        <div class="mb-5">
+                            <h5 class="text-danger mb-4">
+                                <span class="bg-danger bg-opacity-10 p-2 rounded me-2"><i
+                                        class="fas fa-calendar-alt"></i></span>
+                                Detalles de la Cita
+                            </h5>
+
+                            <div class="row g-3">
+                                <!-- Título -->
+                                <div class="col-md-6">
+                                    <label class="form-label" for="{{ form.titulo.id_for_label }}">
+                                        <i class="fas fa-heading me-2 text-primary"></i> Título de la cita
+                                    </label>
+                                    <input type="text" name="{{ form.titulo.name }}"
+                                           id="{{ form.titulo.id_for_label }}"
+                                           class="form-control {% if form.titulo.errors %}is-invalid{% endif %}"
+                                           placeholder="Ej: Situación disciplinaria urgente"
+                                           value="{{ form.titulo.value|default_if_none:'' }}">
+                                    {% if form.titulo.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.titulo.errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Fecha y Hora -->
+                                <div class="mb-3">
+                                    <label for="{{ form.fecha_hora_inicio.id_for_label }}" class="form-label">
+                                        {{ form.fecha_hora_inicio.label }}
+                                    </label>
+                                    <input type="datetime-local"
+                                           name="{{ form.fecha_hora_inicio.name }}"
+                                           id="{{ form.fecha_hora_inicio.id_for_label }}"
+                                           class="form-control"
+                                           value="{{ form.initial.fecha_hora_inicio|default:'' }}"
+                                           required>
+
+                                    {% if form.fecha_hora_inicio.errors %}
+                                        <div class="text-danger">
+                                            {{ form.fecha_hora_inicio.errors }}
+                                        </div>
+                                    {% endif %}
+                                    {% if form.fecha_hora_inicio.help_text %}
+                                        <div class="form-text">{{ form.fecha_hora_inicio.help_text }}</div>
+                                    {% endif %}
+
+                                    <small class="form-text text-muted">
+                                        Horario de atención: 08:00 - 18:00 hrs<br>
+                                        Hora mínima para hoy: {{ hora_minima_legible }}<br>
+                                        Para otros días: 08:00 - 17:30
+                                    </small>
+                                </div>
+
+                                <!-- Duración -->
+                                <div class="col-md-4">
+                                    <label class="form-label" for="{{ form.duracion.id_for_label }}">
+                                        <i class="fas fa-hourglass-half me-2 text-primary"></i> Duración
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number"
+                                               name="{{ form.duracion.name }}"
+                                               id="{{ form.duracion.id_for_label }}"
+                                               class="form-control {% if form.duracion.errors %}is-invalid{% endif %}"
+                                               value="{{ form.duracion.value|default_if_none:'' }}">
+                                        <span class="input-group-text">minutos</span>
+                                    </div>
+                                    {% if form.duracion.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.duracion.errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Ubicación -->
+                                <div class="col-md-8">
+                                    <label class="form-label" for="{{ form.ubicacion.id_for_label }}">
+                                        <i class="fas fa-map-marker-alt me-2 text-primary"></i> Ubicación
+                                    </label>
+                                    <input type="text" name="{{ form.ubicacion.name }}"
+                                           id="{{ form.ubicacion.id_for_label }}"
+                                           class="form-control {% if form.ubicacion.errors %}is-invalid{% endif %}"
+                                           placeholder="Ej: Oficina del Director"
+                                           value="{{ form.ubicacion.value|default_if_none:'' }}">
+                                    {% if form.ubicacion.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.ubicacion.errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo para subir archivo (opcional) -->
+                        <div class="mb-4">
+                            <label for="{{ form.evidencia_archivo.id_for_label }}" class="form-label fw-bold">
+                                <i class="fas fa-paperclip me-2 text-secondary"></i> Adjuntar Evidencia (opcional)
+                            </label>
+                            <input type="file"
+                                   name="{{ form.evidencia_archivo.name }}"
+                                   id="{{ form.evidencia_archivo.id_for_label }}"
+                                   class="form-control {% if form.evidencia_archivo.errors %}is-invalid{% endif %}">
+                            {% if form.evidencia_archivo.help_text %}
+                                <div class="form-text">{{ form.evidencia_archivo.help_text }}</div>
+                            {% endif %}
+                            {% if form.evidencia_archivo.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.evidencia_archivo.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-flex justify-content-between pt-4 border-top">
+                            <a href="{% url 'servicios_escolares:agendar_cita' estudiante.id %}"
+                               class="btn btn-outline-secondary btn-lg px-4">
+                                <i class="fas fa-arrow-left me-2"></i> Usar formulario normal
+                            </a>
+                            <button type="submit" class="btn btn-danger btn-lg px-4 shadow-sm">
+                                <i class="fas fa-bolt me-2"></i> Confirmar Cita Urgente
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Character counter for textareas
+        document.querySelectorAll('textarea').forEach(textarea => {
+            const counterId = textarea.id + '-count';
+            const counter = document.createElement('small');
+            counter.className = 'form-text d-flex justify-content-between';
+            counter.innerHTML = `
+                <small><i class="fas fa-info-circle me-1"></i> Máximo ${textarea.maxLength} caracteres</small>
+                <small><span id="${counterId}">${textarea.value.length}</span>/${textarea.maxLength}</small>
+            `;
+            textarea.parentNode.insertBefore(counter, textarea.nextSibling);
+
+            textarea.addEventListener('input', function () {
+                document.getElementById(counterId).textContent = this.value.length;
+            });
+        });
+
+        // Date validation
+        document.getElementById('id_fecha_hora_inicio').addEventListener('change', function () {
+            const fechaSeleccionada = new Date(this.value);
+            const ahora = new Date();
+
+            if (fechaSeleccionada < ahora) {
+                alert('¡Error! No puede seleccionar fechas/horas pasadas');
+                this.value = '';
+            }
+        });
+    </script>
+{% endblock %}
+
+<div class="form-text d-flex justify-content-between">
+    <small><i class="fas fa-info-circle me-1"></i> Máximo 500 caracteres</small>
+    <small><span id="motivo-prio-count">0</span>/500</small>
+</div>

@@ -1,0 +1,284 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="mb-3">
+                    <i class="fas fa-users-class"></i> Panel de Grupos - {{ ciclo_actual.nombre }}
+                </h2>
+                {% if messages %}
+                    <div class="messages">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Tarjeta de Grados -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Grados Disponibles</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for grado in grados %}
+                                <div class="col-md-3 mb-3">
+                                    <a href="?grado_id={{ grado.id }}"
+                                       class="card grado-card text-decoration-none
+                                      {% if grado_seleccionado and grado_seleccionado.id == grado.id %}border-primary border-2{% endif %}">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title">{{ grado.nombre }}</h5>
+                                            <div class="d-flex justify-content-around">
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-door-open"></i> {{ grado.num_grupos }} grupos
+                                        </span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección de Grupos (visible cuando se selecciona un grado) -->
+                {% if grado_seleccionado %}
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h4 class="mb-0">Grupos de {{ grado_seleccionado.nombre }}</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="thead-dark">
+                                    <tr>
+                                        <th>Grupo</th>
+                                        <th>Turno</th>
+                                        <th>Estudiantes</th>
+                                        <th>Capacidad</th>
+                                        <th>% Ocupación</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for grupo in grupos %}
+                                        <tr class="{% if grupo_seleccionado and grupo_seleccionado.id == grupo.id %}table-active{% endif %}">
+                                            <td>
+                                                <strong>{{ grupo.grado.numero }}°{{ grupo.letra }}</strong>
+                                            </td>
+                                            <td>{{ grupo.get_turno_display }}</td>
+                                            <td>{{ grupo.num_estudiantes }}</td>
+                                            <td>{{ grupo.capacidad }}</td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar
+                                                {% if grupo.num_estudiantes == grupo.capacidad %}bg-danger
+                                                {% elif grupo.num_estudiantes > grupo.capacidad %}bg-warning
+                                                {% else %}bg-success{% endif %}"
+                                                         style="width: {% widthratio grupo.num_estudiantes grupo.capacidad 100 %}%">
+                                                        {% widthratio grupo.num_estudiantes grupo.capacidad 100 %}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="?grado_id={{ grado_seleccionado.id }}&grupo_id={{ grupo.id }}#detalle-grupo"
+                                                   class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-search"></i> Detalle
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Sección de Detalle de Grupo (visible cuando se selecciona un grupo) -->
+                {% if grupo_seleccionado %}
+                    <div class="card shadow-sm" id="detalle-grupo">
+                        <div class="card-header bg-info text-white">
+                            <h4 class="mb-0">
+                                Detalle del Grupo: {{ grupo_seleccionado.grado.numero }}°{{ grupo_seleccionado.letra }}
+                                ({{ grupo_seleccionado.get_turno_display }})
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="card">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title">Información del Grupo</h5>
+                                            <p class="mb-1">
+                                                <strong>Aula:</strong> {{ grupo_seleccionado.aula|default:"Sin asignar" }}
+                                            </p>
+                                            <p class="mb-1">
+                                                <strong>Capacidad:</strong> {{ grupo_seleccionado.capacidad }}</p>
+                                            <p class="mb-1"><strong>Estudiantes:</strong> {{ estudiantes.count }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title text-center">Distribución por Género</h5>
+                                            <div class="text-center">
+                                                <!-- Aquí podrías agregar un gráfico de pastel si tienes datos de género -->
+                                                <p class="text-muted">Gráfico estadístico aquí</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h5 class="mb-3">Lista de Estudiantes</h5>
+                            <!-- AÑADE ESTE BOTÓN NUEVO -->
+                            <div class="text-end mb-3">
+                                {# {% url 'servicios_escolares:asignar_padres_grupo' grupo_seleccionado.id %} #}
+                                <a href="{% url 'servicios_escolares:asignar_padres_grupo' grupo_seleccionado.id %}"
+                                   class="btn btn-lg btn-success"
+                                   title="Asignar padres a todo el grupo">
+                                    <i class="fas fa-users-cog"></i> Asignar Padres al Grupo
+                                </a>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th>Matrícula</th>
+                                        <th>Nombre Completo</th>
+                                        <th>Edad</th>
+                                        <th>Padre/Tutor</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for estudiante in estudiantes %}
+                                        <tr>
+                                            <td>{{ estudiante.matricula }}</td>
+                                            <td>{{ estudiante.nombre_completo }}</td>
+                                            <td>{{ estudiante.edad|default:"-" }}</td>
+                                            <td>
+                                                {% if estudiante.padre %}
+                                                    {{ estudiante.padre.nombre_completo }}
+                                                {% else %}
+                                                    <span class="text-muted">Sin asignar</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if estudiante.padre %}
+                                                    {% if estudiante.padre.estado_cuenta == 'Activo' %}
+                                                        <span class="badge bg-success">Padre registrado</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning text-dark">Padre inactivo</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Sin padre</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <!-- Botón para editar estudiante -->
+                                                    <a href="{% url 'servicios_escolares:editar_estudiante' estudiante.id %}"
+                                                       class="btn btn-sm btn-outline-primary"
+                                                       title="Editar estudiante">
+                                                        <i class="fas fa-user-edit"></i> Editar estudiante
+                                                    </a>
+
+                                                    <!-- Botón para asignar padre -->
+                                                    {# {% url 'servicios_escolares:asignar_padre' estudiante.id %} #}
+                                                    <a href="{% url 'servicios_escolares:asignar_padre' estudiante.id %}"
+                                                       class="btn btn-sm btn-outline-info"
+                                                       title="Asignar padre/tutor">
+                                                        <i class="fas fa-user-plus"></i> Asignar padre
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center">No hay estudiantes registrados en este
+                                                grupo
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+
+                                <!-- Sección para importar desde archivo -->
+                                <div class="card mt-4">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-file-import"></i> Importar datos de estudiantes
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        {# {% url 'servicios_escolares:importar_estudiantes' grupo_seleccionado.id %} #}
+                                        <form method="post" enctype="multipart/form-data"
+                                              action="{% url 'servicios_escolares:importar_estudiantes' grupo_seleccionado.id %}">
+                                            {% csrf_token %}
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="archivoEstudiantes" class="form-label">Seleccionar
+                                                            archivo (Excel/CSV)</label>
+                                                        <input class="form-control" type="file" id="archivoEstudiantes"
+                                                               name="archivo" required>
+                                                        <div class="form-text">
+                                                            El archivo debe contener columnas: Matrícula, Nombre,
+                                                            Apellido Paterno, Apellido Materno, etc.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="d-flex align-items-end h-100">
+                                                        <button type="submit" class="btn btn-success">
+                                                            <i class="fas fa-upload"></i> Importar Estudiantes
+                                                        </button>
+                                                        {# {% url 'servicios_escolares:descargar_plantilla' %} #}
+                                                        <a href="#"
+                                                           class="btn btn-outline-secondary ms-2">
+                                                            <i class="fas fa-file-download"></i> Descargar Plantilla
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .grado-card {
+            transition: all 0.3s ease;
+        }
+
+        .grado-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress {
+            min-width: 100px;
+        }
+
+        #detalle-grupo {
+            border-top: 3px solid #17a2b8;
+        }
+    </style>
+{% endblock %}

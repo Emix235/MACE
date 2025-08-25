@@ -1,0 +1,66 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white">
+                <h3><i class="fas fa-clock-rotate-left me-2"></i>Citas Pasadas Pendientes</h3>
+            </div>
+
+            <div class="card-body">
+                {% if citas_pendientes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Título</th>
+                                <th>Fecha/Hora</th>
+                                <th>Padre</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for cita in citas_pendientes %}
+                                <tr>
+                                    <td>{{ cita.id }}</td>
+                                    <td>{{ cita.titulo }}</td>
+                                    <td>
+                                        {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}
+                                        <small class="d-block text-muted">
+                                            (Hace {{ ahora|timesince:cita.fecha_hora_fin }})
+                                        </small>
+                                    </td>
+                                    <td>{{ cita.solicitante.nombre_completo }}</td>
+                                    <td><span
+                                            class="badge bg-{{ cita.get_badge_color }}">{{ cita.get_estado_display }}</span>
+                                    </td>
+                                    <td>
+                                        <form method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="cita_id" value="{{ cita.id }}">
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="fas fa-check-circle me-1"></i> Completar
+                                            </button>
+                                        </form>
+                                        <a href="{% url 'servicios_escolares:detalle_cita' cita.id %}"
+                                           class="btn btn-sm btn-outline-primary ms-1">
+                                            <i class="fas fa-eye"></i> Detalle
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        No hay citas pasadas pendientes de completar.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

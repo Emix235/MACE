@@ -1,0 +1,258 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+{% load my_filters %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">{{ titulo }}</h1>
+                <p class="lead text-muted mb-0">{{ subtitulo }}</p>
+                <small class="text-muted">Período: {{ periodo }} (desde {{ fecha_limite|date:"d M Y" }})</small>
+            </div>
+            <div class="text-end">
+            <span class="badge bg-primary">
+                <i class="fas fa-chalkboard-teacher me-1"></i>
+                {{ profesores|length }} Profesores
+            </span>
+                <span class="badge bg-success ms-2">
+                <i class="fas fa-star me-1"></i>
+                Promedio: {{ promedio_general|floatformat:1 }}/5.0
+            </span>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            Este ranking muestra a los profesores con al menos 5 evaluaciones en el período.
+            Ordenados por mejor calificación promedio.
+        </div>
+
+        <div class="row">
+            {% for profesor_data in profesores %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm border-{% if forloop.first %}warning border-2{% else %}0{% endif %}">
+                        {% if forloop.first %}
+                            <div class="card-header bg-warning text-dark">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-trophy me-2"></i>
+                                        #1 {{ profesor_data.profesor.nombre_completo }}
+                                    </h5>
+                                    <span class="badge bg-dark">
+                            {{ profesor_data.promedio_calificacion|floatformat:1 }}/5.0
+                        </span>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="card-header bg-primary text-white">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="card-title mb-0">
+                                        #{{ forloop.counter }} {{ profesor_data.profesor.nombre_completo }}
+                                    </h5>
+                                    <span class="badge bg-light text-dark">
+                            {{ profesor_data.promedio_calificacion|floatformat:1 }}/5.0
+                        </span>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-3">
+                        <span class="badge bg-success">
+                            <i class="fas fa-medal me-1"></i>
+                            Mejor: {{ profesor_data.max_calificacion|default:"-" }}/5
+                        </span>
+                                <span class="badge bg-secondary">
+                            <i class="fas fa-chart-line me-1"></i>
+                            Padres: {{ profesor_data.num_padres_distintos }}
+                        </span>
+                                <span class="badge bg-info">
+                            <i class="fas fa-comments me-1"></i>
+                            Evaluaciones: {{ profesor_data.num_retroalimentaciones }}
+                        </span>
+                            </div>
+
+                            <div class="progress mb-3" style="height: 20px;">
+                                <div class="progress-bar bg-{% if forloop.first %}warning{% else %}primary{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ profesor_data.promedio_calificacion|multiply:20 }}%"
+                                     aria-valuenow="{{ profesor_data.promedio_calificacion }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="5">
+                                    {{ profesor_data.promedio_calificacion|floatformat:1 }}
+                                </div>
+                            </div>
+
+                            <p class="card-text">
+                                <i class="fas fa-book me-2"></i>
+                                <strong>Materias:</strong>
+                                {{ profesor_data.materias|join:", "|default:"Sin materias asignadas" }}
+                            </p>
+
+                            {% if profesor_data.comentarios %}
+                                <div class="mt-3">
+                                    <h6><i class="fas fa-quote-left me-1"></i> Comentarios destacados:</h6>
+                                    <div class="comment-scroll" style="max-height: 120px; overflow-y: auto;">
+                                        {% for comentario in profesor_data.comentarios %}
+                                            <div class="card mb-2 p-2">
+                                                <small>"{{ comentario|truncatechars:100 }}"</small>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="card-footer">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-arrow-down me-1"></i>
+                                    Mínima: {{ profesor_data.min_calificacion|default:"-" }}/5
+                                </small>
+                                <a href="#" class="btn btn-sm btn-outline-primary"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#profesorModal{{ profesor_data.profesor.id }}">
+                                    Ver detalles
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal para detalles del profesor -->
+                <div class="modal fade" id="profesorModal{{ profesor_data.profesor.id }}" tabindex="-1"
+                     aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">
+                                    Detalles de {{ profesor_data.profesor.nombre_completo }}
+                                    <span class="badge bg-light text-dark ms-2">
+                                #{{ forloop.counter }} en el ranking
+                            </span>
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row mb-4">
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card bg-light p-2 text-center h-100">
+                                            <h6 class="text-muted mb-2">Promedio</h6>
+                                            <h2 class="text-primary mb-0">{{ profesor_data.promedio_calificacion|floatformat:1 }}</h2>
+                                            <small class="text-muted">/5.0</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card bg-light p-2 text-center h-100">
+                                            <h6 class="text-muted mb-2">Evaluaciones</h6>
+                                            <h2 class="text-info mb-0">{{ profesor_data.num_retroalimentaciones }}</h2>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card bg-light p-2 text-center h-100">
+                                            <h6 class="text-muted mb-2">Padres distintos</h6>
+                                            <h2 class="text-success mb-0">{{ profesor_data.num_padres_distintos }}</h2>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card bg-light p-2 text-center h-100">
+                                            <h6 class="text-muted mb-2">Materias</h6>
+                                            <h2 class="text-warning mb-0">{{ profesor_data.materias.count }}</h2>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card mb-4">
+                                            <div class="card-header bg-light">
+                                                <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Distribución de
+                                                    calificaciones</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <small>Máxima:</small>
+                                                    <span class="badge bg-success">{{ profesor_data.max_calificacion }}/5</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between mb-2">
+                                                    <small>Mínima:</small>
+                                                    <span class="badge bg-danger">{{ profesor_data.min_calificacion }}/5</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <small>Diferencia:</small>
+                                                    <span class="badge bg-info">{{ profesor_data.max_calificacion|subtract:profesor_data.min_calificacion }} puntos</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header bg-light">
+                                                <h6 class="mb-0"><i class="fas fa-book me-2"></i>Materias impartidas
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                {% if profesor_data.materias.all %}
+                                                    <ul class="list-unstyled mb-0">
+                                                        {% for materia in profesor_data.materias.all %}
+                                                            <li class="mb-1">
+                                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                                {{ materia.nombre }}
+                                                            </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                {% else %}
+                                                    <div class="alert alert-warning mb-0">
+                                                        No hay materias asignadas
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card mt-4">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0"><i class="fas fa-comments me-2"></i>Comentarios recibidos</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if profesor_data.comentarios %}
+                                            <div class="comment-section" style="max-height: 200px; overflow-y: auto;">
+                                                {% for comentario in profesor_data.comentarios %}
+                                                    <div class="card mb-3 p-3">
+                                                        <div class="d-flex justify-content-between">
+                                                            <small class="text-muted">Comentario
+                                                                #{{ forloop.counter }}</small>
+                                                        </div>
+                                                        <p class="mb-0 mt-2">"{{ comentario }}"</p>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-info mb-0">
+                                                No hay comentarios registrados para este profesor.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        No hay profesores con suficientes evaluaciones para mostrar en este período.
+                        <small>(Se requieren al menos 5 evaluaciones completadas)</small>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,349 @@
+{% extends 'padres/base.html' %}
+{% load static %}
+
+{% block content %}
+    <style>
+        /* Estilos generales */
+        .calendar-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar-nav-btn {
+            padding: 5px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .calendar-nav-btn:hover {
+            background: #0069d9;
+        }
+
+        /* Estilos de la cuadrícula del calendario */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            font-weight: bold;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .calendar-day {
+            min-height: 100px;
+            padding: 5px;
+            border: 1px solid #dee2e6;
+            background: white;
+            position: relative;
+        }
+
+        .day-number {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .other-month {
+            background: #f8f9fa;
+            color: #adb5bd;
+        }
+
+        .today {
+            background: #e7f5ff;
+        }
+
+        /* Estilos de eventos */
+        .event {
+            font-size: 12px;
+            padding: 2px 5px;
+            margin: 2px 0;
+            border-radius: 3px;
+            color: white;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .event-tiempo-libre {
+            background: #28a745;
+        }
+
+        .event-clase {
+            background: #dc3545;
+        }
+
+        .event-cita {
+            background: #6c757d;
+        }
+
+        /* Leyenda */
+        .calendar-legend {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+        }
+    </style>
+
+    {% if messages %}
+        <div class="container mt-3 ps-0 pe-0"> <!-- Bootstrap 5 -->
+            {% for message in messages %}
+                <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="alert alert-info">
+        <strong>DEBUG:</strong>
+        Profesor ID: {{ profesor.id|default:"NO DISPONIBLE" }} |
+        Nombre: {{ profesor.nombre_completo|default:"NO DISPONIBLE" }}
+    </div>
+
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <h2 class="calendar-title">Disponibilidad del Profesor {{ profesor.nombre_completo }} - <span
+                    id="current-month">{{ current_date|date:"F Y" }}</span></h2>
+            <div class="calendar-nav">
+                <a href="?year={{ prev_month.year }}&month={{ prev_month.month }}" class="calendar-nav-btn">Anterior</a>
+                <a href="?year={{ today.year }}&month={{ today.month }}" class="calendar-nav-btn">Hoy</a>
+                <a href="?year={{ next_month.year }}&month={{ next_month.month }}"
+                   class="calendar-nav-btn">Siguiente</a>
+            </div>
+        </div>
+
+        <!-- Leyenda -->
+        <div class="calendar-legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #28a745;"></div>
+                <span>Tiempo disponible</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #dc3545;"></div>
+                <span>Clase programada</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #6c757d;"></div>
+                <span>Cita existente</span>
+            </div>
+        </div>
+
+        <!-- Encabezados de días -->
+        <div class="calendar-grid" id="day-headers">
+            <div class="calendar-day-header">Lunes</div>
+            <div class="calendar-day-header">Martes</div>
+            <div class="calendar-day-header">Miércoles</div>
+            <div class="calendar-day-header">Jueves</div>
+            <div class="calendar-day-header">Viernes</div>
+            <div class="calendar-day-header">Sábado</div>
+            <div class="calendar-day-header">Domingo</div>
+        </div>
+
+        <!-- Días del calendario generados desde Python -->
+        <div class="calendar-grid" id="calendar-days">
+            {% for semana in semanas %}
+                {% for dia in semana %}
+                    <div class="calendar-day {% if not dia.es_mes_actual %}other-month{% endif %} {% if dia.es_hoy %}today{% endif %}">
+                        <div class="day-number">{{ dia.numero }}</div>
+
+                        {% for evento in dia.eventos %}
+                            <div class="event event-{{ evento.tipo }} {% if evento.clickable %}event-clickable{% endif %}"
+                                 data-start="{{ evento.start }}"
+                                 data-end="{{ evento.end }}"
+                                 data-tipo="{{ evento.tipo }}">
+                                {{ evento.title }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Modal para agendar cita -->
+    <div class="modal fade" id="agendarCitaModal" tabindex="-1" aria-labelledby="agendarCitaModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="agendarCitaModalLabel">Agendar Cita
+                        con {{ profesor.nombre_completo }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                {% with profesor_id=profesor.id|default:1 %}
+                    <form id="citaForm" method="post"
+                          action="{% url 'padres:crear_cita_profesor' profesor_id=profesor_id %}">
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            <input type="hidden" name="fecha_hora_inicio" id="id_fecha_hora_inicio_hidden">
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="id_titulo" class="form-label">Título *</label>
+                                    <input type="text" class="form-control" id="id_titulo" name="titulo" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_tipo" class="form-label">Tipo de cita *</label>
+                                    <select class="form-control" id="id_tipo" name="tipo" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="academica">Académica</option>
+                                        <option value="conducta">Conducta</option>
+                                        <option value="administrativa">Administrativa</option>
+                                        <option value="otro">Otro</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Fecha y hora seleccionada *</label>
+                                    <input type="text" class="form-control" id="fecha_hora_display" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_duracion" class="form-label">Duración *</label>
+                                    <select class="form-control" id="id_duracion" name="duracion" required>
+                                        <option value="15">15 minutos</option>
+                                        <option value="30">30 minutos</option>
+                                        <option value="45">45 minutos</option>
+                                        <option value="60">1 hora</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="id_estudiantes" class="form-label">Estudiantes *</label>
+                                    <div class="form-check">
+                                        {% for estudiante in cita_form.estudiantes.field.queryset %}
+                                            <div>
+                                                <input class="form-check-input" type="checkbox" name="estudiantes"
+                                                       id="estudiante_{{ estudiante.id }}" value="{{ estudiante.id }}">
+                                                <label class="form-check-label" for="estudiante_{{ estudiante.id }}">
+                                                    {{ estudiante.nombre_completo }}
+                                                </label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_ubicacion" class="form-label">Ubicación *</label>
+                                    <input type="text" class="form-control" id="id_ubicacion" name="ubicacion" required>
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" name="incluir_servicio_escolar"
+                                               id="id_incluir_servicio_escolar">
+                                        <label class="form-check-label" for="id_incluir_servicio_escolar">
+                                            Incluir a servicio escolar
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_motivo" class="form-label">Motivo *</label>
+                                <textarea class="form-control" id="id_motivo" name="motivo" rows="3"
+                                          required></textarea>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="id_observaciones" class="form-label">Observaciones</label>
+                                <textarea class="form-control" id="id_observaciones" name="observaciones"
+                                          rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Agendar Cita</button>
+                        </div>
+                    </form>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Manejar clic en eventos disponibles
+            document.querySelectorAll('.event-clickable').forEach(eventElement => {
+                eventElement.addEventListener('click', function () {
+                    const startTime = this.dataset.start;
+                    const endTime = this.dataset.end;
+                    const eventDateTime = new Date(startTime);
+
+                    // Configurar el modal
+                    document.getElementById('id_fecha_hora_inicio_hidden').value = startTime;
+                    document.getElementById('fecha_hora_display').value =
+                        eventDateTime.toLocaleString('es-ES', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+
+                    // Calcular duración máxima disponible
+                    const duracionMax = (new Date(endTime) - eventDateTime) / (1000 * 60);
+                    const duracionSelect = document.getElementById('id_duracion');
+
+                    // Limpiar y ajustar opciones de duración
+                    duracionSelect.innerHTML = '';
+                    [15, 30, 45, 60].forEach(opcion => {
+                        if (opcion <= duracionMax) {
+                            const option = document.createElement('option');
+                            option.value = opcion;
+                            option.textContent = `${opcion} minutos`;
+                            duracionSelect.appendChild(option);
+                        }
+                    });
+
+                    // Mostrar modal
+                    new bootstrap.Modal(document.getElementById('agendarCitaModal')).show();
+                });
+            });
+        });
+    </script>
+{% endblock %}

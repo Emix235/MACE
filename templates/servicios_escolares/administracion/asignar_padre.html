@@ -1,0 +1,111 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-3">
+                <i class="fas fa-user-plus"></i> Asignar Padre/Tutor
+            </h2>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Asignar padre a {{ estudiante.nombre_completo }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-info text-white">
+                                        <h5 class="mb-0">Información del Estudiante</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <ul class="list-group list-group-flush">
+                                            <li class="list-group-item">
+                                                <strong>Matrícula:</strong> {{ estudiante.matricula }}
+                                            </li>
+                                            <li class="list-group-item">
+                                                <strong>Nombre:</strong> {{ estudiante.nombre_completo }}
+                                            </li>
+                                            <li class="list-group-item">
+                                                <strong>Grupo:</strong> {{ estudiante.grupo_actual }}
+                                            </li>
+                                            <li class="list-group-item">
+                                                <strong>Padre actual:</strong> 
+                                                {% if estudiante.padre %}
+                                                    {{ estudiante.padre.nombre_completo }}
+                                                {% else %}
+                                                    <span class="text-muted">Sin asignar</span>
+                                                {% endif %}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0">Seleccionar Padre/Tutor</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if padres %}
+                                            <div class="mb-3">
+                                                <label for="padreSelect" class="form-label">Padres disponibles:</label>
+                                                <select class="form-select" id="padreSelect" name="padre_id" required>
+                                                    <option value="">-- Seleccione un padre --</option>
+                                                    {% for padre in padres %}
+                                                        <option value="{{ padre.id }}" 
+                                                            {% if estudiante.padre and estudiante.padre.id == padre.id %}selected{% endif %}>
+                                                            {{ padre.nombre_completo }} ({{ padre.correo_electronico }})
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                                <a href="{% url 'servicios_escolares:panel_grupos_padres' %}?grado_id={{ estudiante.grupo_actual.grado.id }}&grupo_id={{ estudiante.grupo_actual.id }}"
+                                                   class="btn btn-secondary me-md-2">
+                                                    <i class="fas fa-arrow-left"></i> Cancelar
+                                                </a>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-save"></i> Guardar Asignación
+                                                </button>
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-warning">
+                                                No hay padres registrados en el sistema.
+                                            </div>
+                                            <a href="{% url 'servicios_escolares:panel_grupos_padres' %}?grado_id={{ estudiante.grupo_actual.grado.id }}&grupo_id={{ estudiante.grupo_actual.id }}"
+                                               class="btn btn-secondary">
+                                                <i class="fas fa-arrow-left"></i> Regresar
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estilos adicionales -->
+<style>
+    .list-group-item {
+        padding: 0.75rem 1.25rem;
+    }
+    .card {
+        border-radius: 0.5rem;
+    }
+    .card-header {
+        border-radius: 0.5rem 0.5rem 0 0 !important;
+    }
+</style>
+{% endblock %}

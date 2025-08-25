@@ -1,0 +1,36 @@
+{
+  "categories": [
+    {
+      "name": "Admisiones",
+      "questions": [
+        {
+          "id": 1,
+          "question": "¿Cuáles son los requisitos para admisión?",
+          "answers": [
+            "Los requisitos incluyen...",
+            "Documentación necesaria: acta de nacimiento, CURP, etc."
+          ]
+        },
+        {
+          "id": 2,
+          "question": "¿Cuándo son las fechas de inscripción?",
+          "answers": [
+            "Las inscripciones para el ciclo 2023-2024 serán del 15 al 30 de agosto."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pagos",
+      "questions": [
+        {
+          "id": 3,
+          "question": "¿Qué métodos de pago aceptan?",
+          "answers": [
+            "Aceptamos transferencia bancaria, tarjeta de crédito/débito y pago en efectivo en caja."
+          ]
+        }
+      ]
+    }
+  ]
+}

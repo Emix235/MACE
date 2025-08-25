@@ -1,0 +1,89 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Configurar Grados y Grupos - {{ ciclo.nombre }}</h2>
+    
+    <form method="post" id="configForm">
+        {% csrf_token %}
+        
+        {% for nivel in configuracion %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3>{{ nivel.nivel.nombre }}</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>Cantidad de grados:</label>
+                    <input type="number" class="form-control grado-counter" 
+                           name="nivel_{{ nivel.nivel.id }}_grados"
+                           min="0" max="12" value="{{ nivel.num_grados }}"
+                           data-nivel-id="{{ nivel.nivel.id }}">
+                </div>
+                
+                <div id="grados-container-{{ nivel.nivel.id }}">
+                    {% for grado in nivel.grados %}
+                    <div class="grado-config mb-3 p-3 border rounded">
+                        <h5>Grado {{ grado.numero }}°</h5>
+                        <div class="form-group">
+                            <label>Cantidad de grupos:</label>
+                            <input type="number" class="form-control" 
+                                   name="nivel_{{ nivel.nivel.id }}_grado_{{ grado.numero }}_grupos"
+                                   min="1" max="10" value="{{ grado.num_grupos }}">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <button type="submit" class="btn btn-success btn-lg">
+            <i class="fas fa-save"></i> Guardar Configuración
+        </button>
+    </form>
+</div>
+
+<!-- JavaScript para manejar dinámicamente los grados -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Delegación de eventos para los contadores de grados
+    document.getElementById('configForm').addEventListener('change', function(e) {
+        if (e.target.classList.contains('grado-counter')) {
+            const nivelId = e.target.dataset.nivelId;
+            const cantidad = parseInt(e.target.value);
+            const container = document.getElementById(`grados-container-${nivelId}`);
+            
+            // Limpiar contenedor
+            container.innerHTML = '';
+            
+            // Generar campos para cada grado
+            for (let i = 1; i <= cantidad; i++) {
+                const div = document.createElement('div');
+                div.className = 'grado-config mb-3 p-3 border rounded';
+                div.innerHTML = `
+                    <h5>Grado ${i}°</h5>
+                    <div class="form-group">
+                        <label>Cantidad de grupos:</label>
+                        <input type="number" class="form-control" 
+                               name="nivel_${nivelId}_grado_${i}_grupos"
+                               min="1" max="10" value="1">
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+        }
+    });
+});
+</script>
+
+<style>
+.grado-config {
+    background-color: #f8f9fa;
+}
+.grado-config:hover {
+    background-color: #e9ecef;
+}
+</style>
+{% endblock %}

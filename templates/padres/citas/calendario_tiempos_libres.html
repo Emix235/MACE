@@ -1,0 +1,104 @@
+{% extends 'padres/base.html' %}
+{% load static %}
+
+{% block content %}
+    <style>
+        .calendario {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin: 20px;
+        }
+
+        .dia {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+
+        .dia h3 {
+            text-align: center;
+            color: #333;
+        }
+
+        .tiempo-libre {
+            background: #4CAF50;
+            color: white;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tiempo-libre:hover {
+            background: #45a049;
+        }
+
+        #form-cita {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            width: 300px;
+        }
+    </style>
+
+    <h1 style="text-align: center;">Tiempos Libres del Profesor</h1>
+
+    <div class="calendario">
+        {% for dia, tiempos in tiempos_por_dia.items %}
+            <div class="dia">
+                <h3>{{ dia }}</h3>
+                {% for tiempo in tiempos %}
+                    <div class="tiempo-libre"
+                         onclick="mostrarFormulario('{{ dia }}', '{{ tiempo.hora_inicio }}', '{{ tiempo.id }}')">
+                        {{ tiempo.hora_inicio }} - {{ tiempo.hora_fin }}<br>
+                        <small>{{ tiempo.motivo }}</small>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Formulario Oculto -->
+    <div id="form-cita">
+        <h3>Agendar Cita</h3>
+        <form method="post" action="{% url 'padres:crear_cita_profesor' profesor_id=profesor_id %}">
+            {% csrf_token %}
+            <input type="hidden" id="tiempo-libre-id" name="tiempo_libre_id">
+            <div class="form-group">
+                <label>Día:</label>
+                <input type="text" id="dia-seleccionado" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label>Hora:</label>
+                <input type="text" id="hora-seleccionada" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label>Título:</label>
+                <input type="text" name="titulo" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Agendar</button>
+            <button type="button" onclick="document.getElementById('form-cita').style.display = 'none'"
+                    class="btn btn-secondary">Cancelar
+            </button>
+        </form>
+    </div>
+
+    <script>
+        function mostrarFormulario(dia, hora, tiempoLibreId) {
+            document.getElementById('dia-seleccionado').value = dia;
+            document.getElementById('hora-seleccionada').value = hora;
+            document.getElementById('tiempo-libre-id').value = tiempoLibreId;
+            document.getElementById('form-cita').style.display = 'block';
+        }
+    </script>
+{% endblock %}

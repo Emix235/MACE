@@ -1,0 +1,169 @@
+<!-- Modal de Ticket (el que me compartiste) -->
+<div class="modal fade" id="ticketSoporteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Ticket de Soporte</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="ticketSoporteForm" method="post" action="{% url 'padres:crear_ticket_soporte' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_asunto" class="form-label">Asunto</label>
+                        <input type="text" class="form-control" id="id_asunto" name="asunto" required>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="id_descripcion" name="descripcion" required></textarea>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <input type="hidden" name="current_url" id="current_url">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Enviar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ticket-flotante {
+        position: relative;
+        margin-bottom: 15px; /* Espacio entre botones si hay otro debajo */
+    }
+
+    .btn-flotante {
+        border-radius: 50px;
+        padding: 10px 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        background-color: #dc3545; /* Rojo de Bootstrap */
+        color: white;
+        border: none;
+        font-size: 16px;
+    }
+
+    .btn-flotante:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        background-color: #c82333; /* Rojo más oscuro al hover */
+    }
+
+    .texto-boton {
+        margin-left: 8px;
+    }
+
+    /* Versión mobile - solo ícono */
+    @media (max-width: 767px) {
+        .btn-flotante {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            padding: 0;
+            justify-content: center;
+        }
+
+        .texto-boton {
+            display: none;
+        }
+    }
+</style>
+<script>
+    // En tu modal HTML, añade este script
+    document.getElementById('ticketSoporteModal').addEventListener('show.bs.modal', function () {
+        document.getElementById('current_url').value = window.location.href;
+    });
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        // Capturar la URL actual inmediatamente al cargar la página
+        const currentUrlInput = document.getElementById('current_url');
+        currentUrlInput.value = window.location.href;
+
+        const form = document.getElementById('ticketSoporteForm');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Actualizar la URL por si cambió (pestañas SPA o similar)
+            currentUrlInput.value = window.location.href;
+            console.log('URL capturada:', currentUrlInput.value); // Verificar en consola
+
+            const formData = new FormData(form);
+
+            console.log('current_url:', currentUrlInput.value);
+
+            // Enviar datos vía AJAX
+            fetch(form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Mostrar mensaje de éxito
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                        alertDiv.innerHTML = `
+                        ${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                        // Insertar mensaje antes del formulario
+                        form.parentNode.insertBefore(alertDiv, form);
+
+                        // Resetear el formulario
+                        form.reset();
+
+                        // Cerrar el modal tras 2 segundos
+                        setTimeout(() => {
+                            const modalEl = document.getElementById('ticketSoporteModal');
+                            const modal = bootstrap.Modal.getInstance(modalEl);
+                            if (modal) modal.hide();
+                        }, 2000);
+                    } else {
+                        // Limpiar errores previos
+                        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
+                        // Mostrar errores de validación
+                        if (data.errors) {
+                            for (const [field, error] of Object.entries(data.errors)) {
+                                const input = form.querySelector(`[name=${field}]`);
+                                const feedback = input?.nextElementSibling;
+
+                                if (input) input.classList.add('is-invalid');
+                                if (feedback) feedback.textContent = error;
+                            }
+                        }
+
+                        // Mensaje de error general si existe
+                        if (data.message) {
+                            alert(data.message);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error en la conexión con el servidor.');
+                });
+        });
+
+        // Limpiar errores y campos cuando se cierra el modal
+        const modalEl = document.getElementById('ticketSoporteModal');
+        if (modalEl) {
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                form.reset();
+                form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            });
+        }
+    });
+</script>
+

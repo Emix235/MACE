@@ -1,0 +1,48 @@
+{% load static %}
+<!-- Botón Ayuda -->
+<div class="ayuda-flotante">
+  <button type="button" class="btn btn-info btn-flotante-ayuda" data-bs-toggle="modal" data-bs-target="#ayudaModal">
+    <i class="fas fa-question-circle"></i>
+    <span class="texto-boton">Ayuda</span>
+  </button>
+</div>
+
+<!-- Incluye el modal -->
+{% include 'preguntas/hacer_pregunta.html' %}
+
+<style>
+.ayuda-flotante {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.btn-flotante-ayuda {
+    border-radius: 50px;
+    padding: 10px 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    font-size: 16px;
+}
+
+.btn-flotante-ayuda:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    background-color: #138496;
+}
+
+.texto-boton {
+    margin-left: 8px;
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .texto-boton {
+        display: inline;
+    }
+}
+</style>

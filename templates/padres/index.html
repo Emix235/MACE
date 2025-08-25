@@ -1,0 +1,1333 @@
+qqqqqqq{% extends 'padres/base.html' %}
+<!-- Tailwind CSS CDN (para desarrollo) -->
+
+{% block content %}
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">Horario Semanal</h2>
+            <div class="alert alert-info mb-0 py-2">
+                <i class="fas fa-calendar-week me-2"></i>
+                Semana del {{ week_days.0|date:"d/m/Y" }} al {{ week_days.5|date:"d/m/Y" }}
+            </div>
+        </div>
+        {% if messages %}
+            <div class="container mt-3 ps-0 pe-0"> <!-- Bootstrap 5 -->
+                {% for message in messages %}
+                    <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if retro_pendiente %}
+            <div class="modal-overlay active" id="avisoRetroalimentacion">
+                <div class="modal-aviso">
+                    <div class="modal-aviso-icono">
+                        <i class="fas fa-comment-alt-check fa-4x text-primary"></i>
+                    </div>
+                    <h3 class="modal-aviso-titulo">¡Tu opinión es importante!</h3>
+                    <p class="modal-aviso-texto">
+                        Nos encantaría conocer tu experiencia sobre la cita del
+                        <strong>{{ retro_pendiente.cita.fecha_hora_inicio|date:"d/m/Y" }}</strong>.
+                        Solo te tomará 2 minutos.
+                    </p>
+                    <div class="modal-aviso-acciones">
+                        <a href="{% url 'formularios:responder_retroalimentacion' retro_pendiente.cita.id %}"
+                           class="btn btn-primary btn-lg">
+                            Completar Retroalimentación
+                        </a>
+                        <small class="text-muted d-block mt-2">
+                            (Serás redirigido al formulario)
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                .modal-overlay {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: rgba(0, 0, 0, 0.85);
+                    z-index: 9999;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    animation: fadeIn 0.3s;
+                }
+
+                .modal-aviso {
+                    background: white;
+                    border-radius: 12px;
+                    padding: 2rem;
+                    text-align: center;
+                    max-width: 500px;
+                    width: 90%;
+                    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+                }
+
+                .modal-aviso-icono {
+                    margin-bottom: 1.5rem;
+                    color: var(--primary);
+                }
+
+                .modal-aviso-titulo {
+                    font-weight: 600;
+                    margin-bottom: 1rem;
+                    color: #333;
+                }
+
+                .modal-aviso-texto {
+                    color: #555;
+                    margin-bottom: 2rem;
+                    line-height: 1.6;
+                }
+
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                    }
+                    to {
+                        opacity: 1;
+                    }
+                }
+            </style>
+
+            <script>
+                // Opcional: Evitar cerrar el modal haciendo click fuera
+                document.getElementById('avisoRetroalimentacion').addEventListener('click', function (e) {
+                    if (e.target === this) {
+                        e.preventDefault();
+                    }
+                });
+            </script>
+        {% endif %}
+
+
+        {% if encuesta_pendiente %}
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <h4 class="alert-heading"><i class="bi bi-clipboard2-pulse"></i> Encuesta Pendiente</h4>
+                <p>Tienes una encuesta de satisfacción pendiente por contestar.</p>
+                <hr>
+                <div class="d-flex justify-content-end">
+                    <a href="{{ encuesta_url }}" class="btn btn-primary">
+                        <i class="bi bi-pencil-square"></i> Contestar Encuesta
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- En dashboard.html del padre -->
+        {% if retro_pendientes %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <h4 class="alert-heading">
+                    <i class="fas fa-exclamation-circle me-2"></i>Retroalimentaciones pendientes
+                </h4>
+                <hr>
+                {% for retro in retro_pendientes %}
+                    <div class="mb-3">
+                        <strong>{{ retro.cita.titulo }}</strong> - {{ retro.cita.fecha_hora_inicio|date:"d/m/Y H:i" }}
+                        <p class="mb-1">{{ retro.retroalimentacion.descripcion }}</p>
+                        <a href="{% url 'responder_retroalimentacion' retro.cita.id %}" class="btn btn-sm btn-warning">
+                            <i class="fas fa-edit me-1"></i>Responder ahora
+                        </a>
+                    </div>
+                    {% if not forloop.last %}
+                        <hr>{% endif %}
+                {% endfor %}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+
+        {% if citas_prioritarias %}
+            <div class="emergency-container">
+                <!-- Cabecera de ALERTA -->
+                <div class="emergency-header">
+                    <div style="display: flex; align-items: center;">
+            <span class="emergency-icon">
+                <i class="fas fa-exclamation"></i>
+            </span>
+                        <h3>¡Atención Urgente!</h3>
+                    </div>
+                    <a href="{% url 'padres:mis_citas' %}"
+                       style="color: white; text-decoration: none; font-size: 0.875rem;">
+                        VER TODAS <i class="fas fa-arrow-right" style="margin-left: 0.25rem;"></i>
+                    </a>
+                </div>
+
+                <!-- Lista de citas -->
+                <div style="padding: 1rem; max-height: 450px; overflow-y: auto;">
+                    {% for cita in citas_prioritarias.values %}
+                        <div class="emergency-card"
+                             style="padding: 1rem; margin-bottom: 0.5rem; border-bottom: 1px solid #fee2e2; transition: background 0.2s;">
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                <!-- Contenido principal -->
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                        <span style="color: #dc2626; font-size: 1.25rem; margin-top: 0.25rem; animation: pulse 1s infinite;">
+                            <i class="fas fa-triangle-exclamation"></i>
+                        </span>
+
+                                        <div>
+                                            <!-- Título y prioridad -->
+                                            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                                <h4 style="font-size: 1.125rem; font-weight: 800; color: #1f2937; margin: 0;">{{ cita.titulo|upper }}</h4>
+                                                <span class="emergency-badge">{{ cita.get_nivel_prioridad_display|upper }}</span>
+                                                <span class="urgency-type-badge">{{ cita.get_tipo_urgencia_display }}</span>
+                                            </div>
+
+                                            <!-- Fecha y estado -->
+                                            <div style="display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.875rem;">
+                                <span style="display: flex; align-items: center; font-weight: 600; color: #b91c1c;">
+                                    <i class="fas fa-calendar-alt" style="margin-right: 0.5rem;"></i>
+                                    {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}
+                                </span>
+                                                <span style="display: flex; align-items: center; font-weight: 600; color: #4b5563;">
+                                    <i class="fas fa-clock" style="margin-right: 0.5rem;"></i>
+                                    {{ cita.duracion }} minutos
+                                </span>
+
+                                                {% if cita.estado == 'pendiente' %}
+                                                    <span class="status-badge pending">
+                                    <i class="fas fa-clock" style="margin-right: 0.5rem;"></i>
+                                    CONFIRMACIÓN PENDIENTE
+                                </span>
+                                                {% elif cita.estado == 'confirmada' %}
+                                                    <span class="status-badge confirmed">
+                                    <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>
+                                    CONFIRMADA
+                                </span>
+                                                {% endif %}
+                                            </div>
+
+                                            <!-- Resumen de urgencia -->
+                                            <div style="margin-top: 0.75rem; background: #fef2f2; padding: 0.75rem; border-radius: 0.5rem;">
+                                                <p style="margin: 0; font-size: 0.9rem; color: #b91c1c; font-weight: 600;">
+                                                    <i class="fas fa-circle-exclamation"
+                                                       style="margin-right: 0.5rem;"></i>
+                                                    {{ cita.motivo_prioridad|truncatechars:100 }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Botones de acción -->
+                                <div style="display: flex; gap: 0.75rem;">
+                                    <form method="post" action="{% url 'padres:confirmar_cita' cita.id %}"
+                                          style="flex: 1;">
+                                        {% csrf_token %}
+                                        {% if cita.estado == 'pendiente' and not cita.creada_por_padre and cita.solicitante == padre %}
+                                            <button type="submit" class="emergency-button confirm-button">
+                                                <i class="fas fa-check-double" style="margin-right: 0.5rem;"></i>
+                                                CONFIRMAR
+                                            </button>
+                                        {% endif %}
+                                    </form>
+
+                                    <button onclick="openModal('modal-{{ cita.id }}')" class="details-button">
+                                        <i class="fas fa-info-circle" style="margin-right: 0.5rem;"></i>
+                                        DETALLES
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal de detalles (oculto inicialmente) -->
+                        <div id="modal-{{ cita.id }}" class="emergency-modal">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h3>Detalles completos de la cita</h3>
+                                    <span class="close-modal" onclick="closeModal('modal-{{ cita.id }}')">&times;</span>
+                                </div>
+
+                                <div class="modal-body">
+                                    <div class="detail-section">
+                                        <h4><i class="fas fa-info-circle"></i> Información Básica</h4>
+                                        <div class="detail-grid">
+                                            <div>
+                                                <strong>Título:</strong>
+                                                <p>{{ cita.titulo }}</p>
+                                            </div>
+                                            <div>
+                                                <strong>Tipo:</strong>
+                                                <p>{{ cita.get_tipo_display }}</p>
+                                            </div>
+                                            <div>
+                                                <strong>Fecha/Hora:</strong>
+                                                <p>{{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}</p>
+                                            </div>
+                                            <div>
+                                                <strong>Duración:</strong>
+                                                <p>{{ cita.duracion }} minutos</p>
+                                            </div>
+                                            <div>
+                                                <strong>Ubicación:</strong>
+                                                <p>{{ cita.ubicacion }}</p>
+                                            </div>
+                                            <div>
+                                                <strong>Estado:</strong>
+                                                <p class="status-text {{ cita.estado }}">
+                                                    {{ cita.get_estado_display }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-section">
+                                        <h4><i class="fas fa-exclamation-triangle"></i> Datos de Prioridad</h4>
+                                        <div class="detail-grid">
+                                            <div>
+                                                <strong>Nivel de Prioridad:</strong>
+                                                <p class="priority-{{ cita.nivel_prioridad }}">
+                                                    {{ cita.get_nivel_prioridad_display }}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <strong>Tipo de Urgencia:</strong>
+                                                <p>{{ cita.get_tipo_urgencia_display }}</p>
+                                            </div>
+                                            <div>
+                                                <strong>Tiempo Máx. Resolución:</strong>
+                                                <p>{{ cita.tiempo_max_resolucion }} horas</p>
+                                            </div>
+                                            <div>
+                                                <strong>Escalado a autoridades:</strong>
+                                                <p>{{ cita.escalado_autoridades|yesno:"Sí,No" }}</p>
+                                            </div>
+                                        </div>
+                                        <div style="margin-top: 1rem;">
+                                            <strong>Motivo de Prioridad:</strong>
+                                            <p class="priority-reason">{{ cita.motivo_prioridad }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="detail-section">
+                                        <h4><i class="fas fa-users"></i> Participantes</h4>
+                                        <div class="participants-grid">
+                                            <div>
+                                                <strong>Estudiante(s):</strong>
+                                                <ul>
+                                                    {% for estudiante in cita.estudiantes.all %}
+                                                        <li>{{ estudiante.nombre_completo }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                            <div>
+                                                <strong>Profesor(es):</strong>
+                                                <ul>
+                                                    {% if cita.profesor %}
+                                                        <li>{{ cita.profesor.nombre_completo }}</li>
+                                                    {% endif %}
+                                                    {% for profesor in cita.asistentes_profesores.all %}
+                                                        <li>{{ profesor.nombre_completo }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {% if cita.evidencia_archivo %}
+                                        <div class="detail-section">
+                                            <h4><i class="fas fa-file-alt"></i> Evidencia Adjunta</h4>
+                                            <a href="{{ cita.evidencia_archivo.url }}" target="_blank"
+                                               class="evidence-link">
+                                                <i class="fas fa-download"></i> Descargar archivo
+                                            </a>
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="detail-section">
+                                        <h4><i class="fas fa-comment"></i> Observaciones</h4>
+                                        <p class="observations-text">{{ cita.observaciones|default:"Sin observaciones" }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button onclick="closeModal('modal-{{ cita.id }}')" class="modal-close-button">
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <!-- Nota adhesiva -->
+                <!--    <div class="emergency-sticky-note">
+                        ¡URGENTE!
+                    </div>
+                -->
+            </div>
+
+            <!-- Estilos CSS para el modal -->
+            <style>
+                .emergency-modal {
+                    display: none;
+                    position: fixed;
+                    z-index: 1000;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    overflow: auto;
+                }
+
+                .modal-content {
+                    margin: 5% auto;
+                    padding: 1.5rem;
+                    border-radius: 0.5rem;
+                    width: 80%;
+                    max-width: 800px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+                    max-height: 200vh; /* Ajusta según necesidad */
+                    overflow-y: auto; /* Scroll interno si el contenido es largo */
+                }
+
+                .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding-bottom: 1rem;
+                    margin-bottom: 1.5rem;
+                    border-bottom-width: 1px;
+                    border-bottom-style: solid;
+                }
+
+                .modal-header h3 {
+                    margin: 0;
+                }
+
+                .close-modal {
+                    font-size: 2rem;
+                    font-weight: bold;
+                    cursor: pointer;
+                }
+
+                .detail-section {
+                    margin-bottom: 1.5rem;
+                    padding-bottom: 1.5rem;
+                    border-bottom-width: 1px;
+                    border-bottom-style: solid;
+                }
+
+                .detail-section h4 {
+                    margin-bottom: 1rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                }
+
+                .detail-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                    gap: 1rem;
+                }
+
+                .participants-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                    gap: 1.5rem;
+                }
+
+                .priority-reason, .observations-text {
+                    padding: 1rem;
+                    border-radius: 0.5rem;
+                }
+
+                .observations-text {
+                    white-space: pre-line;
+                }
+
+                .evidence-link {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 0.5rem 1rem;
+                    border-radius: 0.5rem;
+                    text-decoration: none;
+                }
+
+                .modal-footer {
+                    display: flex;
+                    justify-content: flex-end;
+                    padding-top: 1.5rem;
+                    border-top-width: 1px;
+                    border-top-style: solid;
+                    margin-top: 1rem;
+                }
+
+                .modal-close-button {
+                    border: none;
+                    padding: 0.5rem 1.5rem;
+                    border-radius: 0.5rem;
+                    cursor: pointer;
+                    font-weight: 600;
+                }
+
+                /* Estado y prioridad solo estructura */
+                .status-text.pendiente,
+                .status-text.confirmada,
+                .priority-critica,
+                .priority-alta,
+                .priority-media {
+                    font-weight: 600;
+                }
+
+                .priority-critica {
+                    font-weight: 700;
+                }
+            </style>
+
+            <!-- JavaScript para manejar el modal -->
+            <script>
+                function openModal(modalId) {
+                    document.getElementById(modalId).style.display = 'block';
+                    document.body.style.overflow = 'hidden'; // Previene el scroll
+                }
+
+                function closeModal(modalId) {
+                    document.getElementById(modalId).style.display = 'none';
+                    document.body.style.overflow = 'auto'; // Restaura el scroll
+                }
+
+                // Cerrar modal al hacer clic fuera del contenido
+                window.onclick = function (event) {
+                    if (event.target.className === 'emergency-modal') {
+                        event.target.style.display = 'none';
+                        document.body.style.overflow = 'auto';
+                    }
+                }
+            </script>
+        {% endif %}
+
+        <br>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Citas pendientes</h5>
+                <a href="{% url 'padres:mis_citas' %}" class="text-decoration-none text-primary">Ver todas</a>
+            </div>
+
+            <!-- Scroll horizontal -->
+            <div class="card-body p-0">
+                <div class="d-flex overflow-auto" style="height: 600px;">
+
+                    {% if citas_creadas %}
+                        <div class="flex-shrink-0 border-end" style="width: 33.33%;">
+                            <div class="p-2 border-bottom text-center fw-bold">Creadas por ti</div>
+                            <div class="overflow-auto" style="height: 550px;">
+                                <ul class="list-group list-group-flush">
+                                    {% for cita in citas_creadas %}
+                                        {% include 'padres/partials/cita_item.html' with cita=cita es_creador=True %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if citas_de_servicios %}
+                        <div class="flex-shrink-0 border-end" style="width: 33.33%;">
+                            <div class="p-2 border-bottom text-center fw-bold">De Servicio Social</div>
+                            <div class="overflow-auto" style="height: 550px;">
+                                <ul class="list-group list-group-flush">
+                                    {% for cita in citas_de_servicios %}
+                                        {% include 'padres/partials/cita_item.html' with cita=cita es_servicio=True %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if citas_de_profesores %}
+                        <div class="flex-shrink-0" style="width: 33.33%;">
+                            <div class="p-2 border-bottom text-center fw-bold">De Profesores</div>
+                            <div class="overflow-auto" style="height: 550px;">
+                                <ul class="list-group list-group-flush">
+                                    {% for cita in citas_de_profesores %}
+                                        {% include 'padres/partials/cita_item.html' with cita=cita es_profesor=True %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Puedes seguir agregando más columnas aquí con el mismo patrón -->
+
+                </div>
+            </div>
+        </div>
+
+        <br>
+        <br>
+
+        <div class="container mt-4">
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h4><i class="bi bi-calendar-week"></i> Calendario de Citas</h4>
+                        </div>
+                        <div class="card-body">
+                            <!-- Leyenda del calendario -->
+                            <div class="calendar-legend">
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #9b59b6;"></span>
+                                    <span>Reunión</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #1abc9c;"></span>
+                                    <span>Tutoría</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #e91e63;"></span>
+                                    <span>Entrega</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #34495e;"></span>
+                                    <span>General</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #f1c40f;"></span>
+                                    <span>Pendiente</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #2ecc71;"></span>
+                                    <span>Confirmada</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #e74c3c;"></span>
+                                    <span>Cancelada</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color" style="background-color: #e67e22;"></span>
+                                    <span>Reprogramada</span>
+                                </div>
+                                <div class="legend-item">
+                                    <span class="legend-color"
+                                          style="background-color: #9b59b6; border-left: 4px solid #e74c3c;"></span>
+                                    <span>Prioritaria</span>
+                                </div>
+                            </div>
+
+                            <div id="calendar-parent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FullCalendar Styles & Scripts -->
+        <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/main.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/locales/es.global.min.js"></script>
+        <!--Query-->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <style>
+            /* Estilos base del calendario */
+            #calendar-parent {
+                background-color: white;
+                border-radius: 0.5rem;
+                padding: 1rem;
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            }
+
+            .fc-daygrid-day {
+                border-width: 1px;
+                border-style: solid;
+                border-color: #e0e0e0;
+            }
+
+            .fc-day-today {
+                background-color: #e8f4ff !important;
+            }
+
+            .fc-event {
+                border: none !important;
+                border-radius: 0.25rem;
+                font-size: 0.85rem;
+                padding: 2px 4px;
+                cursor: pointer;
+                font-weight: 500;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Estilos para eventos prioritarios */
+            .fc-event-prioritaria {
+                border-left: 4px solid #e74c3c !important;
+                font-weight: bold;
+            }
+
+            /* Estilos para diferentes tipos de eventos */
+            .fc-event-clase {
+                background-color: #9b59b6;
+                border-color: #9b59b6;
+            }
+
+            .fc-event-descanso {
+                background-color: #f39c12;
+                border-color: #f39c12;
+            }
+
+            .fc-event-reunion {
+                background-color: #9b59b6;
+                border-color: #9b59b6;
+            }
+
+            .fc-event-tutoria {
+                background-color: #1abc9c;
+                border-color: #1abc9c;
+            }
+
+            .fc-event-entrega {
+                background-color: #e91e63;
+                border-color: #e91e63;
+            }
+
+            .fc-event-general {
+                background-color: #34495e;
+                border-color: #34495e;
+            }
+
+            /* Estilos por estado */
+            .fc-event-pendiente {
+                background-color: #f1c40f;
+                border-color: #f1c40f;
+            }
+
+            .fc-event-confirmada {
+                background-color: #2ecc71;
+                border-color: #2ecc71;
+            }
+
+            .fc-event-completada {
+                background-color: #3498db;
+                border-color: #3498db;
+            }
+
+            .fc-event-cancelada {
+                background-color: #e74c3c;
+                border-color: #e74c3c;
+            }
+
+            .fc-event-reprogramada {
+                background-color: #e67e22;
+                border-color: #e67e22;
+            }
+
+            /* Leyenda del calendario */
+            .calendar-legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-bottom: 15px;
+                padding: 10px;
+                border-radius: 5px;
+            }
+
+            .legend-item {
+                display: flex;
+                align-items: center;
+                font-size: 0.8rem;
+            }
+
+            .legend-color {
+                width: 15px;
+                height: 15px;
+                border-radius: 3px;
+                margin-right: 5px;
+                display: inline-block;
+            }
+
+            /* Mejoras visuales */
+            .fc-toolbar-title {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #2c3e50;
+            }
+
+            .fc-button {
+                border: 1px solid #dee2e6 !important;
+                background-color: #f8f9fa !important;
+                color: #212529 !important;
+                transition: all 0.2s;
+            }
+
+            .fc-button:hover {
+                background-color: #e9ecef !important;
+            }
+
+            .fc-button-active {
+                background-color: #e9ecef !important;
+                color: #495057 !important;
+            }
+
+            .fc-event-time {
+                font-weight: bold;
+            }
+
+            /* Estilos para los periodos en tooltips */
+            .tooltip-periodo {
+                padding: 3px 8px;
+                border-radius: 12px;
+                font-size: 0.75rem;
+                font-weight: bold;
+                margin-bottom: 8px;
+                display: inline-block;
+            }
+
+            .tooltip-manana {
+                background-color: #fff3cd;
+                color: #856404;
+                border: 1px solid #ffeeba;
+            }
+
+            .tooltip-tarde {
+                background-color: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+
+            /* Estilos para eventos en diferentes periodos */
+            .fc-event-manana {
+                border-left: 3px solid #ffc107 !important;
+            }
+
+            .fc-event-tarde {
+                border-left: 3px solid #28a745 !important;
+            }
+
+            .fc-daygrid-dot-event .fc-event-title {
+                flex-grow: 1;
+                flex-shrink: 1;
+                font-weight: 80;
+                min-width: 0;
+                overflow: hidden;
+                white-space: normal !important;
+                word-break: break-word !important;
+                text-overflow: ellipsis !important;
+                display: -webkit-box !important;
+                -webkit-line-clamp: 2 !important;
+                -webkit-box-orient: vertical !important;
+                font-size: 0.8em !important;
+                line-height: 1.2 !important;
+                padding: 2px 4px !important;
+                text-align: center !important;
+            }
+        </style>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const calendarEl = document.getElementById('calendar-parent');
+
+                // Función para generar contenido del modal
+                function getModalContent(event) {
+                    const hora = event.start.getHours();
+                    const periodo = hora < 12 ? 'Mañana ☀️' : 'Tarde 🌙';
+                    const horaInicio = event.start.toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+
+                    const horaFin = event.end.toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                    return `
+            <div class="modal-header ${hora < 12 ? 'bg-warning text-dark' : 'bg-success text-white'}">
+                <h5 class="modal-title">${event.title}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title">${periodo} - ${event.title}</h5>            
+</div>
+            <div class="modal-body">
+                <p><strong>Horario:</strong> ${horaInicio} - ${horaFin}</p>
+                <p><strong>Estado:</strong> ${event.extendedProps.estado}</p>
+                <p><strong>Estado:</strong> ${event.extendedProps.estado}</p>
+                <p><strong>Tipo:</strong> ${event.extendedProps.tipo}</p>
+                ${event.extendedProps.descripcion ? `<p><strong>Descripción:</strong> ${event.extendedProps.descripcion}</p>` : ''}
+                ${event.extendedProps.ubicacion ? `<p><strong>Ubicación:</strong> ${event.extendedProps.ubicacion}</p>` : ''}
+                ${event.extendedProps.estudiantes && event.extendedProps.estudiantes.length > 0 ?
+                        `<p><strong>Estudiantes:</strong> ${event.extendedProps.estudiantes.join(', ')}</p>` : ''}
+                ${event.extendedProps.prioridad ? `<p><strong>Prioridad:</strong> ${event.extendedProps.prioridad}</p>` : ''}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        `;
+                }
+
+                const calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    locale: 'es',
+                    height: 'auto',
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                    },
+                    buttonText: {
+                        today: 'Hoy',
+                        month: 'Mes',
+                        week: 'Semana',
+                        day: 'Día',
+                        list: 'Lista'
+                    },
+                    events: '/padres/api/eventos-padre/',
+                    eventClassNames: function (arg) {
+                        const classNames = [];
+                        const tipo = arg.event.extendedProps.tipo?.toLowerCase() || '';
+                        const estado = arg.event.extendedProps.estado?.toLowerCase() || '';
+                        const hora = arg.event.start?.getHours() || 0;
+
+                        // Clase por periodo del día
+                        if (hora < 12) {
+                            classNames.push('fc-event-manana');
+                        } else {
+                            classNames.push('fc-event-tarde');
+                        }
+
+                        // Clases por tipo de cita
+                        if (tipo.includes('reunión')) classNames.push('fc-event-reunion');
+                        else if (tipo.includes('tutoría')) classNames.push('fc-event-tutoria');
+                        else if (tipo.includes('entrega')) classNames.push('fc-event-entrega');
+                        else if (tipo === 'clase') classNames.push('fc-event-clase');
+                        else if (tipo === 'descanso') classNames.push('fc-event-descanso');
+                        else classNames.push('fc-event-general');
+
+                        // Clases por estado
+                        if (estado.includes('pendiente')) classNames.push('fc-event-pendiente');
+                        else if (estado.includes('confirmada')) classNames.push('fc-event-confirmada');
+                        else if (estado.includes('completada')) classNames.push('fc-event-completada');
+                        else if (estado.includes('cancelada')) classNames.push('fc-event-cancelada');
+                        else if (estado.includes('reprogramada')) classNames.push('fc-event-reprogramada');
+
+                        // Clase prioritaria
+                        if (arg.event.extendedProps.es_prioritaria) {
+                            classNames.push('fc-event-prioritaria');
+                        }
+
+                        return classNames;
+                    },
+                    eventDidMount: function (info) {
+                        // Determinar si es mañana (AM) o tarde (PM)
+                        const hora = info.event.start.getHours();
+                        const periodo = hora < 12 ? 'MAÑANA' : 'TARDE';
+                        const iconoPeriodo = hora < 12 ? '☀️' : '🌙';
+
+                        // Agregar indicador visual al título del evento
+                        const titleEl = info.el.querySelector('.fc-event-title');
+                        if (titleEl) {
+                            titleEl.innerHTML = `${iconoPeriodo} ${info.event.title}`;
+                        }
+
+                        // Tooltip mejorado
+                        if (!info.el._tooltip) {
+                            let estudiantes = info.event.extendedProps.estudiantes;
+                            if (!Array.isArray(estudiantes)) {
+                                estudiantes = typeof estudiantes === 'string' ?
+                                    estudiantes.split(/[,-]/).map(s => s.trim()) : [];
+                            }
+
+                            const horaInicio = info.event.start.toLocaleTimeString('es-ES', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            });
+
+                            const horaFin = info.event.end.toLocaleTimeString('es-ES', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            });
+
+                            const tooltipContent = `
+            <div class="tooltip-periodo ${hora < 12 ? 'tooltip-manana' : 'tooltip-tarde'}">
+                ${periodo} ${iconoPeriodo}
+            </div>
+            <strong>${info.event.title}</strong><br>
+            <strong>Horario:</strong> ${horaInicio} - ${horaFin}<br>
+            <strong>Estado:</strong> ${info.event.extendedProps.estado}<br>
+            <strong>Tipo:</strong> ${info.event.extendedProps.tipo}<br>
+            ${info.event.extendedProps.descripcion ? `<br><strong>Descripción:</strong> ${info.event.extendedProps.descripcion}` : ''}
+            ${info.event.extendedProps.ubicacion ? `<br><strong>Ubicación:</strong> ${info.event.extendedProps.ubicacion}` : ''}
+            ${estudiantes.length > 0 ? `<br><strong>Estudiantes:</strong> ${estudiantes.join(', ')}` : ''}
+            ${info.event.extendedProps.prioridad ? `<br><strong>Prioridad:</strong> ${info.event.extendedProps.prioridad}` : ''}
+        `;
+
+                            info.el._tooltip = new bootstrap.Tooltip(info.el, {
+                                title: tooltipContent,
+                                html: true,
+                                placement: 'top',
+                                container: 'body'
+                            });
+                        }
+
+                        // Resaltar citas prioritarias
+                        if (info.event.extendedProps.es_prioritaria) {
+                            info.el.style.boxShadow = '0 2px 5px rgba(231, 76, 60, 0.3)';
+                        }
+                    },
+                    eventClick: function (info) {
+                        const modal = new bootstrap.Modal(document.createElement('div'));
+                        modal._element.className = 'modal fade';
+                        modal._element.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        ${getModalContent(info.event)}
+                    </div>
+                </div>
+            `;
+                        document.body.appendChild(modal._element);
+                        modal.show();
+
+                        modal._element.addEventListener('hidden.bs.modal', function () {
+                            document.body.removeChild(modal._element);
+                        });
+
+                        info.jsEvent.preventDefault();
+                    },
+                    views: {
+                        dayGridMonth: {dayMaxEventRows: 3},
+                        timeGridWeek: {
+                            allDaySlot: false,
+                            slotMinTime: '07:00:00',
+                            slotMaxTime: '20:00:00'
+                        },
+                        timeGridDay: {
+                            allDaySlot: false,
+                            slotMinTime: '07:00:00',
+                            slotMaxTime: '20:00:00'
+                        },
+                        listWeek: {
+                            listDayFormat: {weekday: 'long', month: 'numeric', day: 'numeric'},
+                            listDaySideFormat: false
+                        }
+                    },
+                    nowIndicator: true,
+                    navLinks: true,
+                    editable: false,
+                    selectable: false,
+                    dayMaxEvents: true
+                });
+
+                calendar.render();
+            });
+        </script>
+    </div>
+
+    <style>
+        .emergency-container {
+            position: relative;
+            border: 3px solid;
+            border-left: 12px solid;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            animation: emergency-pulse 3s infinite;
+        }
+
+        .emergency-header {
+            padding: 1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .emergency-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            animation: ping 1.5s infinite;
+        }
+
+        .emergency-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 900;
+            border: 2px solid;
+            animation: pulse 2s infinite;
+        }
+
+        .emergency-button {
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            font-weight: bold;
+            border: 2px solid;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .emergency-button:hover {
+            transform: scale(1.05);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        @keyframes ping {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            75%, 100% {
+                transform: scale(1.3);
+                opacity: 0;
+            }
+        }
+
+        @keyframes emergency-pulse {
+            0%, 100% {
+            }
+            50% {
+            }
+        }
+
+        .alertas-citas {
+            font-family: sans-serif;
+            margin-bottom: 1.5rem;
+        }
+
+        .encabezado-alertas {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .icono-alerta {
+            font-size: 1.2rem;
+        }
+
+        .ver-todas {
+            margin-left: auto;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .alerta-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed;
+        }
+
+        .contenido-alerta {
+            flex-grow: 1;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .fecha-alerta {
+            font-size: 0.9rem;
+        }
+
+        .titulo-alerta {
+            flex-grow: 1;
+        }
+
+        .nivel-alerta {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        .boton-confirmar {
+            background: none;
+            border: 1px solid;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .boton-confirmar:hover {
+        }
+
+        .scrollbar-estilizada {
+            scrollbar-width: thin;
+        }
+
+        .scrollbar-estilizada::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .scrollbar-estilizada::-webkit-scrollbar-track {
+            border-radius: 4px;
+        }
+
+        .scrollbar-estilizada::-webkit-scrollbar-thumb {
+            border-radius: 4px;
+            border: 2px solid;
+        }
+
+        .scrollbar-estilizada::-webkit-scrollbar-thumb:hover {
+        }
+    </style>
+{% endblock %}
+
+
+{# NO SALE EN LA PESTAÑA, SOLO POR SI ACASO #}
+<!-- Pestañas de navegación -->
+<div class="btn-group mb-4 w-100" role="group">
+    <a href="?tab=clases"
+       class="btn btn-lg {% if active_tab == 'clases' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        <i class="fas fa-chalkboard-teacher me-2"></i>Clases
+    </a>
+    <a href="?tab=descansos"
+       class="btn btn-lg {% if active_tab == 'descansos' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        <i class="fas fa-coffee me-2"></i>Descansos
+    </a>
+</div>
+<!-- Tabla de Horario (se reemplaza según la pestaña activa) -->
+<div class="table-responsive">
+    <table class="table table-bordered weekly-calendar">
+        <thead class="thead-dark">
+        <tr>
+            <th style="width: 8%" class="text-center">Hora</th>
+            {% for day in week_days %}
+                <th class="text-center {% if day.date == current_date %}table-primary{% endif %}"
+                    style="width: 15%">
+                    <div class="fw-bold">{{ day|date:"l"|title }}</div>
+                    <div class="small">{{ day|date:"d/m/Y" }}</div>
+                </th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for hora in horas %}
+            <tr>
+                <td class="text-center hour-cell">{{ hora }}</td>
+
+                <!-- Lunes (Día 1) -->
+                <td class="{% if week_days.0.date == current_date %}table-primary{% endif %}">
+                    {% if active_tab == 'clases' %}
+                        {% for horario in horarios_por_dia.1 %}
+                            {% if horario.hora_inicio|time:"H:i" <= hora and horario.hora_fin|time:"H:i" > hora %}
+                                {% include 'padres/partials/clase_card.html' %}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% for descanso in descansos_por_dia.1 %}
+                            {% if descanso.hora_inicio|time:"H:i" <= hora and descanso.hora_fin|time:"H:i" > hora %}
+                                {% include 'padres/partials/descanso_card.html' %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </td>
+
+                <!-- Martes (Día 2) -->
+                <td class="{% if week_days.1.date == current_date %}table-primary{% endif %}">
+                    {% if active_tab == 'clases' %}
+                        {% for horario in horarios_por_dia.2 %}
+                            {% if horario.hora_inicio|time:"H:i" <= hora and horario.hora_fin|time:"H:i" > hora %}
+                                {% include 'padres/partials/clase_card.html' %}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% for descanso in descansos_por_dia.2 %}
+                            {% if descanso.hora_inicio|time:"H:i" <= hora and descanso.hora_fin|time:"H:i" > hora %}
+                                {% include 'padres/partials/descanso_card.html' %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </td>
+
+                <!-- Miércoles (Día 3) -->
+                <td class="{% if week_days.2.date == current_date %}table-primary{% endif %}">
+                    {% if active_tab == 'clases' %}
+                        {% for horario in horarios_por_dia.3 %}
+                            {% if horario.hora_inicio|time:"H:i" <= hora and horario.hora_fin|time:"H:i" > hora %}
+                                {% include 'padres/partials/clase_card.html' %}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% for descanso in descansos_por_dia.3 %}
+                            {% if descanso.hora_inicio|time:"H:i" <= hora and descanso.hora_fin|time:"H:i" > hora %}
+                                {% include 'padres/partials/descanso_card.html' %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </td>
+
+
+                <!-- Jueves (Día 4) -->
+                <td class="{% if week_days.3.date == current_date %}table-primary{% endif %}">
+                    {% if active_tab == 'clases' %}
+                        {% for horario in horarios_por_dia.4 %}
+                            {% if horario.hora_inicio|time:"H:i" <= hora and horario.hora_fin|time:"H:i" > hora %}
+                                {% include 'padres/partials/clase_card.html' %}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% for descanso in descansos_por_dia.4 %}
+                            {% if descanso.hora_inicio|time:"H:i" <= hora and descanso.hora_fin|time:"H:i" > hora %}
+                                {% include 'padres/partials/descanso_card.html' %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </td>
+
+                <!-- Viernes (Día 5) -->
+                <td class="{% if week_days.4.date == current_date %}table-primary{% endif %}">
+                    {% if active_tab == 'clases' %}
+                        {% for horario in horarios_por_dia.5 %}
+                            {% if horario.hora_inicio|time:"H:i" <= hora and horario.hora_fin|time:"H:i" > hora %}
+                                {% include 'padres/partials/clase_card.html' %}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% for descanso in descansos_por_dia.5 %}
+                            {% if descanso.hora_inicio|time:"H:i" <= hora and descanso.hora_fin|time:"H:i" > hora %}
+                                {% include 'padres/partials/descanso_card.html' %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </td>
+
+                <!-- Sábado (Día 5) -->
+                <td class="{% if week_days.5.date == current_date %}table-primary{% endif %}">
+                    {% if active_tab == 'clases' %}
+                        {% for horario in horarios_por_dia.6 %}
+                            {% if horario.hora_inicio|time:"H:i" <= hora and horario.hora_fin|time:"H:i" > hora %}
+                                {% include 'padres/partials/clase_card.html' %}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% for descanso in descansos_por_dia.6 %}
+                            {% if descanso.hora_inicio|time:"H:i" <= hora and descanso.hora_fin|time:"H:i" > hora %}
+                                {% include 'padres/partials/descanso_card.html' %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </td>
+
+                <!-- ... Repetir para Miércoles (3), Jueves (4), Viernes (5), Sábado (6) ... -->
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<p><strong>Fecha y hora:</strong> ${event.start.toLocaleString('es-ES')}</p>

@@ -1,0 +1,151 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Asignación de Padres - Grupo {{ grupo.grado.numero }}°{{ grupo.letra }}</h2>
+    
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Estudiante</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for estudiante in estudiantes %}
+                <tr>
+                    <td>{{ estudiante.nombre_completo }}</td>
+                    <td>
+                        {% if estudiante.padre %}
+                            <span class="badge bg-success">Registrado</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Pendiente</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if not estudiante.padre %}
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-primary generar-enlace"
+                                    data-enlace="{{ request.scheme }}://{{ request.get_host }}/padres/registro/{{ estudiante.registro_token }}/"
+                                    data-nombre="{{ estudiante.nombre_completo }}">
+                                <i class="fas fa-paper-plane"></i> Generar Invitación
+                            </button>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para opciones de envío -->
+<div class="modal fade" id="envioModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Enviar Invitación de Registro</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Enlace de registro para <strong id="nombreEstudiante"></strong>:</label>
+                    <div class="input-group mb-3">
+                        <input type="text" id="enlaceRegistro" class="form-control" readonly>
+                        <button class="btn btn-outline-secondary" onclick="copiarEnlace()">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Este enlace es personal e intransferible. Expirará en 7 días.
+                </div>
+                <hr>
+                <h5>Opciones de envío:</h5>
+                <div class="d-grid gap-2">
+                    <button id="whatsappBtn" class="btn btn-success">
+                        <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
+                    </button>
+                    <button id="emailBtn" class="btn btn-danger">
+                        <i class="fas fa-envelope"></i> Enviar por Correo Electrónico
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const envioModal = new bootstrap.Modal(document.getElementById('envioModal'));
+    let currentEnlace = '';
+    let currentNombre = '';
+
+    // Mostrar modal con opciones de envío
+    document.querySelectorAll('.generar-enlace').forEach(btn => {
+        btn.addEventListener('click', function() {
+            currentEnlace = this.dataset.enlace;
+            currentNombre = this.dataset.nombre;
+            
+            document.getElementById('enlaceRegistro').value = currentEnlace;
+            document.getElementById('nombreEstudiante').textContent = currentNombre;
+            envioModal.show();
+        });
+    });
+
+    // Función para copiar el enlace
+    window.copiarEnlace = function() {
+        navigator.clipboard.writeText(currentEnlace).then(() => {
+            alert('Enlace copiado al portapapeles');
+        }).catch(err => {
+            console.error('Error al copiar:', err);
+            alert('Error al copiar el enlace');
+        });
+    };
+
+    // Enviar por WhatsApp
+    document.getElementById('whatsappBtn').addEventListener('click', function() {
+        const mensaje = encodeURIComponent(
+            `📋 *Invitación de Registro Escolar*\n\n` +
+            `Estimado padre/tutor de *${currentNombre}*:\n\n` +
+            `Por favor, haga clic en el siguiente enlace para completar el registro:\n\n` +
+            `🔗 ${currentEnlace}\n\n` +
+            `*Importante:* Este enlace es personal y válido por 7 días.`
+        );
+        window.open(`https://wa.me/?text=${mensaje}`, '_blank');
+        envioModal.hide();
+    });
+
+    // Enviar por Correo
+    document.getElementById('emailBtn').addEventListener('click', function() {
+        const asunto = encodeURIComponent(`Invitación de registro para ${currentNombre}`);
+        const cuerpo = encodeURIComponent(
+            `Estimado padre/tutor:\n\n` +
+            `Para completar el registro escolar de ${currentNombre}, por favor haga clic en el siguiente enlace:\n\n` +
+            `${currentEnlace}\n\n` +
+            `Este enlace es personal y válido por 7 días. No lo comparta con terceros.\n\n` +
+            `Atentamente,\nEl equipo administrativo`
+        );
+        window.open(`mailto:?subject=${asunto}&body=${cuerpo}`, '_blank');
+        envioModal.hide();
+    });
+});
+</script>
+
+<style>
+.btn-group .btn {
+    margin-right: 5px;
+}
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+#enlaceRegistro {
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,30 @@
+<!-- crear_plantilla.html -->
+{% extends 'servicios_escolares/base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Crear Nueva Plantilla de Notificación</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label">Variables disponibles:</label>
+                    <div class="alert alert-info">
+                        {% for key, value in variables_disponibles.items %}
+                        <span class="badge bg-primary me-2">{{ key }}: {{ value }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                {{ form.as_p }}
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Guardar Plantilla
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

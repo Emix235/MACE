@@ -1,0 +1,300 @@
+{% extends 'profesores/base.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Calendario Mensual de Citas</h2>
+            <div>
+                <!-- Botón para Historial -->
+                <a href="{% url 'profesores:historial_citas' %}" class="btn btn-info me-2">
+                    <i class="fas fa-history"></i> Ver Historial Completo
+                </a>
+
+                <a href="{% url 'profesores:panel_citas' %}" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left"></i> Panel
+                </a>
+                <a href="?year={{ hoy.year }}&month={{ hoy.month }}" class="btn btn-outline-primary">
+                    <i class="fas fa-calendar-day"></i> Hoy
+                </a>
+            </div>
+        </div>
+
+        <!-- Sección de resumen por estados - Versión mejorada con scroll -->
+        <div class="row mb-4">
+            <!-- Tarjeta Pendientes -->
+            <div class="col-md-4">
+                <div class="card border-warning shadow-sm h-100">
+                    <div class="card-header bg-warning bg-opacity-25 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-clock text-warning me-2"></i> Pendientes</h5>
+                        <span class="badge bg-warning text-dark">{{ citas_pendientes|length }}</span>
+                    </div>
+                    <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                        {% for cita in citas_pendientes|slice:":10" %}
+                            <div class="m-2 p-2 border-start border-3 border-warning rounded bg-warning bg-opacity-10 hover-scale">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <strong class="d-block text-truncate" style="max-width: 200px;"
+                                                title="{{ cita.titulo }}">{{ cita.titulo }}</strong>
+                                        <small class="text-muted">{{ cita.fecha_hora_inicio|date:"D d M H:i" }}</small>
+                                    </div>
+                                    <span class="badge bg-warning text-dark">Pendiente</span>
+                                </div>
+                                <div class="small mt-1">
+                <span class="d-block text-truncate"
+                      title="{{ cita.solicitante.nombre_completo }}">{{ cita.solicitante.nombre_completo }}</span>
+                                    <span class="text-muted d-block text-truncate" style="max-width: 220px;">
+                    {% for estudiante in cita.estudiantes.all %}
+                        {{ estudiante.nombre_completo }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </span>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2 mt-2">
+                                    <form action="{% url 'citas:cancelar_cita' cita.id %}" method="post"
+                                          class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-times"></i> Cancelar
+                                        </button>
+                                    </form>
+                                    {# {% url 'citas:confirmar_cita' cita.id %} #}
+                                    <form action="{% url 'profesores:reprogramar_cita' cita.id %}" method="post"
+                                          class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-check"></i> Reprogramar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center text-muted py-4">No hay citas pendientes</div>
+                        {% endfor %}
+                    </div>
+                    {% if citas_pendientes|length > 5 %}
+                        <div class="card-footer bg-transparent text-center py-2">
+                            <small class="text-muted">Scroll para ver más</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tarjeta Próximas -->
+            <div class="col-md-4">
+                <div class="card border-primary shadow-sm h-100">
+                    <div class="card-header bg-primary bg-opacity-25 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-calendar-check text-primary me-2"></i> Próximas</h5>
+                        <span class="badge bg-primary">{{ citas_proximas|length }}</span>
+                    </div>
+                    <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                        {% for cita in citas_proximas|slice:":10" %}
+                            <div class="m-2 p-2 border-start border-3 border-primary rounded bg-primary bg-opacity-10 hover-scale">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <strong class="d-block text-truncate" style="max-width: 200px;"
+                                                title="{{ cita.titulo }}">{{ cita.titulo }}</strong>
+                                        <small class="text-muted">{{ cita.fecha_hora_inicio|date:"D d M H:i" }}</small>
+                                    </div>
+                                    <span class="badge bg-primary">Próxima</span>
+                                </div>
+                                <div class="small mt-1">
+                <span class="d-block text-truncate"
+                      title="{{ cita.solicitante.nombre_completo }}">{{ cita.solicitante.nombre_completo }}</span>
+                                    <span class="text-muted d-block text-truncate" style="max-width: 220px;">
+                    {% for estudiante in cita.estudiantes.all %}
+                        {{ estudiante.nombre_completo }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </span>
+                                </div>
+                                <div class="d-flex justify-content-end gap-2 mt-2">
+                                    <form action="{% url 'citas:cancelar_cita' cita.id %}" method="post"
+                                          class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-times"></i> Cancelar
+                                        </button>
+                                    </form>
+                                    {# {% url 'citas:confirmar_cita' cita.id %} #}
+                                    <form action="#" method="post"
+                                          class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-check"></i> Confirmar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center text-muted py-4">No hay citas próximas</div>
+                        {% endfor %}
+                    </div>
+                    {% if citas_proximas|length > 5 %}
+                        <div class="card-footer bg-transparent text-center py-2">
+                            <small class="text-muted">Scroll para ver más</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Tarjeta Hoy -->
+            <div class="col-md-4">
+                <div class="card border-success shadow-sm h-100">
+                    <div class="card-header bg-success bg-opacity-25 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-check-circle text-success me-2"></i> Hoy</h5>
+                        <span class="badge bg-success">{{ citas_hoy|length }}</span>
+                    </div>
+                    <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                        {% for cita in citas_hoy %}
+                            <div class="m-2 p-2 border-start border-3 border-success rounded bg-success bg-opacity-10 hover-scale">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <strong class="d-block text-truncate" style="max-width: 200px;"
+                                                title="{{ cita.titulo }}">{{ cita.titulo }}</strong>
+                                        <small class="text-muted">{{ cita.fecha_hora_inicio|time }}
+                                            - {{ cita.fecha_hora_fin|time }}</small>
+                                    </div>
+                                    <span class="badge bg-success">Hoy</span>
+                                </div>
+                                <div class="small mt-1">
+                                    <span class="d-block text-truncate"
+                                          title="{{ cita.solicitante.nombre_completo }}">{{ cita.solicitante.nombre_completo }}</span>
+                                    <span class="text-muted d-block text-truncate" style="max-width: 220px;">
+                                {% for estudiante in cita.estudiantes.all %}
+                                    {{ estudiante.nombre_completo }}{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </span>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center text-muted py-4">No hay citas para hoy</div>
+                        {% endfor %}
+                    </div>
+                    {% if citas_hoy|length > 5 %}
+                        <div class="card-footer bg-transparent text-center py-2">
+                            <small class="text-muted">Scroll para ver más</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Calendario Mensual -->
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">{{ mes_actual }}</h4>
+                    <div>
+                        <a href="?year={{ mes_anterior|slice:':4' }}&month={{ mes_anterior|slice:'5:7' }}"
+                           class="btn btn-sm btn-light">
+                            <i class="fas fa-chevron-left"></i> Anterior
+                        </a>
+                        <a href="?year={{ mes_siguiente|slice:':4' }}&month={{ mes_siguiente|slice:'5:7' }}"
+                           class="btn btn-sm btn-light">
+                            Siguiente <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead>
+                        <tr class="bg-light">
+                            <th class="text-center" style="width: 14.28%">Domingo</th>
+                            <th class="text-center" style="width: 14.28%">Lunes</th>
+                            <th class="text-center" style="width: 14.28%">Martes</th>
+                            <th class="text-center" style="width: 14.28%">Miércoles</th>
+                            <th class="text-center" style="width: 14.28%">Jueves</th>
+                            <th class="text-center" style="width: 14.28%">Viernes</th>
+                            <th class="text-center" style="width: 14.28%">Sábado</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for semana in calendario %}
+                            <tr style="height: 120px;">
+                                {% for dia in semana %}
+                                    <td class="align-top {% if dia.day == hoy.day and mes == hoy.month and year == hoy.year %}bg-info bg-opacity-10{% endif %}">
+                                        {% if dia.day %}
+                                            <div class="d-flex flex-column h-100">
+                                                <div class="text-end p-1">
+                                        <span class="{% if dia.hoy %}badge bg-primary rounded-pill{% endif %}">
+                                            {{ dia.day }}
+                                        </span>
+                                                </div>
+
+                                                <div class="flex-grow-1 overflow-auto small" style="max-height: 80px;">
+                                                    {% for cita in dia.citas %}
+                                                        <div class="mb-1 p-1 rounded border-start border-3 
+                                                    {% if cita.estado == 'cancelada' %}border-danger bg-danger bg-opacity-10
+                                                    {% elif cita.estado == 'completada' %}border-secondary bg-light
+                                                    {% elif cita.estado == 'confirmada' %}border-success bg-success bg-opacity-10
+                                                    {% else %}border-warning bg-warning bg-opacity-10{% endif %}">
+                                                            <div class="d-flex justify-content-between align-items-start">
+                                                                <div class="flex-grow-1">
+                                                                    <strong class="d-block text-truncate"
+                                                                            style="max-width: 100px;">{{ cita.titulo }}</strong>
+                                                                    <small class="text-muted">{{ cita.fecha_hora_inicio|time }}</small>
+                                                                </div>
+                                                                <span class="badge bg-{{ cita.get_badge_color }} small">
+                                                    {{ cita.get_estado_display }}
+                                                </span>
+                                                            </div>
+                                                            <div class="text-truncate" style="max-width: 100%;"
+                                                                 title="{{ cita.solicitante.nombre_completo }}">
+                                                                <small>{{ cita.solicitante.nombre_completo }}</small>
+                                                            </div>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .table tbody tr td {
+            vertical-align: top;
+            transition: all 0.2s;
+        }
+
+        .table tbody tr td:hover {
+            background-color: rgba(0, 0, 0, 0.03);
+        }
+
+        .text-truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /*Agregar este CSS para mejorar la interactividad  -*/
+        .hover-scale {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .hover-scale:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            cursor: pointer;
+        }
+
+        /* Estilo personalizado para scroll */
+        .card-body::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .card-body::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+    </style>
+{% endblock %}

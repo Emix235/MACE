@@ -1,0 +1,133 @@
+{% load static %}
+<div class="col-md-6 mb-4">
+    <div class="card shadow-sm h-100 border-{{ cita.get_badge_color }}">
+        <div class="card-header d-flex justify-content-between align-items-center bg-{{ cita.get_badge_color }} {% if cita.estado == 'confirmada' or cita.estado == 'cancelada' %}text-white{% endif %}">
+            <div>
+                <h5 class="mb-0">{{ cita.titulo }}</h5>
+                <small class="d-block">
+                    {% if es_creador %}
+                        <i class="fas fa-user-edit me-1"></i>Cita creada por ti
+                    {% elif es_solicitante %}
+                        <i class="fas fa-user-tag me-1"></i>Citado por servicio escolar
+                    {% else %}
+                        <i class="fas fa-user-plus me-1"></i>Citado por el profesor(a):
+                        {{ cita.profesor.nombre_completo }}
+                    {% endif %}
+                </small>
+            </div>
+            <span class="badge bg-{{ cita.get_badge_color }} {% if cita.estado == 'confirmada' or cita.estado == 'cancelada' %}text-white{% endif %}">
+                {{ cita.get_estado_display }}
+            </span>
+        </div>
+
+        <div class="card-body">
+            <!-- Información del responsable -->
+            <div class="d-flex mb-3 align-items-center">
+                <div class="flex-shrink-0">
+                    {% if cita.profesor %}
+                        <img src="
+                                {% if cita.profesor.imagen_usuario %}{{ cita.profesor.imagen_usuario.url }}{% else %}{% static 'img/default-user.png' %}{% endif %}"
+                             class="rounded-circle" width="60" height="60" alt="Profesor">
+                    {% elif cita.servicio_escolar %}
+                        <img src="
+                                {% if cita.servicio_escolar.imagen_usuario %}{{ cita.servicio_escolar.imagen_usuario.url }}{% else %}{% static 'img/default-user.png' %}{% endif %}"
+                             class="rounded-circle" width="60" height="60" alt="Servicio Escolar">
+                    {% else %}
+                        <img src="{% static 'img/default-user.png' %}" class="rounded-circle" width="60" height="60"
+                             alt="Por asignar">
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    {% if cita.profesor %}
+                        <h6 class="mt-0">Prof. {{ cita.profesor.nombre_completo }}</h6>
+                        <p class="text-muted mb-1">{{ cita.profesor.correo_electronico }}</p>
+                        <span class="badge bg-primary">Profesor</span>
+                    {% elif cita.servicio_escolar %}
+                        <h6 class="mt-0">{{ cita.servicio_escolar.nombre_completo }}</h6>
+                        <p class="text-muted mb-1">{{ cita.servicio_escolar.correo_electronico }}</p>
+                        <span class="badge bg-secondary">Servicio Escolar</span>
+                    {% else %}
+                        <h6 class="mt-0">Por asignar</h6>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Detalles de la cita -->
+            <div class="mb-3">
+                <p class="mb-1"><strong><i class="far fa-clock me-1"></i>Fecha y hora:</strong></p>
+                <p>{{ cita.fecha_hora_inicio|date:"l, d F Y" }} a las {{ cita.fecha_hora_inicio|time:"H:i" }}</p>
+                <p class="mb-0"><small>Duración: {{ cita.duracion }} minutos</small></p>
+            </div>
+
+            <div class="mb-3">
+                <p class="mb-1"><strong><i class="fas fa-map-marker-alt me-1"></i>Ubicación:</strong></p>
+                <p>{{ cita.ubicacion|default:"Por confirmar" }}</p>
+            </div>
+
+            <div class="mb-3">
+                <p class="mb-1"><strong><i class="fas fa-info-circle me-1"></i>Motivo:</strong></p>
+                <p>{{ cita.motivo|truncatechars:100 }}</p>
+            </div>
+        </div>
+
+        <div class="card-footer bg-transparent">
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                    Creada: {{ cita.fecha_creacion|date:"d/m/Y H:i" }}
+                </small>
+                <div>
+                    <a href="#" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                       data-bs-target="#detalleCita{{ cita.id }}">
+                        <i class="fas fa-eye me-1"></i> Detalles
+                    </a>
+
+                    <!-- Acciones según estado y rol -->
+                    {% if cita.estado == 'pendiente' %}
+                        {% if es_creador %}
+                            <!-- Acciones para citas creadas por el padre -->
+                            <a href="{% url 'padres:reprogramar_cita' cita.id %}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-calendar-edit me-1"></i> Reprogramar
+                            </a>
+                            <a href="{% url 'citas:cancelar_cita' cita.id %}" class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('¿Estás seguro de cancelar esta cita?');">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                        {% elif es_solicitante %}
+                            <!-- Acciones para citas donde el padre es solicitante pero no creador -->
+                            <a href="{% url 'padres:confirmar_cita' cita.id %}" class="btn btn-sm btn-success"
+                               onclick="return confirm('¿Confirmas esta cita solicitada?');">
+                                <i class="fas fa-check me-1"></i> Confirmar
+                            </a>
+                            <a href="{% url 'citas:cancelar_cita' cita.id %}" class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('¿Estás seguro de cancelar esta cita?');">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                        {% else %}
+                            <!-- Acciones para citas donde es solo invitado -->
+                            <a href="{% url 'padres:confirmar_cita' cita.id %}" class="btn btn-sm btn-success"
+                               onclick="return confirm('¿Confirmas tu asistencia a esta cita?');">
+                                <i class="fas fa-check me-1"></i> Confirmar
+                            </a>
+                            <a href="{% url 'padres:rechazar_cita' cita.id %}" class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('¿Estás seguro de rechazar esta invitación?');">
+                                <i class="fas fa-times me-1"></i> Rechazar
+                            </a>
+                        {% endif %}
+                    {% elif cita.estado == 'confirmada' %}
+                        <!-- Acciones para citas confirmadas -->
+                        {% if es_creador or es_solicitante %}
+                            <a href="{% url 'citas:cancelar_cita' cita.id %}" class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('¿Estás seguro de cancelar esta cita confirmada?');">
+                                <i class="fas fa-times me-1"></i> Cancelar
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalles -->
+{% include 'padres/citas/modal_detalle.html' with cita=cita %}

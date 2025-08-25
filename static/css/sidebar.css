@@ -1,0 +1,115 @@
+
+#cal-side-bar {
+/*    padding: 10px;*/
+	float: left;
+	width: 250px;
+	height: 100%;
+	background: #2ed39e;
+	color: white;
+	overflow: hidden;
+	position: relative;
+	transition: 0.5s;
+}
+
+#cal-side-bar-top {
+	height: 40px;
+	line-height: 40px;
+}
+#btn-menu {
+	font-size: 1.3rem;
+	display: inline;
+}
+
+#cal-thumb {
+	padding: 10px 20px;
+	display: inline-block;
+	width: 100%;
+/*    height: 250px;*/
+}
+#cal-thumb-content-top {
+	padding: 7px;
+	font-size: 1.1rem;
+}
+
+#cal-thumb-content-grid {
+	font-size: 0.8rem;
+	text-align: center;
+}
+#thumb-week-days li {
+	float: left;
+	width: calc(100% / 7);
+	padding: 3px;
+}
+
+.thumb-week-row li {
+	float: left;
+	width: calc(100% / 7);
+	padding: 3px;
+}
+.thumb-week-row li:not(.disabled) {
+	background: #2bc493;
+}
+.thumb-week-row li.selected {
+	background: white;
+	color: #2ed39e;
+}
+
+#time {
+	padding: 10px;
+	font-size: 3.5rem;
+	font-weight: lighter;
+	text-align: center;
+}
+#time #am-pm {
+	font-size: 1rem;
+}
+
+#today-events {
+	width: 100%;
+/*    height: 170px;*/
+}
+.top-heading {
+	font-size: 0.9rem;
+	padding: 5px 20px;
+}
+#today-events ul {
+/*    height: calc(100% - 1rem);*/
+	overflow-y: auto;
+	overflow-x: hidden;
+	background: #2bc493;
+	padding: 0px 20px;
+}
+#today-events li {
+	width: 100%;
+	border-bottom: 1px solid #2ed39e;
+	height: 2rem;
+	line-height: 2rem;
+}
+
+#weather {
+	position: absolute;
+	left: 0px;
+	bottom: 30px;
+	width: 100%;
+}
+#weather-content {
+	background: #2bc493;
+	height: 100px;
+	padding: 5px 20px;
+}
+#weather-type {
+	display: inline-block;
+	height: 100%;
+	text-align: center;
+	padding: 5px;
+}
+#weather-type-icon {
+	padding: 5px;
+	font-size: 3rem;
+}
+#weather-max {
+	font-size: 3rem;
+}
+#weather-min {
+	font-size: 2rem;
+}

@@ -1,0 +1,16 @@
+<div class="card mb-2 calendar-event event-expandible descanso-card">
+    <div class="card-body p-2">
+        <h6 class="card-title mb-1">Descanso</h6>
+        <p class="card-text mb-1 small">
+            {{ descanso.hora_inicio|time:"H:i" }} - {{ descanso.hora_fin|time:"H:i" }}
+        </p>
+        <p class="card-text small text-muted mb-0">
+            Prof: {{ descanso.profesor.nombre_completo }}
+        </p>
+        {% if descanso.motivo %}
+            <p class="card-text small text-muted">
+                {{ descanso.motivo }}
+            </p>
+        {% endif %}
+    </div>
+</div>

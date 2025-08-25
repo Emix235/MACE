@@ -1,0 +1,294 @@
+{% extends 'servicios_escolares/base.html' %}
+
+{% block content %}
+    <div class="container-fluid mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-clipboard2-pulse"></i> Gestión de Encuestas de Satisfacción</h2>
+        </div>
+
+        <!-- Pestañas para navegar -->
+        <ul class="nav nav-tabs mb-4" id="encuestasTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="edicion-tab" data-bs-toggle="tab" data-bs-target="#edicion"
+                        type="button" role="tab">
+                    <i class="bi bi-pencil-square"></i> Editar y Publicar
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial"
+                        type="button" role="tab">
+                    <i class="bi bi-clock-history"></i> Historial
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="encuestasTabContent">
+            <!-- Pestaña de Edición y Publicación -->
+            <div class="tab-pane fade show active" id="edicion" role="tabpanel">
+                {% if messages %}
+                    <div class="container mt-3 ps-0 pe-0">
+                        {% for message in messages %}
+                            <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                        aria-label="Cerrar"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <div class="alert alert-info mb-4">
+                    <i class="bi bi-info-circle"></i>
+                    {% if encuestas_con_info.0.actual.es_default %}
+                        Estás viendo la plantilla por defecto.
+                    {% else %}
+                        Estás viendo la versión más reciente (v{{ encuestas_con_info.0.actual.version }}) de la
+                        encuesta.
+                    {% endif %}
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card shadow-sm mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">{{ encuestas_con_info.0.actual.titulo }}</h5>
+                                {% if encuestas_con_info.0.actual.es_default %}
+                                    <span class="badge bg-warning">Plantilla por defecto</span>
+                                {% else %}
+                                    <span class="badge bg-success">Versión actual (v{{ encuestas_con_info.0.actual.version }})</span>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">{{ encuestas_con_info.0.actual.descripcion }}</p>
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar"></i>
+                                        Última
+                                        edición: {{ encuestas_con_info.0.actual.ultima_edicion|date:"d/m/Y H:i" }}
+                                    </small>
+                                    <span class="badge bg-info">
+                                        {{ encuestas_con_info.0.actual.preguntas.count }} preguntas
+                                    </span>
+                                </div>
+
+                                <!-- Estado de publicación -->
+                                {% if encuestas_con_info.0.publicada %}
+                                    <div class="alert alert-success">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <i class="bi bi-check-circle"></i>
+                                                <strong>Publicada actualmente</strong>
+                                                <div class="mt-2">
+                                                    <span class="badge bg-primary">
+                                                        Ciclo: {{ encuestas_con_info.0.publicada.ciclo_escolar }}
+                                                    </span>
+                                                    <span class="badge bg-info ms-2">
+                                                        <b>{{ encuestas_con_info.0.publicada.num_usuarios }}</b> respuestas de usuarios
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <form method="post"
+                                                  action="{% url 'formularios:finalizar_encuesta' %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="bi bi-stop-circle"></i> Despublicar
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                <!-- Acordeón de preguntas -->
+                                <div class="accordion mb-3" id="accordionPreguntas">
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="headingPreguntas">
+                                            <button class="accordion-button" type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#collapsePreguntas"
+                                                    aria-expanded="true">
+                                                Ver todas las preguntas
+                                            </button>
+                                        </h2>
+                                        <div id="collapsePreguntas" class="accordion-collapse collapse show"
+                                             aria-labelledby="headingPreguntas">
+                                            <div class="accordion-body">
+                                                <ol class="list-group list-group-numbered">
+                                                    {% for pregunta in encuestas_con_info.0.actual.preguntas.all %}
+                                                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                                                            <div class="ms-2 me-auto">
+                                                                <div>{{ pregunta.texto }}</div>
+                                                                <small class="text-muted">
+                                                                    Tipo: {{ pregunta.get_tipo_display }}
+                                                                    {% if pregunta.obligatoria %}
+                                                                        <span class="badge bg-warning text-dark ms-2">Obligatoria</span>
+                                                                    {% endif %}
+                                                                </small>
+                                                            </div>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Formulario de publicación -->
+                                {% if not encuestas_con_info.0.publicada and encuestas_con_info.0.puede_editar %}
+                                    <div class="card mt-4">
+                                        <div class="card-header bg-light">
+                                            <h6 class="mb-0"><i class="bi bi-send"></i> Publicar Encuesta</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <form method="post"
+                                                  action="{% url 'formularios:aplicar_encuesta' %}">
+                                                {% csrf_token %}
+                                                <div class="mb-3">
+                                                    <label class="form-label">Seleccionar ciclo escolar:</label>
+                                                    <select name="ciclo_escolar" class="form-select" required>
+                                                        {% for ciclo in ciclos_disponibles %}
+                                                            <option value="{{ ciclo.id }}">{{ ciclo }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <button type="submit" class="btn btn-success">
+                                                    <i class="bi bi-send-check"></i> Publicar Encuesta
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <a href="
+                                        {% if encuestas_con_info.0.puede_editar %}{% url 'formularios:editar_encuesta' %}{% else %}#{% endif %}"
+                                   class="btn btn-primary {% if not encuestas_con_info.0.puede_editar %}disabled{% endif %}"
+                                   aria-disabled="{% if not encuestas_con_info.0.puede_editar %}true{% else %}false{% endif %}">
+                                    <i class="bi bi-pencil-square"></i>
+                                    {% if encuestas_con_info.0.actual.es_default %}
+                                        Editar Plantilla
+                                    {% else %}
+                                        Editar Versión
+                                    {% endif %}
+                                </a>
+                                {% if not encuestas_con_info.0.actual.es_default %}
+                                    <a href="{% url 'formularios:detalle_versiones_encuesta' encuestas_con_info.0.encuesta.pk %}"
+                                       class="btn btn-outline-secondary ms-2">
+                                        <i class="bi bi-arrow-left"></i> Ver plantilla original
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Instrucciones</h6>
+                            </div>
+                            <div class="card-body">
+                                <ol class="small">
+                                    <li class="mb-2">Edita la plantilla según tus necesidades</li>
+                                    <li class="mb-2">Revisa todas las preguntas antes de publicar</li>
+                                    <li class="mb-2">Selecciona el ciclo escolar al publicar</li>
+                                    <li>Puedes despublicar en cualquier momento</li>
+                                </ol>
+                                {% if not encuestas_con_info.0.actual.es_default %}
+                                    <div class="alert alert-warning mt-3 small">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        Estás editando una versión derivada de la plantilla original.
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pestaña de Historial -->
+            <div class="tab-pane fade" id="historial" role="tabpanel">
+                {% if encuestas_aplicadas %}
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="card-title mb-0"><i class="bi bi-clock-history"></i> Historial de Aplicaciones
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Ciclo Escolar</th>
+                                        <th>Estado</th>
+                                        <th>Respuestas</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for aplicada in encuestas_aplicadas|dictsortreversed:"fecha_aplicacion" %}
+                                        <tr>
+                                            <td>
+                                                {{ aplicada.fecha_aplicacion|date:"d/m/Y H:i" }}
+                                            </td>
+                                            <td>{{ aplicada.ciclo_escolar }}</td>
+                                            <td>
+                                                {% if aplicada.activa %}
+                                                    <span class="badge bg-success">Activa</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Finalizada</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary rounded-pill">
+                                                    {{ aplicada.num_usuarios }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'formularios:detalle_respuestas_encuesta' aplicada.id %}"
+                                                   class="btn btn-sm btn-outline-primary"
+                                                   title="Ver resultados">
+                                                    <i class="bi bi-bar-chart-line"></i> Resultados
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No hay historial de encuestas aplicadas.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .card {
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+        }
+
+        .badge {
+            font-weight: 500;
+        }
+
+        .list-group-item {
+            border-left: none;
+            border-right: none;
+        }
+    </style>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Registrar Estudiantes - {{ ciclo.nombre }}</h2>
+    
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Formato de matrícula: [AÑO][GRADO][LETRA]-[CONSECUTIVO] (ej: "241A-001")
+    </div>
+    
+    <form method="post" id="estudiantesForm">
+        {% csrf_token %}
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Asignación de Estudiantes por Grupo</h4>
+                    <span class="badge bg-light text-dark">
+                        <i class="fas fa-users"></i> {{ grupos|length }} Grupos
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th style="width: 30%">Grupo</th>
+                                <th style="width: 15%">Matrícula Ejemplo</th>
+                                <th style="width: 15%">Estudiantes Actuales</th>
+                                <th style="width: 15%">Capacidad</th>
+                                <th style="width: 25%">Nuevos Estudiantes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for grupo in grupos %}
+                            <tr>
+                                <td>
+                                    <strong>{{ grupo.nombre_completo }}</strong>
+                                </td>
+                                <td>
+                                    <code>{{ grupo.ejemplo_matricula }}</code>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if grupo.cantidad_actual == 0 %}secondary{% else %}info{% endif %}">
+                                        {{ grupo.cantidad_actual }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-dark">{{ grupo.capacidad }}</span>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="number" 
+                                               name="cantidad_{{ grupo.id }}"
+                                               min="0" 
+                                               max="{{ grupo.capacidad }}"
+                                               value="{{ grupo.cantidad_actual }}"
+                                               class="form-control"
+                                               aria-label="Estudiantes para {{ grupo.nombre_corto }}">
+                                        <span class="input-group-text">estudiantes</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" name="actualizar" id="actualizarCheck">
+                <label class="form-check-label" for="actualizarCheck">
+                    <i class="fas fa-sync-alt"></i> Reemplazar todos los estudiantes existentes
+                </label>
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{% url 'servicios_escolares:paso2_grados' ciclo_id=ciclo.id %}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-arrow-left"></i> Regresar
+                </a>
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-save"></i> Guardar Estudiantes
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .table th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+    }
+    .form-switch .form-check-input {
+        width: 3em;
+        height: 1.5em;
+    }
+</style>
+{% endblock %}

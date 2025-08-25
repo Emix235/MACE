@@ -1,0 +1,912 @@
+{% extends 'servicios_escolares/base.html' %}
+{% load static %}
+{% block content %}
+
+    <div class="container mt-4">
+        <h2 class="mb-4">Gestión de Citas - Servicios Escolares</h2>
+        {% if messages %}
+            <div class="container mt-3 ps-0 pe-0"> <!-- Bootstrap 5 -->
+                {% for message in messages %}
+                    <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="container mt-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4><i class="bi bi-shield-lock"></i> Panel Seguro - Servicios Escolares</h4>
+                </div>
+
+                <!--{% if messages %}
+                <div class="fixed top-4 right-4 z-50 space-y-3">
+                    {% for message in messages %}
+                        <div class="flex items-start justify-between max-w-sm p-4 rounded-lg shadow-lg  
+                  {% if message.tags == 'success' %}bg-green-500
+                  {% elif message.tags == 'error' %}bg-red-500
+                  {% elif message.tags == 'warning' %}bg-yellow-500 text-black
+                  {% else %}bg-blue-500
+                  {% endif %}"
+                             style="    
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;"
+                             x-data="{ show: true }" x-show="show" x-transition>
+                            <div class="flex-1">
+                                {{ message }}
+                            </div>
+                            <button class="ml-4 font-bold" @click="show = false">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}-->
+
+
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <h5>Bienvenido, {{ usuario.nombre }}</h5>
+                        <p class="mb-1"><strong>Rol:</strong> {{ usuario.rol }}</p>
+                        <p class="mb-1"><strong>Correo:</strong> {{ usuario.correo }}</p>
+                        <p class="mb-0"><strong>Último acceso:</strong> {{ usuario.ultimo_acceso }}</p>
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="bi bi-shield-check"></i> Sesión verificada y protegida
+                </div>
+            </div>
+        </div>
+        <br><br>
+        <!-- Modal para detalles de cita -->
+        <div class="modal fade" id="citaModal" tabindex="-1" aria-labelledby="citaModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="citaModalLabel">Detalles de la Cita</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="citaModalBody">
+                        <!-- Contenido se cargará dinámicamente via AJAX -->
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <!-- Barra de citas para completar -->
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tasks me-2"></i>Citas para completar
+                            <span class="badge bg-light text-dark ms-2">{{ citas_para_completar.count }}</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if citas_para_completar %}
+                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                <table class="table table-hover">
+                                    <thead style="position: sticky; top: 0; background-color: white; z-index: 1;">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Hora</th>
+                                        <th>Solicitante</th>
+                                        <th>Título</th>
+                                        <th>Tipo</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for cita in citas_para_completar %}
+                                        <tr>
+                                            <td>{{ cita.fecha_hora_inicio|date:"d/m/Y" }}</td>
+                                            <td>{{ cita.fecha_hora_inicio|time:"H:i" }}</td>
+                                            <td>{{ cita.solicitante.nombre_completo }}</td>
+                                            <td>{{ cita.titulo }}</td>
+                                            <td>{{ cita.get_tipo_display }}</td>
+                                            <td>
+                                                <form method="post"
+                                                      action="{% url 'servicios_escolares:completar_cita' cita.id %}">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm"
+                                                            style="background-color: #FFD700; color: #000;">
+                                                        <i class="fas fa-check-circle"></i> Completar
+                                                    </button>
+                                                </form>
+                                                <a href="{% url 'servicios_escolares:detalle_cita' cita.id %}"
+                                                   class="btn btn-sm btn-info mt-1">
+                                                    <i class="fas fa-eye"></i> Ver
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info mb-0">
+                                No hay citas pendientes por completar.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para retroalimentación -->
+        <div class="modal fade" id="retroModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Retroalimentación enviada</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            La cita ha sido marcada como completada y se ha enviado la solicitud de retroalimentación al
+                            padre.
+                        </div>
+                        <div id="retroInfo"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <a href="#" id="verRetroLink" class="btn btn-primary">
+                            <i class="fas fa-external-link-alt me-2"></i>Ver retroalimentación
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Barra de estado rápido -->
+        <div class="row mb-4">
+            <!-- Columna izquierda: Citas pendientes -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5>Citas Pendientes</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Citas pendientes creadas por el usuario -->
+                        {% if citas_creadas %}
+                            {% if citas_pendientes_creadas %}
+                                <div class="card mb-3">
+                                    <div class="card-header bg-warning text-white">
+                                        <h6><i class="fas fa-user-edit"></i> Citas que usted creó</h6>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="list-group list-group-flush">
+                                            {% for cita in citas_pendientes_creadas %}
+                                                <div class="list-group-item">
+                                                    <div class="d-flex w-100 justify-content-between">
+                                                        <h6 class="mb-1">{{ cita.titulo }}</h6>
+                                                        <small class="text-{{ cita.get_badge_color }}">{{ cita.get_estado_display }}</small>
+                                                    </div>
+                                                    <p class="mb-1">
+                                                        <strong>Solicitante:</strong> {{ cita.solicitante.nombre_completo|default:"N/D" }}<br>
+                                                        <strong>Fecha:</strong> {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}<br>
+                                                        <strong>Tipo:</strong> {{ cita.get_tipo_display }}
+                                                    </p>
+                                                    <div class="btn-group btn-group-sm mt-2 gap-2">
+                                                        <a href="{% url 'servicios_escolares:detalle_cita' cita.id %}"
+                                                           class="btn btn-info btn-sm">
+                                                            <i class="fas fa-info-circle"></i> Detalles
+                                                        </a>
+                                                        <button class="btn btn-info ver-detalle" data-bs-toggle="modal"
+                                                                data-bs-target="#citaModal"
+                                                                data-cita-id="{{ cita.id }}">
+                                                            <i class="fas fa-eye"></i> Ver
+                                                        </button>
+                                                        <form method="post"
+                                                              action="{% url 'servicios_escolares:cancelar_cita_servicio' cita.id %}">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="fas fa-times"></i> Cancelar
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+
+                        <!-- Citas pendientes donde es asistente -->
+                        {% if citas_solicitadas_por_padres %}
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h6><i class="fas fa-user-clock"></i> Citas que requieren su atención</h6>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="list-group list-group-flush">
+                                        {% for cita in citas_solicitadas_por_padres %}
+                                            {% if cita.estado == 'pendiente' %}
+                                                <div class="list-group-item">
+                                                    <div class="d-flex w-100 justify-content-between">
+                                                        <h6 class="mb-1">{{ cita.titulo }}</h6>
+                                                        <small class="text-{{ cita.get_badge_color }}">{{ cita.get_estado_display }}</small>
+                                                    </div>
+                                                    <p class="mb-1">
+                                                        <strong>Creada por:</strong>
+                                                        {% if cita.creador_tipo.model == 'padre' %}
+                                                            {{ cita.solicitante.nombre_completo }}
+                                                        {% elif cita.creador_tipo.model == 'profesor' %}
+                                                            {{ cita.profesor.nombre_completo }}
+                                                        {% else %}
+                                                            {{ cita.servicio_escolar.nombre_completo }}
+                                                        {% endif %}<br>
+                                                        <strong>Fecha:</strong> {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}<br>
+                                                        <strong>Tipo:</strong> {{ cita.get_tipo_display }}
+                                                    </p>
+                                                    <div class="btn-group btn-group-sm mt-2 gap-2">
+                                                        <form method="post"
+                                                              action="{% url 'servicios_escolares:confirmar_cita_servicio' cita.id %}">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-success btn-sm">
+                                                                <i class="fas fa-check"></i> Confirmar
+                                                            </button>
+                                                        </form>
+                                                        <form method="post"
+                                                              action="{% url 'servicios_escolares:cancelar_cita_servicio' cita.id %}">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="fas fa-times"></i> Rechazar
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Columna derecha: Próximas citas -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h5>Próximas Citas</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if citas_como_agendador or citas_como_asistente %}
+                            <!-- Citas programadas por el servicio escolar -->
+                            {% if citas_como_agendador %}
+                                <h6 class="mt-2"><i class="fas fa-user-edit text-warning"></i> Citas que usted programó
+                                </h6>
+                                <div class="list-group mb-3">
+                                    {% for cita in citas_como_agendador %}
+                                        {% if cita.estado != 'cancelada' and cita.estado != 'pendiente' and cita.estado != 'completada' and  cita.fecha_hora_inicio|date:"U" < now|date:"U" %}
+                                            <div class="list-group-item">
+                                                <div class="d-flex w-100 justify-content-between gap-2 align-items-center">
+                                                    <h6 class="mb-1">{{ cita.titulo }}</h6>
+                                                    <small class="text-{{ cita.get_badge_color }}">{{ cita.get_estado_display }}</small>
+                                                </div>
+                                                <p class="mb-1">
+                                                    <strong>Para:</strong> {{ cita.solicitante.nombre_completo|default:"N/D" }}<br>
+                                                    <strong>Fecha:</strong> {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}<br>
+                                                    <strong>Ubicación:</strong> {{ cita.ubicacion|default:"Por definir" }}
+                                                </p>
+                                                <a href="{% url 'servicios_escolares:detalle_cita' cita.id %}"
+                                                   class="btn btn-sm btn-outline-primary mt-1">
+                                                    <i class="fas fa-info-circle"></i> Detalles
+                                                </a>
+                                                {# {% url 'servicios_escolares:detalle_cita' cita.id %} #}
+                                                <a href="#"
+                                                   class="btn btn-sm btn-warning text-dark">
+                                                    <i class="fas fa-check-circle"></i> Completada
+                                                </a>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <!--border-start border-5 border-success-->
+                            <!-- Citas confirmadas donde participa como asistente -->
+                            {% if citas_solicitadas_por_padres or citas_como_asistente %}
+                                <h6 class="mt-3"><i class="fas fa-user-check text-success"></i> Citas confirmadas donde
+                                    participa</h6>
+                                <div class="list-group">
+                                    {% for cita in citas_solicitadas_por_padres %}
+                                        {% if cita.estado == 'confirmada' %}
+                                            <div class="list-group-item">
+                                                <div class="d-flex w-100 justify-content-between">
+                                                    <h6 class="mb-1">{{ cita.titulo }}</h6>
+                                                    <small class="text-{{ cita.get_badge_color }}">{{ cita.get_estado_display }}</small>
+                                                </div>
+                                                <p class="mb-1">
+                                                    <strong>Con:</strong> {{ cita.solicitante.nombre_completo|default:"N/D" }}<br>
+                                                    <strong>Fecha:</strong> {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}<br>
+                                                    <strong>Ubicación:</strong> {{ cita.ubicacion|default:"Por definir" }}
+                                                </p>
+                                                <div class="btn-group btn-group-sm mt-2">
+                                                    <a href="{% url 'servicios_escolares:detalle_cita' cita.id %}"
+                                                       class="btn btn-outline-success btn-sm">
+                                                        <i class="fas fa-info-circle"></i> Detalles
+                                                    </a>
+                                                    <a href="{{ cita.evento_url|default:'#' }}"
+                                                       target="_blank"
+                                                       class="btn btn-outline-primary btn-sm {% if not cita.evento_url %}disabled{% endif %}">
+                                                        <i class="fas fa-calendar-day"></i> Ver en calendario
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% empty %}
+                                        <div class="list-group-item">
+                                            <p class="text-muted mb-0">No hay citas confirmadas donde participe</p>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-muted">No hay citas próximas</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--<h1>Calendario de Citas (Prueba)</h1>-->
+    <!-- FullCalendar con estilo Bootstrap -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar3"></i> Calendario de Citas - {{ current_month }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4><i class="bi bi-calendar-week"></i> Calendario Semanal</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="text-center mb-4">{{ current_week }}</h5>
+                        <div class="row">
+                            {% for day in week_days %}
+                                <div class="col">
+                                    <div class="card text-center {% if day.date == current_date %}border-primary{% endif %}">
+                                        <div class="card-header bg-light">
+                                            <strong>{{ day|date:"D" }}</strong>
+                                        </div>
+                                        <div class="card-body">
+                                            <h5 class="card-title">{{ day.day }}</h5>
+                                        </div>
+                                        <div class="card-footer bg-transparent">
+                                            <small class="text-muted">
+                                                {% if day.date == current_date %}
+                                                    <span class="badge bg-primary">Hoy</span>
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FullCalendar Styles & Scripts -->
+        <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/main.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
+
+        <style>
+            /* Estilos base del calendario */
+            #calendar {
+                background-color: white;
+                border-radius: 0.5rem;
+                padding: 1rem;
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            }
+
+            .fc-daygrid-day {
+                border-width: 1px;
+                border-style: solid;
+                border-color: #e0e0e0;
+            }
+
+            .fc-day-today {
+                background-color: #e8f4ff !important;
+            }
+
+            .fc-event {
+                border: none !important;
+                border-radius: 0.25rem;
+                font-size: 0.85rem;
+                padding: 2px 4px;
+                cursor: pointer;
+                font-weight: 500;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            /* Estilos para eventos prioritarios */
+            .fc-event-prioritaria {
+                border-left: 4px solid #e74c3c !important;
+                font-weight: bold;
+            }
+
+            /* Estilos para diferentes tipos de eventos */
+            .fc-event-clase {
+                background-color: #9b59b6;
+                border-color: #9b59b6;
+            }
+
+            .fc-event-descanso {
+                background-color: #f39c12;
+                border-color: #f39c12;
+            }
+
+            .fc-event-reunion {
+                background-color: #9b59b6;
+                border-color: #9b59b6;
+            }
+
+            .fc-event-tutoria {
+                background-color: #1abc9c;
+                border-color: #1abc9c;
+            }
+
+            .fc-event-entrega {
+                background-color: #e91e63;
+                border-color: #e91e63;
+            }
+
+            .fc-event-general {
+                background-color: #34495e;
+                border-color: #34495e;
+            }
+
+            /* Estilos por estado */
+            .fc-event-pendiente {
+                background-color: #f1c40f;
+                border-color: #f1c40f;
+            }
+
+            .fc-event-confirmada {
+                background-color: #2ecc71;
+                border-color: #2ecc71;
+            }
+
+            .fc-event-completada {
+                background-color: #3498db;
+                border-color: #3498db;
+            }
+
+            .fc-event-cancelada {
+                background-color: #e74c3c;
+                border-color: #e74c3c;
+            }
+
+            .fc-event-reprogramada {
+                background-color: #e67e22;
+                border-color: #e67e22;
+            }
+
+            /* Leyenda del calendario */
+            .calendar-legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-bottom: 15px;
+                padding: 10px;
+                border-radius: 5px;
+            }
+
+            .legend-item {
+                display: flex;
+                align-items: center;
+                font-size: 0.8rem;
+            }
+
+            .legend-color {
+                width: 15px;
+                height: 15px;
+                border-radius: 3px;
+                margin-right: 5px;
+                display: inline-block;
+            }
+
+            /* Mejoras visuales */
+            .fc-toolbar-title {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: #2c3e50;
+            }
+
+            .fc-button {
+                border: 1px solid #dee2e6 !important;
+                background-color: #f8f9fa !important;
+                color: #212529 !important;
+                transition: all 0.2s;
+            }
+
+            .fc-button:hover {
+                background-color: #e9ecef !important;
+            }
+
+            .fc-button-active {
+                background-color: #e9ecef !important;
+                color: #495057 !important;
+            }
+
+            .fc-event-time {
+                font-weight: bold;
+            }
+
+            /* Estilos para los periodos en tooltips */
+            .tooltip-periodo {
+                padding: 3px 8px;
+                border-radius: 12px;
+                font-size: 0.75rem;
+                font-weight: bold;
+                margin-bottom: 8px;
+                display: inline-block;
+            }
+
+            .tooltip-manana {
+                background-color: #fff3cd;
+                color: #856404;
+                border: 1px solid #ffeeba;
+            }
+
+            .tooltip-tarde {
+                background-color: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            }
+
+            /* Estilos para eventos en diferentes periodos */
+            .fc-event-manana {
+                border-left: 3px solid #ffc107 !important;
+            }
+
+            .fc-event-tarde {
+                border-left: 3px solid #28a745 !important;
+            }
+
+            .fc-daygrid-dot-event .fc-event-title {
+                flex-grow: 1;
+                flex-shrink: 1;
+                font-weight: 80;
+                min-width: 0;
+                overflow: hidden;
+                white-space: normal !important;
+                word-break: break-word !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+                display: -webkit-box !important;
+                -webkit-line-clamp: 2 !important;
+                -webkit-box-orient: vertical !important;
+                font-size: 0.8em !important;
+                line-height: 1.2 !important;
+                padding: 2px 4px !important;
+                text-align: center !important;
+            }
+        </style>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const calendarEl = document.getElementById('calendar');
+
+                // Función para generar contenido del modal
+                function getModalContent(event) {
+                    const hora = event.start.getHours();
+                    const periodo = hora < 12 ? 'Temprano ☀️' : 'Tarde 🌙';
+                    const horaInicio = event.start.toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+
+                    const horaFin = event.end.toLocaleTimeString('es-ES', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    });
+                    return `
+                    <div class="modal-header ${hora < 12 ? 'bg-warning text-dark' : 'bg-success text-white'}">
+                        <h5 class="modal-title">${event.title}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <h5 class="modal-title">${periodo} - ${event.title}</h5>            
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Horario:</strong> ${horaInicio} - ${horaFin}</p>
+                        <p><strong>Estado:</strong> ${event.extendedProps.estado}</p>
+                        <p><strong>Tipo:</strong> ${event.extendedProps.tipo}</p>
+                        ${event.extendedProps.descripcion ? `<p><strong>Descripción:</strong> ${event.extendedProps.descripcion}</p>` : ''}
+                        ${event.extendedProps.ubicacion ? `<p><strong>Ubicación:</strong> ${event.extendedProps.ubicacion}</p>` : ''}
+                        ${event.extendedProps.estudiantes && event.extendedProps.estudiantes.length > 0 ?
+                        `<p><strong>Estudiantes:</strong> ${event.extendedProps.estudiantes.join(', ')}</p>` : ''}
+                        ${event.extendedProps.prioridad ? `<p><strong>Prioridad:</strong> ${event.extendedProps.prioridad}</p>` : ''}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                `;
+                }
+
+                const calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    locale: 'es',
+                    height: 'auto',
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+                    },
+                    buttonText: {
+                        today: 'Hoy',
+                        month: 'Mes',
+                        week: 'Semana',
+                        day: 'Día',
+                        list: 'Lista'
+                    },
+                    events: '/servicios_escolares/eventos/',
+                    eventClassNames: function (arg) {
+                        const classNames = [];
+                        const tipo = arg.event.extendedProps.tipo?.toLowerCase() || '';
+                        const estado = arg.event.extendedProps.estado?.toLowerCase() || '';
+                        const hora = arg.event.start?.getHours() || 0;
+
+                        // Clase por periodo del día
+                        if (hora < 12) {
+                            classNames.push('fc-event-manana');
+                        } else {
+                            classNames.push('fc-event-tarde');
+                        }
+
+                        // Clases por tipo de cita
+                        if (tipo.includes('reunión')) classNames.push('fc-event-reunion');
+                        else if (tipo.includes('tutoría')) classNames.push('fc-event-tutoria');
+                        else if (tipo.includes('entrega')) classNames.push('fc-event-entrega');
+                        else if (tipo === 'clase') classNames.push('fc-event-clase');
+                        else if (tipo === 'descanso') classNames.push('fc-event-descanso');
+                        else classNames.push('fc-event-general');
+
+                        // Clases por estado
+                        if (estado.includes('pendiente')) classNames.push('fc-event-pendiente');
+                        else if (estado.includes('confirmada')) classNames.push('fc-event-confirmada');
+                        else if (estado.includes('completada')) classNames.push('fc-event-completada');
+                        else if (estado.includes('cancelada')) classNames.push('fc-event-cancelada');
+                        else if (estado.includes('reprogramada')) classNames.push('fc-event-reprogramada');
+
+                        // Clase prioritaria
+                        if (arg.event.extendedProps.es_prioritaria) {
+                            classNames.push('fc-event-prioritaria');
+                        }
+
+                        return classNames;
+                    },
+                    eventDidMount: function (info) {
+                        // Determinar si es mañana (AM) o tarde (PM)
+                        const hora = info.event.start.getHours();
+                        const periodo = hora < 12 ? 'TEMPRANO' : 'TARDE';
+                        const iconoPeriodo = hora < 12 ? '☀️' : '🌙';
+
+                        // Agregar indicador visual al título del evento
+                        const titleEl = info.el.querySelector('.fc-event-title');
+                        if (titleEl) {
+                            titleEl.innerHTML = `${iconoPeriodo} ${info.event.title}`;
+                        }
+
+                        // Tooltip mejorado
+                        if (!info.el._tooltip) {
+                            let estudiantes = info.event.extendedProps.estudiantes;
+                            if (!Array.isArray(estudiantes)) {
+                                estudiantes = typeof estudiantes === 'string' ?
+                                    estudiantes.split(/[,-]/).map(s => s.trim()) : [];
+                            }
+
+                            const horaInicio = info.event.start.toLocaleTimeString('es-ES', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            });
+
+                            const horaFin = info.event.end.toLocaleTimeString('es-ES', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                            });
+
+                            const tooltipContent = `
+                            <div class="tooltip-periodo ${hora < 12 ? 'tooltip-manana' : 'tooltip-tarde'}">
+                                ${periodo} ${iconoPeriodo}
+                            </div>
+                            <strong>${info.event.title}</strong><br>
+                            <strong>Horario:</strong> ${horaInicio} - ${horaFin}<br>
+                            <strong>Estado:</strong> ${info.event.extendedProps.estado}<br>
+                            <strong>Tipo:</strong> ${info.event.extendedProps.tipo}<br>
+                            ${info.event.extendedProps.descripcion ? `<br><strong>Descripción:</strong> ${info.event.extendedProps.descripcion}` : ''}
+                            ${info.event.extendedProps.ubicacion ? `<br><strong>Ubicación:</strong> ${info.event.extendedProps.ubicacion}` : ''}
+                            ${estudiantes.length > 0 ? `<br><strong>Estudiantes:</strong> ${estudiantes.join(', ')}` : ''}
+                            ${info.event.extendedProps.prioridad ? `<br><strong>Prioridad:</strong> ${info.event.extendedProps.prioridad}` : ''}
+                        `;
+
+                            info.el._tooltip = new bootstrap.Tooltip(info.el, {
+                                title: tooltipContent,
+                                html: true,
+                                placement: 'top',
+                                container: 'body'
+                            });
+                        }
+
+                        // Resaltar citas prioritarias
+                        if (info.event.extendedProps.es_prioritaria) {
+                            info.el.style.boxShadow = '0 2px 5px rgba(231, 76, 60, 0.3)';
+                        }
+                    },
+                    eventClick: function (info) {
+                        const modal = new bootstrap.Modal(document.createElement('div'));
+                        modal._element.className = 'modal fade';
+                        modal._element.innerHTML = `
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                ${getModalContent(info.event)}
+                            </div>
+                        </div>
+                    `;
+                        document.body.appendChild(modal._element);
+                        modal.show();
+
+                        modal._element.addEventListener('hidden.bs.modal', function () {
+                            document.body.removeChild(modal._element);
+                        });
+
+                        info.jsEvent.preventDefault();
+                    },
+                    views: {
+                        dayGridMonth: {dayMaxEventRows: 3},
+                        timeGridWeek: {
+                            allDaySlot: false,
+                            slotMinTime: '07:00:00',
+                            slotMaxTime: '20:00:00'
+                        },
+                        timeGridDay: {
+                            allDaySlot: false,
+                            slotMinTime: '07:00:00',
+                            slotMaxTime: '20:00:00'
+                        },
+                        listWeek: {
+                            listDayFormat: {weekday: 'long', month: 'numeric', day: 'numeric'},
+                            listDaySideFormat: false
+                        }
+                    },
+                    nowIndicator: true,
+                    navLinks: true,
+                    editable: false,
+                    selectable: false,
+                    dayMaxEvents: true
+                });
+
+                calendar.render();
+            });
+        </script>
+    </div>
+
+
+    <script>
+        $(document).ready(function () {
+            // Manejar clic en botón de detalles
+            $('.ver-detalle').click(function () {
+                var citaId = $(this).data('cita-id');
+                var url = "{% url 'servicios_escolares:detalle_cita' 0 %}".replace('0', citaId);
+
+                // Cargar contenido via AJAX
+                $.get(url, function (data) {
+                    $('#citaModalBody').html(data);
+                }).fail(function () {
+                    $('#citaModalBody').html(
+                        '<div class="alert alert-danger">Error al cargar los detalles de la cita</div>'
+                    );
+                });
+            });
+            // Limpiar modal al cerrar
+            $('#citaModal').on('hidden.bs.modal', function () {
+                $('#citaModalBody').html(
+                    '<div class="text-center"><div class="spinner-border" role="status">' +
+                    '<span class="visually-hidden">Cargando...</span></div></div>'
+                );
+            });
+        });
+    </script>
+{% endblock %}
+
+
+<!--Eliminado solo por si acaso-->
+<!--
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <i class="bi bi-graph-up"></i> Estadísticas de Sesión
+                    </div>
+                    <div class="card-body">
+                        <p><i class="bi bi-clock"></i> <strong>Hora actual del sistema:</strong> {{ hora_actual }}</p>
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped bg-warning" style="width: 100%">
+                                Sesión activa
+                            </div>
+                        </div>
+                    </div>
+                </div>-->
+
+<!--<div class="d-grid gap-2">
+                    <a href="{% url 'servicios_escolares:logout' %}" class="btn btn-danger">
+                        <i class="bi bi-box-arrow-left"></i> Cerrar Sesión Segura
+                    </a>
+                </div>-->
+<!-- Calendario Mensual -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4><i class="bi bi-calendar-month"></i> Calendario Mensual - {{ current_month }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr class="bg-light">
+                            <th>Lun</th>
+                            <th>Mar</th>
+                            <th>Mié</th>
+                            <th>Jue</th>
+                            <th>Vie</th>
+                            <th>Sáb</th>
+                            <th>Dom</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for week in month_weeks %}
+                            <tr>
+                                {% for day in week %}
+                                    <td class="{% if not day.current_month %}text-muted{% endif %} 
+                                               {% if day.is_today %}bg-primary text-white{% endif %}">
+                                        <div class="day-number">{{ day.date.day }}</div>
+                                        <div class="day-events">
+                                            {% if day.current_month %}
+                                                <!-- Espacio para eventos -->
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
