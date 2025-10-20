@@ -58,3 +58,6 @@ urlpatterns = [
     # APIS
     path('api/profesor/eventos/', views.api_eventos_profesor, name='api_eventos_profesor'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

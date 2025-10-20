@@ -27,6 +27,8 @@ class Notification(models.Model):
         # Notificaciones para Profesores
         'profesor_cita_creada': ('profesores:panel_citas', 'Tienes una nueva cita', 'profesor'),
         'profesor_cita_modificada': ('citas:cancelar_cita', 'Cambio en tu cita', 'profesor'),
+        'profesor_cita_reprogramada': ('profesores:historial_citas', 'Cita reprogramada para profesor', 'profesor'),
+        'cita_reprogramada': ('profesores:historial_citas', 'Cita reprogramada para padre', 'padre'),
         'profesor_cita_cancelada': ('citas:cancelar_cita', 'Cita cancelada', 'profesor'),
         'profesor_feedback_pendiente': ('feedback:responder', 'Feedback pendiente', 'profesor'),
         'profesor_cita_proxima': ('citas:cancelar_cita', 'Recordatorio de cita', 'profesor'),

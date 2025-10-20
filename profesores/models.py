@@ -122,35 +122,38 @@ class Profesor(models.Model):
         """Versión unificada que replica el comportamiento de la propiedad url del modelo"""
         from django.urls import reverse
         from django.urls.exceptions import NoReverseMatch
-        from notificaciones.models import Notification  # Importación local para evitar circularidad
+        from notificaciones.models import Notification
+
+        if event_type not in Notification.EVENT_TYPES:
+            logger.warning(f"Tipo de evento desconocido: {event_type}")
+            return reverse('profesores:dashboard_profesor')
 
         try:
-            # Usamos el EVENT_TYPES del modelo para consistencia
             event_info = Notification.EVENT_TYPES.get(event_type, Notification.EVENT_TYPES['custom'])
             url_name = event_info[0]
 
             logger.debug(f"Generando URL para '{event_type}' usando url_name='{url_name}'")
 
-            # Casos especiales que no necesitan target
+            # Casos especiales
             if event_type in ['registro_padre', 'servicio_nuevo_padre']:
                 url = reverse('servicios_escolares:panel_grupos_padres')
                 logger.debug(f"URL especial generada: {url}")
                 return url
 
-            # Construcción de URL con manejo de errores
+            # Intentar generar URL con los posibles nombres de parámetro
             if target_id:
-                try:
-                    url = reverse(url_name, kwargs={'pk': target_id})
-                    logger.debug(f"URL con parámetro generada: {url}")
-                    return url
-                except NoReverseMatch:
-                    logger.debug("Fallando a URL sin parámetro")
-                    url = reverse(url_name)
-                    return url
-            else:
-                url = reverse(url_name)
-                logger.debug(f"URL simple generada: {url}")
-                return url
+                for key in ['pk', 'id', 'cita_id']:
+                    try:
+                        url = reverse(url_name, kwargs={key: target_id})
+                        logger.debug(f"URL generada con parámetro '{key}': {url}")
+                        return url
+                    except NoReverseMatch:
+                        continue  # intentar con el siguiente key
+
+            # Si no hay target_id o no funcionó con ningún key
+            url = reverse(url_name)
+            logger.debug(f"URL simple generada: {url}")
+            return url
 
         except Exception as e:
             logger.error(f"Error generando URL: {str(e)}", exc_info=True)

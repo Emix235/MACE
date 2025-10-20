@@ -371,7 +371,6 @@ def editar_perfil_view(request):
     if not request.session.get('credenciales_profesor'):
         messages.warning(request, 'Debes iniciar sesión primero')
         return redirect('profesores:login_profesor')
-
     try:
         # Obtener el profesor actual
         profesor = Profesor.objects.get(id=request.session['credenciales_profesor']['id'])

@@ -146,7 +146,8 @@ class EditarPerfilForm(forms.ModelForm):
         widget=forms.PasswordInput(attrs={
             'class': 'form-control',
             'placeholder': 'Confirmar nueva contraseña'
-        })
+        }),
+        label="Confirmar Contraseña"
     )
 
     class Meta:
@@ -178,14 +179,14 @@ class EditarPerfilForm(forms.ModelForm):
         nueva_contraseña = cleaned_data.get('nueva_contraseña')
         confirmar_contraseña = cleaned_data.get('confirmar_contraseña')
 
-        # Lógica mejorada de validación
-        if nueva_contraseña:  # Si hay nueva contraseña
-            if not confirmar_contraseña:
-                raise forms.ValidationError("Debes confirmar la nueva contraseña")
+        # Solo validar si ambos campos tienen valor
+        if nueva_contraseña or confirmar_contraseña:
+            if not (nueva_contraseña and confirmar_contraseña):
+                # Ignorar si ambos están vacíos
+                cleaned_data['nueva_contraseña'] = ''
+                cleaned_data['confirmar_contraseña'] = ''
             elif nueva_contraseña != confirmar_contraseña:
                 raise forms.ValidationError("Las contraseñas no coinciden")
-        elif confirmar_contraseña:  # Si solo hay confirmación sin nueva contraseña
-            raise forms.ValidationError("Debes ingresar una nueva contraseña")
 
         return cleaned_data
 
