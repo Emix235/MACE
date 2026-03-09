@@ -73,16 +73,11 @@ def login_padre_view(request):
     if request.session.get('credenciales_padre'):
         return redirect('padres:dashboard_padre')
 
-    # Limpiar mensajes de logout si existen
+    # Limpiar mensajes existentes o manejarlos de forma más simple
     storage = messages.get_messages(request)
-    logout_message = None
-
     for message in storage:
-        messages.add_message(request, message.level, message.message, extra_tags=getattr(message, 'extra_tags', ''))
-
-    if logout_message:
-        messages.add_message(request, logout_message.level, logout_message.message,
-                             extra_tags=logout_message.extra_tags if hasattr(logout_message, 'extra_tags') else '')
+        # Los mensajes se marcan como usados al iterar, así que no los vuelvas a agregar
+        pass
 
     if request.method == 'POST':
         form = LoginPadreForm(request.POST)
@@ -98,8 +93,7 @@ def login_padre_view(request):
                 # Guardar credenciales en sesión
                 request.session['credenciales_padre'] = {
                     'id': padre.id,
-                    'hash_credencial': f"{padre.correo_electronico}-{padre.ultima_fecha_sesion}".encode(
-                        'utf-8').hex(),
+                    'hash_credencial': f"{padre.correo_electronico}-{padre.ultima_fecha_sesion}".encode('utf-8').hex(),
                     'rol': padre.rol_usuario
                 }
 
@@ -108,10 +102,9 @@ def login_padre_view(request):
                 padre.ultima_fecha_sesion = timezone.now().date()
                 padre.save()
 
-                messages.add_message(
+                messages.success(
                     request,
-                    messages.SUCCESS,
-                    f'Bienvenido  {padre.nombre_completo}',
+                    f'Bienvenido {padre.nombre_completo}',
                     extra_tags='login_message'
                 )
                 return redirect('padres:dashboard_padre')
@@ -130,9 +123,9 @@ def logout_padre_view(request):
             del request.session['credenciales_padre']
 
         # Eliminar última actividad si existe
-        request.session.pop('ultima_actividad', None)  # Esto evita el KeyError
+        request.session.pop('ultima_actividad', None)
 
-        # Limpiar toda la sesión si es necesario
+        # Limpiar toda la sesión
         request.session.flush()
 
         messages.success(request, 'Has cerrado sesión correctamente.', extra_tags='logout_message')

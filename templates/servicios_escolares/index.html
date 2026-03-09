@@ -423,13 +423,6 @@
         <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
 
         <style>
-            /* Estilos base del calendario */
-            #calendar {
-                background-color: white;
-                border-radius: 0.5rem;
-                padding: 1rem;
-                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            }
 
             .fc-daygrid-day {
                 border-width: 1px;
@@ -613,6 +606,142 @@
                 line-height: 1.2 !important;
                 padding: 2px 4px !important;
                 text-align: center !important;
+            }
+
+            /* Demo Overlay */
+            .demo-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.85);
+                z-index: 9998;
+                pointer-events: none;
+            }
+
+            /* Popup */
+            .demo-popup {
+                position: fixed;
+                z-index: 9999;
+                background: white;
+                border-radius: 10px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                width: 350px;
+                animation: demoEntrar 0.3s ease;
+            }
+
+            .demo-header {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 15px;
+                border-radius: 10px 10px 0 0;
+            }
+
+            .demo-header h5 {
+                margin: 0;
+                font-size: 1.1rem;
+            }
+
+            .demo-header small {
+                opacity: 0.9;
+                font-size: 0.85rem;
+            }
+
+            .demo-body {
+                padding: 20px;
+            }
+
+            .demo-body p {
+                margin: 0 0 15px 0;
+                line-height: 1.5;
+            }
+
+            .demo-progress {
+                margin-top: 10px;
+            }
+
+            .demo-progress .progress {
+                height: 6px;
+                border-radius: 3px;
+                background: #e9ecef;
+            }
+
+            .demo-progress .progress-bar {
+                background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+                transition: width 0.3s ease;
+            }
+
+            .demo-footer {
+                padding: 15px;
+                border-top: 1px solid #e9ecef;
+                display: flex;
+                justify-content: space-between;
+                gap: 10px;
+            }
+
+            /* Elemento activo */
+            .demo-elemento-activo {
+                position: relative;
+                z-index: 10000 !important;
+                animation: demoResaltar 1.5s infinite;
+            }
+
+            @keyframes demoEntrar {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            @keyframes demoResaltar {
+                0%, 100% { box-shadow: 0 0 0 3px #667eea, 0 0 20px rgba(102, 126, 234, 0.5); }
+                50% { box-shadow: 0 0 0 3px #764ba2, 0 0 30px rgba(118, 75, 162, 0.7); }
+            }
+
+            /* Mensaje final */
+            .demo-final {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                border-left: 4px solid #48bb78;
+                z-index: 10000;
+                animation: mensajeEntrar 0.3s ease;
+            }
+
+            .demo-final-contenido {
+                text-align: center;
+            }
+
+            .demo-final-contenido i {
+                font-size: 2rem;
+            }
+
+            .demo-final-contenido h6 {
+                margin: 5px 0;
+                color: #2d3748;
+            }
+
+            .demo-final-contenido p {
+                color: #718096;
+                margin: 0;
+            }
+
+            @keyframes mensajeEntrar {
+                from { opacity: 0; transform: translateX(100px); }
+                to { opacity: 1; transform: translateX(0); }
+            }
+
+            /* Responsive */
+            @media (max-width: 768px) {
+                .demo-popup {
+                    width: 90%;
+                    left: 5% !important;
+                    right: 5% !important;
+                    max-width: 350px;
+                }
             }
         </style>
 
@@ -910,3 +1039,56 @@
         </div>
     </div>
 </div>
+<script>
+    // Versión simple que funciona directamente
+    document.addEventListener('DOMContentLoaded', function() {
+        // Esperar a que el calendario se renderice
+        setTimeout(function() {
+            // Agregar event listener a todo el calendario
+            const calendar = document.getElementById('calendar');
+            if (!calendar) return;
+
+            // Usar event delegation
+            calendar.addEventListener('mouseover', function(e) {
+                const dayCell = e.target.closest('.fc-daygrid-day:not(.fc-day-other)');
+                if (dayCell) {
+                    addSimpleButton(dayCell);
+                }
+            });
+
+            function addSimpleButton(cell) {
+                if (cell.querySelector('.simple-agendar-btn')) return;
+
+                const btn = document.createElement('button');
+                btn.className = 'simple-agendar-btn';
+                btn.innerHTML = '📅 Agendar';
+                btn.style.cssText = `
+                position: absolute;
+                top: 2px;
+                right: 2px;
+                background: #28a745;
+                color: white;
+                border: none;
+                border-radius: 3px;
+                padding: 2px 6px;
+                font-size: 10px;
+                cursor: pointer;
+                z-index: 1000;
+                display: none;
+            `;
+
+                cell.style.position = 'relative';
+                cell.appendChild(btn);
+
+                cell.addEventListener('mouseenter', () => btn.style.display = 'block');
+                cell.addEventListener('mouseleave', () => btn.style.display = 'none');
+
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    alert('Funcionalidad de agendar activada');
+                    // window.location.href = 'tu_url_aqui';
+                });
+            }
+        }, 500);
+    });
+</script>

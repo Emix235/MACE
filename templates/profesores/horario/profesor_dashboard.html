@@ -13,70 +13,39 @@
                     </div>
                     <div class="card-body text-center">
                         {% if profesor.imagen_usuario %}
-                        <img src="{{ profesor.imagen_usuario.url }}" class="user-icon" alt="Foto de perfil" width="100px" height="100px">
-                    {% else %}
-                        <div class="avatar-placeholder">
-                            {{ profesor.nombre_completo|first }}{{ profesor.apellidos|first }}
-                        </div>
-                    {% endif %}
+                            <img src="{{ profesor.imagen_usuario.url }}" class="user-icon" alt="Foto de perfil"
+                                 width="100px" height="100px">
+                        {% else %}
+                            <div class="avatar-placeholder">
+                                {{ profesor.nombre_completo|first }}{{ profesor.apellidos|first }}
+                            </div>
+                        {% endif %}
                         <h4>{{ profesor.nombre_completo }}</h4>
                         <p class="text-muted">{{ profesor.correo_electronico }}</p>
                     </div>
                 </div>
                 <div class="card shadow mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Acciones de Horario</h6>
+                    </div>
                     <div class="card-body">
-                        <a href="{% url 'profesores:agregar_clase' %}" class="btn btn-sm btn-success ml-1"
-                           title="Agregar clase">
-                            <i class="fas fa-plus">Agregar Clase</i>
-                        </a>
-                        <a href="{% url 'profesores:agregar_tiempo_libre' %}" class="btn btn-sm btn-success ml-1"
-                           title="Agregar tiempo libre">
-                            <i class="fas fa-coffee">Agregar Tiempo Libre</i>
+                        {# <a href="{% url 'profesores:agregar_clase' %}" class="btn btn-sm btn-success ml-1" #}
+                        {# title="Agregar clase"> #}
+                        {# <i class="fas fa-plus">Agregar Clase</i> #}
+                        {#                        </a> #}
+                        <a href="{% url 'profesores:agregar_tiempo_libre' %}"
+                           class="btn-tiempo-libre"
+                           title="Programar tiempo libre para no recibir citas">
+                            <div class="btn-content">
+                                <i class="fas fa-coffee btn-icon"></i>
+                                <span class="btn-text">Agregar Tiempo Libre</span>
+                            </div>
+                            <div class="btn-hover-effect"></div>
                         </a>
                     </div>
                 </div>
                 <!-- Tarjeta de Clases -->
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3 d-flex justify-content-between align-items-center bg-info text-white">
-                        <h6 class="m-0 font-weight-bold">Mis Clases</h6>
-                    </div>
-                    <div class="card-body">
-                        {% if clases %}
-                            <div class="list-group">
-                                {% for clase in clases %}
-                                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-2">
-                                        <div class="d-flex w-100 justify-content-between">
-                                            <h5 class="mb-1">{{ clase.nombre }}</h5>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{% url 'profesores:editar_clase' clase.id %}"
-                                                   class="btn btn-outline-primary">
-                                                    <i class="bi bi-pen-fill"></i>
-                                                </a>
-                                                <a href="{% url 'profesores:eliminar_clase' clase.id %}"
-                                                   class="btn btn-outline-danger">
-                                                    <i class="bi bi-trash3-fill"></i>
-                                                </a>
-                                                <a href="{% url 'profesores:gestionar_horarios' clase.id %}"
-                                                   class="btn btn-outline-info" title="Gestionar horarios">
-                                                    <i class="bi bi-clock-fill"></i>
-                                                    <!-- Icono de reloj (usando Bootstrap Icons) -->
-                                                </a>
-                                            </div>
-                                        </div>
-                                        <p class="mb-1">
-                                            <strong>Grupo:</strong> {{ clase.grupo }}<br>
-                                            <strong>Nivel:</strong> {{ clase.get_nivel_educativo_display }}<br>
-                                            <strong>Tipo:</strong> {{ clase.get_tipo_asignatura_display }}
-                                        </p>
-                                        <small class="text-muted">Ciclo: {{ clase.ciclo_escolar.nombre }}</small>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="alert alert-info">No tienes clases asignadas.</div>
-                        {% endif %}
-                    </div>
-                </div>
+                {#  #}
 
                 <!-- Tarjeta de Tiempos Libres -->
                 <div class="card shadow">
@@ -428,6 +397,52 @@
             }
         }
 
+        /*
+         <div class="card shadow mb-4">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center bg-info text-white">
+                        <h6 class="m-0 font-weight-bold">Mis Clases</h6>
+                    </div>
+                    <div class="card-body">
+                        
+        {% if clases %}
+                            <div class="list-group">
+                                {% for clase in clases %}
+                                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-2">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h5 class="mb-1">{{ clase.nombre }}</h5>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'profesores:editar_clase' clase.id %}"
+                                                   class="btn btn-outline-primary">
+                                                    <i class="bi bi-pen-fill"></i>
+                                                </a>
+                                                <a href="{% url 'profesores:eliminar_clase' clase.id %}"
+                                                   class="btn btn-outline-danger">
+                                                    <i class="bi bi-trash3-fill"></i>
+                                                </a>
+                                                <a href="{% url 'profesores:gestionar_horarios' clase.id %}"
+                                                   class="btn btn-outline-info" title="Gestionar horarios">
+                                                    <i class="bi bi-clock-fill"></i>
+                                                    <!-- Icono de reloj (usando Bootstrap Icons) -->
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <p class="mb-1">
+                                            <strong>Grupo:</strong> {{ clase.grupo }}<br>
+                                            <strong>Nivel:</strong> {{ clase.get_nivel_educativo_display }}<br>
+                                            <strong>Tipo:</strong> {{ clase.get_tipo_asignatura_display }}
+                                        </p>
+                                        <small class="text-muted">Ciclo: {{ clase.ciclo_escolar.nombre }}</small>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">No tienes clases asignadas.</div>
+                        {% endif %}
+
+        
+                            </div>
+                        </div>
+                */
     </style>
 
 {% endblock %}

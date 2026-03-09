@@ -136,6 +136,7 @@ class AplicarEncuestaForm(forms.ModelForm):
                 id__in=ciclos_aplicados
             )
 
+    '''
     def clean(self):
         cleaned_data = super().clean()
         if self.encuesta and self.encuesta.aplicaciones.exists():
@@ -143,6 +144,11 @@ class AplicarEncuestaForm(forms.ModelForm):
                 "Esta versión ya fue aplicada. Cree una nueva versión para modificaciones."
             )
         return cleaned_data
+    '''
+    def clean(self):
+        return super().clean()
+
+
 
     def save(self, commit=True):
         instance = super().save(commit=False)

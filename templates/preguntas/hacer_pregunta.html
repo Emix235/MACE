@@ -1,32 +1,56 @@
 {% load static %}
+<!-- templates/preguntas/hacer_pregunta.html -->
 <div class="modal fade" id="ayudaModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">Asistente Virtual de Ayuda</h5>
+        <h5 class="modal-title">
+          <i class="fas fa-robot"></i> Asistente FAQ - {{ request.session.credenciales.rol|default:"Usuario"|title }}
+        </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-0">
         <div class="chat-container">
           <!-- Historial del chat -->
           <div class="chat-messages p-3" id="chatMessages" style="height: 60vh; overflow-y: auto;">
-            <div class="alert alert-info mb-2">
-              <strong>Asistente:</strong> ¡Hola! Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?
+            <div class="alert alert-info mb-3">
+              <div class="d-flex align-items-center">
+                <i class="fas fa-robot me-2"></i>
+                <div>
+                  <strong>Asistente FAQ:</strong> ¡Hola! Soy tu asistente virtual. 
+                  Puedo responder preguntas sobre citas, calendario, retroalimentación y más.
+                  <br>
+                  <small class="text-muted">Rol detectado: <strong>{{ rol_display }}</strong></small>
+                </div>
+              </div>
             </div>
+            
             <!-- Preguntas frecuentes se cargarán aquí -->
-            <div id="preguntasFrecuentes"></div>
+            <div id="preguntasFrecuentes">
+              <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+              </div>
+            </div>
           </div>
           
           <!-- Formulario de pregunta -->
-          <div class="chat-input p-3 bg-light">
+          <div class="chat-input p-3 bg-light border-top">
             <form id="chatHelpForm">
               {% csrf_token %}
-              <input type="hidden" id="current_url" name="current_url">
               <div class="input-group">
-                <input type="text" class="form-control" id="preguntaInput" placeholder="Escribe tu pregunta..." required>
-                <button class="btn btn-primary" type="submit">
+                <input type="text" class="form-control" id="preguntaInput" 
+                       placeholder="Escribe tu pregunta (ej: ¿cómo agendo una cita?)..." 
+                       required autocomplete="off">
+                <button class="btn btn-primary" type="submit" id="submitBtn">
                   <i class="fas fa-paper-plane"></i> Enviar
                 </button>
+              </div>
+              <div class="mt-2 text-center">
+                <small class="text-muted">
+                  <i class="fas fa-info-circle"></i> Presiona Enter para enviar
+                </small>
               </div>
             </form>
           </div>
@@ -38,165 +62,393 @@
 
 <style>
   .chat-message {
-    border-radius: 0.5rem;
-    padding: 0.75rem 1rem;
-    margin-bottom: 0.75rem;
-    max-width: 80%;
+    border-radius: 15px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    max-width: 85%;
+    position: relative;
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   
   .user-message {
-    background-color: #e3f2fd;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
     margin-left: auto;
-    border-bottom-right-radius: 0;
+    border-bottom-right-radius: 5px;
+    box-shadow: 0 3px 10px rgba(102, 126, 234, 0.2);
   }
   
   .bot-message {
-    background-color: #f8f9fa;
+    background: white;
+    border: 1px solid #e2e8f0;
     margin-right: auto;
-    border-bottom-left-radius: 0;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-bottom-left-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+  
+  .bot-message strong {
+    color: #4a5568;
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+  }
+  
+  .bot-message .rol-badge {
+    background: #e2e8f0;
+    color: #4a5568;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    margin-left: 5px;
   }
   
   .pregunta-rapida {
     cursor: pointer;
     transition: all 0.2s;
+    border-left: 3px solid transparent;
+    padding: 10px 15px;
   }
   
   .pregunta-rapida:hover {
-    background-color: #f0f0f0;
+    background-color: #f7fafc;
+    border-left-color: #667eea;
+    transform: translateX(5px);
+  }
+  
+  .quick-questions-section {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+  }
+  
+  .quick-questions-section h6 {
+    color: #4a5568;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  /* Efecto de typing */
+  .typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 15px;
+  }
+  
+  .typing-dot {
+    width: 8px;
+    height: 8px;
+    background: #a0aec0;
+    border-radius: 50%;
+    animation: typing 1.4s infinite;
+  }
+  
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  
+  @keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
   }
 </style>
 
+<!-- Al inicio del modal, después de los estilos -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
+// Obtener el rol del usuario de Django (se pasa desde la vista)
+const USER_ROLE = "{{ rol_actual }}";
+const USER_ROLE_DISPLAY = "{{ rol_display }}";
+const CSRF_TOKEN = "{{ csrf_token }}";
+
 document.addEventListener('DOMContentLoaded', function() {
-  // Configurar el modal al mostrarse
-  $('#ticketSoporteModal').on('show.bs.modal', function() {
-    // Cargar preguntas frecuentes
+  // Cargar preguntas frecuentes cuando se abre el modal
+  $('#ayudaModal').on('shown.bs.modal', function() {
     cargarPreguntasFrecuentes();
+    
+    // Enfocar el input
+    setTimeout(() => {
+      document.getElementById('preguntaInput').focus();
+    }, 300);
+  });
+  
+  // Limpiar chat cuando se cierra el modal
+  $('#ayudaModal').on('hidden.bs.modal', function() {
+    resetChat();
   });
 
-  // Función para cargar preguntas frecuentes
+  // Función para cargar preguntas frecuentes DEL FAQ REAL
   function cargarPreguntasFrecuentes() {
-    fetch('/ayuda/preguntas-frecuentes/')
-      .then(response => response.json())
+    const container = document.getElementById('preguntasFrecuentes');
+    container.innerHTML = `
+      <div class="text-center py-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Cargando preguntas...</span>
+        </div>
+      </div>
+    `;
+    
+    // Usar tu endpoint real de preguntas frecuentes
+    fetch("{% url 'preguntas:obtener_preguntas_frecuentes' %}")
+      .then(response => {
+        if (!response.ok) throw new Error('Error en la red');
+        return response.json();
+      })
       .then(data => {
-        const container = document.getElementById('preguntasFrecuentes');
         let html = '';
         
-        // Mostrar preguntas específicas del rol
-        if (data.preguntas_especificas.length > 0) {
+        // Preguntas específicas del rol del usuario
+        if (data.preguntas_especificas && data.preguntas_especificas.length > 0) {
           html += `
-            <div class="mb-3">
-              <h6>Preguntas para ${data.rol_usuario}:</h6>
+            <div class="quick-questions-section">
+              <h6><i class="fas fa-user-tag"></i> Para ${USER_ROLE_DISPLAY}:</h6>
               <div class="list-group">
           `;
+          
           data.preguntas_especificas.forEach(p => {
             html += `
-              <a href="#" class="list-group-item list-group-item-action pregunta-rapida" 
+              <a href="#" class="list-group-item list-group-item-action pregunta-rapida d-flex justify-content-between align-items-center" 
                  data-pregunta="${p.pregunta.replace(/"/g, '&quot;')}">
-                ${p.pregunta}
+                <span>${p.pregunta}</span>
+                <i class="fas fa-chevron-right text-muted"></i>
               </a>
             `;
           });
+          
           html += `</div></div>`;
         }
         
-        // Mostrar preguntas generales
-        if (data.preguntas_generales.length > 0) {
+        // Preguntas generales
+        if (data.preguntas_generales && data.preguntas_generales.length > 0) {
           html += `
-            <div class="mb-3">
-              <h6>Preguntas generales:</h6>
+            <div class="quick-questions-section">
+              <h6><i class="fas fa-globe"></i> Preguntas generales:</h6>
               <div class="list-group">
           `;
+          
           data.preguntas_generales.forEach(p => {
             html += `
-              <a href="#" class="list-group-item list-group-item-action pregunta-rapida" 
+              <a href="#" class="list-group-item list-group-item-action pregunta-rapida d-flex justify-content-between align-items-center" 
                  data-pregunta="${p.pregunta.replace(/"/g, '&quot;')}">
-                ${p.pregunta}
+                <span>${p.pregunta}</span>
+                <i class="fas fa-chevron-right text-muted"></i>
               </a>
             `;
           });
+          
           html += `</div></div>`;
         }
         
-        container.innerHTML = html;
+        container.innerHTML = html || `
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> 
+            No hay preguntas frecuentes disponibles en este momento.
+          </div>
+        `;
         
         // Agregar eventos a las preguntas rápidas
         document.querySelectorAll('.pregunta-rapida').forEach(item => {
           item.addEventListener('click', function(e) {
             e.preventDefault();
-            document.getElementById('preguntaInput').value = this.getAttribute('data-pregunta');
+            const pregunta = this.getAttribute('data-pregunta');
+            document.getElementById('preguntaInput').value = pregunta;
+            document.getElementById('preguntaInput').focus();
+            
+            // Enviar automáticamente después de 0.5 segundos
+            setTimeout(() => {
+              document.getElementById('chatHelpForm').dispatchEvent(new Event('submit'));
+            }, 500);
           });
         });
+      })
+      .catch(error => {
+        console.error('Error cargando preguntas:', error);
+        container.innerHTML = `
+          <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i> 
+            Error al cargar las preguntas frecuentes.
+          </div>
+        `;
       });
   }
 
   // Función para agregar mensaje al chat
-  function agregarMensaje(autor, mensaje, esSistema = false) {
+  function agregarMensaje(autor, mensaje, rol = null) {
     const chat = document.getElementById('chatMessages');
     const mensajeDiv = document.createElement('div');
     
-    if (esSistema) {
-      mensajeDiv.className = 'alert alert-secondary mb-2 text-center';
+    if (autor === 'user') {
+      mensajeDiv.className = 'chat-message user-message';
+      mensajeDiv.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start">
+          <span>${mensaje}</span>
+          <small class="opacity-75"><i class="fas fa-user"></i></small>
+        </div>
+      `;
+    } else if (autor === 'system') {
+      mensajeDiv.className = 'alert alert-secondary text-center py-2 mb-2';
       mensajeDiv.innerHTML = `<small>${mensaje}</small>`;
     } else {
-      mensajeDiv.className = `chat-message ${autor}-message`;
-      const autorSpan = document.createElement('strong');
-      autorSpan.textContent = autor === 'user' ? 'Tú: ' : 'Asistente: ';
-      const contenido = document.createElement('span');
-      contenido.innerHTML = mensaje;
-      mensajeDiv.appendChild(autorSpan);
-      mensajeDiv.appendChild(contenido);
+      // Mensaje del bot
+      mensajeDiv.className = 'chat-message bot-message';
+      
+      let rolBadge = '';
+      if (rol) {
+        rolBadge = `<span class="rol-badge">Para ${rol}</span>`;
+      }
+      
+      mensajeDiv.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <strong><i class="fas fa-robot"></i> Asistente:</strong>
+          ${rolBadge}
+        </div>
+        <div>${mensaje}</div>
+      `;
     }
     
     chat.appendChild(mensajeDiv);
     chat.scrollTop = chat.scrollHeight;
   }
 
-  // Manejar el envío del formulario
-  document.getElementById('chatHelpForm').addEventListener('submit', function(e) {
+  // Mostrar indicador de typing
+  function mostrarTyping() {
+    const chat = document.getElementById('chatMessages');
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'typing-indicator';
+    typingDiv.innerHTML = `
+      <div class="d-flex align-items-center gap-2">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <small class="text-muted ms-2">Buscando respuesta...</small>
+      </div>
+    `;
+    chat.appendChild(typingDiv);
+    chat.scrollTop = chat.scrollHeight;
+    return typingDiv;
+  }
+
+  // Manejar el envío del formulario CON TU ENDPOINT REAL
+  document.getElementById('chatHelpForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    e.stopPropagation();
+    
     const input = document.getElementById('preguntaInput');
+    const submitBtn = document.getElementById('submitBtn');
     const pregunta = input.value.trim();
     
-    if (pregunta) {
-      // Mostrar pregunta del usuario
-      agregarMensaje('user', pregunta);
-      input.value = '';
-      
-      // Mostrar mensaje de "escribiendo..."
-      agregarMensaje('bot', 'Buscando información...', true);
-      
-      // Enviar pregunta al servidor
-      fetch('/ayuda/buscar-respuesta/', {
+    if (!pregunta) return;
+    
+    // Mostrar pregunta del usuario
+    agregarMensaje('user', pregunta);
+    input.value = '';
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    // Mostrar indicador de typing
+    const typingIndicator = mostrarTyping();
+    
+    try {
+      // Usar tu endpoint REAL de búsqueda
+      const response = await fetch("{% url 'preguntas:buscar_respuesta' %}", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRFToken': this.querySelector('[name=csrfmiddlewaretoken]').value
+          'X-CSRFToken': CSRF_TOKEN
         },
         body: JSON.stringify({ pregunta: pregunta })
-      })
-      .then(response => response.json())
-      .then(data => {
-        // Eliminar mensaje de "escribiendo..."
-        const chat = document.getElementById('chatMessages');
-        chat.removeChild(chat.lastChild);
-        
-        if (data.error) {
-          agregarMensaje('bot', '⚠️ ' + data.error);
-        } else {
-          // Mostrar la respuesta con indicación del rol
-          let respuesta = data.respuesta;
-          if (data.rol_usuario) {
-            respuesta += `<div class="mt-2 text-end"><small class="text-muted">Respuesta para ${data.rol_usuario}</small></div>`;
-          }
-          agregarMensaje('bot', respuesta);
-        }
-      })
-      .catch(error => {
-        agregarMensaje('bot', '🔴 Error de conexión. Intenta nuevamente.');
       });
+      
+      // Eliminar indicador de typing
+      typingIndicator.remove();
+      
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.error) {
+        agregarMensaje('bot', `<strong>⚠️ Error:</strong> ${data.error}`, null);
+      } else {
+        // Mostrar la respuesta con rol
+        const rolDisplay = data.rol_display || data.rol_usuario || USER_ROLE_DISPLAY;
+        agregarMensaje('bot', data.respuesta, rolDisplay);
+        
+        // Agregar mensaje del sistema
+        setTimeout(() => {
+          agregarMensaje('system', 
+            `¿Te sirvió esta respuesta? Prueba con otra pregunta o usa las preguntas sugeridas arriba.`
+          );
+        }, 300);
+      }
+      
+    } catch (error) {
+      console.error('Error en la búsqueda:', error);
+      typingIndicator.remove();
+      
+      // Respuesta de respaldo si falla la API
+      const respuestasBackup = {
+        'cita': 'Para agendar una cita, ve al módulo de Citas > Nueva Cita. Elige fecha, profesor y confirma.',
+        'contraseña': 'Si olvidaste tu contraseña, haz clic en "¿Olvidaste tu contraseña?" en la página de login.',
+        'horario': 'Los horarios de atención son de Lunes a Viernes de 8:00 AM a 6:00 PM.',
+        'soporte': 'Contacta a soporte en: soporte@sistema.edu.mx o usa el Sistema de Tickets.',
+        'perfil': 'Para editar tu perfil, ve a Mi Perfil > Editar información.',
+        'calendario': 'El calendario muestra todas tus citas. Puedes filtrar por fecha o tipo.'
+      };
+      
+      let respuesta = '📚 Te sugiero revisar las Preguntas Frecuentes o contactar a soporte.';
+      for (const [keyword, resp] of Object.entries(respuestasBackup)) {
+        if (pregunta.toLowerCase().includes(keyword)) {
+          respuesta = resp;
+          break;
+        }
+      }
+      
+      agregarMensaje('bot', respuesta, USER_ROLE_DISPLAY);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar';
+      input.focus();
     }
   });
+
+  // Enviar con Enter
+  document.getElementById('preguntaInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      document.getElementById('chatHelpForm').dispatchEvent(new Event('submit'));
+    }
+  });
+
+  // Resetear chat
+  function resetChat() {
+    const chat = document.getElementById('chatMessages');
+    chat.innerHTML = `
+      <div class="alert alert-info mb-3">
+        <div class="d-flex align-items-center">
+          <i class="fas fa-robot me-2"></i>
+          <div>
+            <strong>Asistente FAQ:</strong> ¡Hola! Soy tu asistente virtual. 
+            Puedo responder preguntas sobre citas, calendario, retroalimentación y más.
+            <br>
+            <small class="text-muted">Rol detectado: <strong>${USER_ROLE_DISPLAY}</strong></small>
+          </div>
+        </div>
+      </div>
+      <div id="preguntasFrecuentes"></div>
+    `;
+  }
 });
 </script>

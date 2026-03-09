@@ -263,7 +263,6 @@
                 transform: scale(1);
             }
         }
-
     </style>
 </head>
 <body>
@@ -342,5 +341,29 @@
 
 {% include 'servicios_escolares/footer.html' %}
 
+
+<!-- Al final de tu base.html -->
+<script src="{% static 'js/demo_citas.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const demo = new DemostracionCitas();
+
+        // Iniciar demo cuando se haga clic en el botón
+        document.getElementById('iniciarDemo')?.addEventListener('click', function(e) {
+            e.preventDefault();
+            demo.iniciar();
+        });
+
+        // O iniciar automáticamente la primera vez (opcional)
+        if (!localStorage.getItem('demo_visto')) {
+            setTimeout(() => {
+                if (confirm('¿Te gustaría ver un tutorial rápido sobre cómo agendar citas?')) {
+                    demo.iniciar();
+                    localStorage.setItem('demo_visto', 'true');
+                }
+            }, 2000);
+        }
+    });
+</script>
 </body>
 </html>

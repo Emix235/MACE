@@ -13,7 +13,7 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarProfPrivate">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0" style="margin-bottom: 0 !important;">
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_profesor' %}active{% endif %}"
                            href="{% url 'profesores:dashboard_profesor' %}">
@@ -42,7 +42,7 @@
                     <li class="nav-item">
                         {# {% if 'asignaturas' in request.resolver_match.url_name %}active{% endif %}" #}
                         <a class="nav-link" href="{% url 'profesores:panel_horario' %}">
-                            <i class="bi bi-journal-bookmark me-1"></i> Clases
+                            <i class="bi bi-journal-bookmark me-1"></i> Tiempo libre
                         </a>
                     </li>
                     <li class="nav-item">
@@ -53,7 +53,7 @@
                     </li>
                 </ul>
 
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" style="margin-bottom: 0 !important;">
                     <!-- Nuevo ícono de notificaciones -->
                     <!-- En la barra de navegación -->
                     <li class="nav-item dropdown">
@@ -125,7 +125,7 @@
                             <li><a class="dropdown-item" href="{% url 'notas:lista_notas' %}">
                                 <i class="bi bi-journal-check me-2"></i>Apuntes
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'preguntas:preguntas_frecuentes' %}">
+                            <li><a class="dropdown-item" href="{% url 'preguntas:faq_por_rol' rol='profesor' %}">
                                 <i class="bi bi-question-octagon me-2"></i>Preguntas Frecuentes
                             </a></li>
                             <li><a class="dropdown-item" href="{% url 'profesores:configuracion_profesor' %}">

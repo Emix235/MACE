@@ -376,28 +376,67 @@ def detalle_versiones_encuesta(request, pk=None):
 
 @requiere_servicio_escolar
 def aplicar_encuesta(request):
-    servicio_escolar = get_object_or_404(ServicioEscolar, id=request.session['credenciales']['id'])
+    logger.debug("Entrando a aplicar_encuesta")
+    messages.debug(request, "Entrando a aplicar_encuesta")
+
+    servicio_escolar = get_object_or_404(
+        ServicioEscolar,
+        id=request.session['credenciales']['id']
+    )
+    logger.debug(f"Servicio escolar ID: {servicio_escolar.id}")
+    messages.debug(request, f"Servicio escolar cargado: {servicio_escolar.id}")
+
     encuesta = Encuesta.obtener_encuesta_default(servicio_escolar)
+    logger.debug(f"Encuesta default ID: {encuesta.id}")
+    messages.debug(request, f"Encuesta default obtenida: {encuesta.id}")
 
     # Verificar que no esté ya publicada
     if encuesta.aplicaciones.filter(activa=True).exists():
+        logger.warning("La encuesta ya tiene una aplicación activa")
         messages.warning(request, "Esta encuesta ya tiene una versión activa publicada")
         return redirect('formularios:lista_encuestas_servicio')
 
     if request.method == 'POST':
-        form = AplicarEncuestaForm(request.POST, encuesta=encuesta, aplicada_por=servicio_escolar)
+        logger.debug("Request POST recibido")
+        messages.debug(request, "Se recibió un POST")
+
+        form = AplicarEncuestaForm(
+            request.POST,
+            encuesta=encuesta,
+            aplicada_por=servicio_escolar
+        )
+
+        logger.debug(f"Formulario válido: {form.is_valid()}")
+        messages.debug(request, f"Formulario válido: {form.is_valid()}")
 
         if form.is_valid():
             encuesta_aplicada = form.save()
+            logger.info(f"Encuesta aplicada ID: {encuesta_aplicada.id}")
+            messages.debug(request, f"Encuesta aplicada creada: {encuesta_aplicada.id}")
 
             # Marcar la encuesta como no editable
             encuesta.es_plantilla = False
             encuesta.save()
+            logger.debug("Encuesta marcada como no plantilla")
 
-            messages.success(request, f"Encuesta publicada para el ciclo {encuesta_aplicada.ciclo_escolar}")
+            messages.success(
+                request,
+                f"Encuesta publicada para el ciclo {encuesta_aplicada.ciclo_escolar}"
+            )
             return redirect('formularios:lista_encuestas_servicio')
+        else:
+            logger.error(f"Errores del formulario: {form.errors}")
+            messages.error(request, "El formulario contiene errores")
+            messages.debug(request, form.errors.as_text())
+
     else:
-        form = AplicarEncuestaForm(encuesta=encuesta, aplicada_por=servicio_escolar)
+        logger.debug("Request GET recibido")
+        messages.debug(request, "Se recibió un GET")
+
+        form = AplicarEncuestaForm(
+            encuesta=encuesta,
+            aplicada_por=servicio_escolar
+        )
 
     return render(request, 'formularios/encuesta/aplicar_encuesta.html', {
         'form': form,

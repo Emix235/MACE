@@ -1,0 +1,646 @@
+<!-- templates/faq/chatbot_demo.html -->
+{% extends base_template %}
+{% load static %}
+
+{% block title %}Demo FAQ Interactivo{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Contenedor principal */
+    .chatbot-demo-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    /* Encabezado */
+    .demo-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+    }
+    
+    .demo-header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .demo-header .lead {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+    
+    /* Área del chat */
+    .chat-container {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .chat-window {
+        flex: 3;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .chat-header {
+        background: #4a5568;
+        color: white;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .chat-header i {
+        font-size: 1.5rem;
+        animation: pulse 2s infinite;
+    }
+    
+    .chat-messages {
+        height: 400px;
+        overflow-y: auto;
+        padding: 1.5rem;
+        background: #f7fafc;
+    }
+    
+    .message {
+        margin-bottom: 1rem;
+        display: flex;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    .message.bot {
+        justify-content: flex-start;
+    }
+    
+    .message.user {
+        justify-content: flex-end;
+    }
+    
+    .message-content {
+        max-width: 70%;
+        padding: 1rem;
+        border-radius: 15px;
+        position: relative;
+    }
+    
+    .bot .message-content {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-top-left-radius: 5px;
+    }
+    
+    .user .message-content {
+        background: #667eea;
+        color: white;
+        border-top-right-radius: 5px;
+    }
+    
+    /* Indicador de escritura */
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 1rem;
+    }
+    
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        background: #a0aec0;
+        border-radius: 50%;
+        animation: typing 1.4s infinite;
+    }
+    
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    
+    /* Panel de controles */
+    .controls-panel {
+        flex: 1;
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .controls-panel h3 {
+        color: #4a5568;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .demo-steps {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .demo-steps li {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        background: #f7fafc;
+        border-left: 4px solid #667eea;
+        border-radius: 5px;
+        transition: all 0.3s;
+    }
+    
+    .demo-steps li.active {
+        background: #ebf4ff;
+        border-left-color: #764ba2;
+        font-weight: 600;
+    }
+    
+    .demo-steps li.completed {
+        background: #f0fff4;
+        border-left-color: #48bb78;
+    }
+    
+    /* Ejemplos de preguntas */
+    .question-examples {
+        margin-top: 2rem;
+    }
+    
+    .example-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .example-btn {
+        padding: 0.75rem;
+        text-align: left;
+        border: 2px solid #e2e8f0;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 0.9rem;
+    }
+    
+    .example-btn:hover {
+        border-color: #667eea;
+        background: #f7fafc;
+        transform: translateX(5px);
+    }
+    
+    /* Área de entrada */
+    .input-area {
+        display: flex;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: white;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .input-area input {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+    
+    .input-area input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .input-area button {
+        padding: 0.75rem 2rem;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.3s;
+        font-weight: 600;
+    }
+    
+    .input-area button:hover {
+        background: #764ba2;
+    }
+    
+    /* Animaciones */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    @keyframes typing {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-10px); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .chat-container {
+            flex-direction: column;
+        }
+        
+        .chat-messages {
+            height: 300px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="chatbot-demo-container">
+    <div class="demo-header">
+        <h1><i class="fas fa-robot"></i> Demo Interactivo FAQ</h1>
+        <p class="lead">Mira cómo el sistema encuentra respuestas a tus preguntas en tiempo real</p>
+    </div>
+    
+    <div class="chat-container">
+        <!-- Ventana de chat -->
+        <div class="chat-window">
+            <div class="chat-header">
+                <i class="fas fa-robot"></i>
+                <div>
+                    <h3 class="mb-0">Asistente FAQ - {{ rol_display }}</h3>
+                    <small>Buscando respuestas en tiempo real</small>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <!-- Mensajes se agregarán aquí dinámicamente -->
+                <div class="message bot">
+                    <div class="message-content">
+                        ¡Hola! Soy tu asistente FAQ para {{ rol_display }}. 
+                        <br><br>
+                        Puedes preguntarme sobre citas, horarios, retroalimentación o cualquier duda del sistema.
+                        <br><br>
+                        <strong>Prueba con:</strong>
+                        <ul>
+                            <li>"¿Cómo agendo una cita?"</li>
+                            <li>"¿Qué hago si olvidé mi contraseña?"</li>
+                            <li>"¿Cómo veo mi historial?"</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" 
+                       id="userQuestion" 
+                       placeholder="Escribe tu pregunta aquí..."
+                       autocomplete="off">
+                <button id="sendQuestion">
+                    <i class="fas fa-paper-plane"></i> Enviar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Panel de controles -->
+        <div class="controls-panel">
+            <h3><i class="fas fa-cogs"></i> Cómo funciona</h3>
+            <ul class="demo-steps" id="demoSteps">
+                <li class="active">1. Recibe tu pregunta</li>
+                <li>2. Detecta tu rol: <strong>{{ rol_display }}</strong></li>
+                <li>3. Busca en preguntas de tu rol</li>
+                <li>4. Si no encuentra, busca en generales</li>
+                <li>5. Muestra la respuesta más relevante</li>
+                <li>6. Registra en historial</li>
+            </ul>
+            
+            <div class="question-examples">
+                <h4><i class="fas fa-lightbulb"></i> Ejemplos para probar:</h4>
+                <div class="example-buttons">
+                    <button class="example-btn" data-question="¿Cómo agendo una cita?">
+                        ¿Cómo agendo una cita?
+                    </button>
+                    <button class="example-btn" data-question="¿Cómo configuro mi disponibilidad?">
+                        ¿Cómo configuro mi disponibilidad?
+                    </button>
+                    <button class="example-btn" data-question="¿Qué hago si olvidé mi contraseña?">
+                        ¿Qué hago si olvidé mi contraseña?
+                    </button>
+                    <button class="example-btn" data-question="¿Cómo veo mis estadísticas?">
+                        ¿Cómo veo mis estadísticas?
+                    </button>
+                    <button class="example-btn" data-question="¿Cómo contacto al soporte?">
+                        ¿Cómo contacto al soporte?
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <button id="resetDemo" class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-redo"></i> Reiniciar Demo
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Información técnica -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-database"></i> Detrás de escenas</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Base de datos:</strong> SQLite con {{ total_preguntas }} preguntas organizadas por rol</p>
+                    <p><strong>Tu rol actual:</strong> {{ rol_display }} ({{ rol_actual }})</p>
+                    <p><strong>Algoritmo de búsqueda:</strong></p>
+                    <ol class="small">
+                        <li>Coincidencia exacta en tu rol</li>
+                        <li>Coincidencia exacta en general</li>
+                        <li>Coincidencia parcial en tu rol</li>
+                        <li>Coincidencia parcial en general</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Historial en vivo</h5>
+                </div>
+                <div class="card-body">
+                    <div id="liveHistory" class="small">
+                        <p class="text-muted">Todavía no hay búsquedas...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chatMessages');
+    const userQuestionInput = document.getElementById('userQuestion');
+    const sendButton = document.getElementById('sendQuestion');
+    const demoSteps = document.querySelectorAll('#demoSteps li');
+    const exampleButtons = document.querySelectorAll('.example-btn');
+    const resetButton = document.getElementById('resetDemo');
+    const liveHistory = document.getElementById('liveHistory');
+    
+    let currentStep = 0;
+    let historyLog = [];
+    
+    // Función para animar los pasos
+    function animateStep(stepIndex) {
+        demoSteps.forEach((step, index) => {
+            step.classList.remove('active', 'completed');
+            if (index < stepIndex) {
+                step.classList.add('completed');
+            } else if (index === stepIndex) {
+                step.classList.add('active');
+            }
+        });
+        currentStep = stepIndex;
+    }
+    
+    // Función para agregar mensaje al chat
+    function addMessage(text, isUser = false, delay = 0) {
+        setTimeout(() => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = text;
+            
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll al final
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Efecto de máquina de escribir para respuestas del bot
+            if (!isUser) {
+                typewriterEffect(contentDiv, text);
+            }
+        }, delay);
+    }
+    
+    // Efecto de máquina de escribir
+    function typewriterEffect(element, text) {
+        element.innerHTML = '';
+        let i = 0;
+        const speed = 20; // ms por carácter
+        
+        function typeChar() {
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(typeChar, speed);
+            }
+        }
+        
+        typeChar();
+    }
+    
+    // Mostrar indicador de escritura
+    function showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing-indicator';
+        typingDiv.innerHTML = `
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        `;
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        return typingDiv;
+    }
+    
+    // Eliminar indicador de escritura
+    function removeTypingIndicator(indicator) {
+        if (indicator && indicator.parentNode) {
+            indicator.parentNode.removeChild(indicator);
+        }
+    }
+    
+    // Simular el proceso de búsqueda
+    async function simulateSearch(question) {
+        // Paso 1: Recibir pregunta
+        animateStep(0);
+        addMessage(question, true);
+        
+        // Paso 2: Detectar rol
+        await sleep(500);
+        animateStep(1);
+        addMessage(`<i class="fas fa-user-tag"></i> Detectando tu rol: <strong>{{ rol_display }}</strong>`, false);
+        
+        // Paso 3: Buscar en preguntas del rol
+        await sleep(800);
+        animateStep(2);
+        addMessage(`🔍 Buscando "<strong>${question}</strong>" en preguntas para {{ rol_display }}...`, false);
+        
+        // Paso 4: Si no encuentra, buscar en generales
+        await sleep(1000);
+        animateStep(3);
+        addMessage('🔎 Extendiendo búsqueda a preguntas generales...', false);
+        
+        // Paso 5: Encontrar respuesta
+        await sleep(600);
+        animateStep(4);
+        
+        // Aquí harías la petición real a tu API
+        const typing = showTypingIndicator();
+        
+        try {
+            const response = await fetch('{% url "preguntas:buscar_respuesta" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ pregunta: question })
+            });
+            
+            const data = await response.json();
+            removeTypingIndicator(typing);
+            
+            if (data.error) {
+                addMessage(`❌ Error: ${data.error}`, false);
+            } else {
+                addMessage(data.respuesta, false);
+                
+                // Paso 6: Registrar en historial
+                animateStep(5);
+                await sleep(300);
+                
+                // Agregar al historial en vivo
+                const historyItem = {
+                    question: question,
+                    answer: data.respuesta.substring(0, 100) + '...',
+                    timestamp: new Date().toLocaleTimeString(),
+                    role: '{{ rol_display }}'
+                };
+                
+                historyLog.unshift(historyItem);
+                updateLiveHistory();
+                
+                // Mensaje de confirmación
+                addMessage(`<i class="fas fa-history"></i> <small class="text-muted">Búsqueda registrada en el historial a las ${historyItem.timestamp}</small>`, false, 300);
+            }
+        } catch (error) {
+            removeTypingIndicator(typing);
+            
+            // Respuesta simulada para demo
+            const simulatedAnswers = {
+                '¿cómo agendo una cita?': 'Para agendar una cita: 1. Ve al módulo de Citas 2. Haz clic en "Nueva Cita" 3. Selecciona profesor/fecha 4. Confirma. Recibirás notificación por correo.',
+                '¿cómo configuro mi disponibilidad?': 'Configura tu disponibilidad en: Perfil > Configuración > Disponibilidad. Define días/horas disponibles por semana.',
+                '¿qué hago si olvidé mi contraseña?': 'Haz clic en "¿Olvidaste tu contraseña?" en la página de login. Recibirás un enlace para restablecerla por correo.',
+                '¿cómo veo mis estadísticas?': 'Ve al Panel de Métricas para ver calificaciones promedio, comentarios recientes y tendencias de retroalimentación.',
+                '¿cómo contacto al soporte?': 'Usa el Sistema de Tickets o escribe a soporte@sistema.edu.mx. Incluye capturas de pantalla si es posible.'
+            };
+            
+            const answer = simulatedAnswers[question.toLowerCase()] || 
+                '📚 No encontré una respuesta exacta, pero te recomiendo:<br>1. Revisar las preguntas frecuentes<br>2. Contactar a soporte técnico<br>3. Reformular tu pregunta';
+            
+            addMessage(answer, false);
+            animateStep(5);
+        }
+        
+        // Resetear pasos después de 2 segundos
+        setTimeout(() => animateStep(0), 2000);
+    }
+    
+    // Actualizar historial en vivo
+    function updateLiveHistory() {
+        liveHistory.innerHTML = '';
+        
+        if (historyLog.length === 0) {
+            liveHistory.innerHTML = '<p class="text-muted">Todavía no hay búsquedas...</p>';
+            return;
+        }
+        
+        historyLog.forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'mb-2 p-2 border rounded';
+            itemDiv.innerHTML = `
+                <div class="d-flex justify-content-between">
+                    <small><strong>${item.question}</strong></small>
+                    <small class="text-muted">${item.timestamp}</small>
+                </div>
+                <small class="text-muted">${item.answer}</small>
+                <div class="mt-1">
+                    <span class="badge bg-info">${item.role}</span>
+                </div>
+            `;
+            liveHistory.appendChild(itemDiv);
+        });
+    }
+    
+    // Función de ayuda para delays
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+    // Event Listeners
+    sendButton.addEventListener('click', function() {
+        const question = userQuestionInput.value.trim();
+        if (question) {
+            simulateSearch(question);
+            userQuestionInput.value = '';
+        }
+    });
+    
+    userQuestionInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendButton.click();
+        }
+    });
+    
+    // Ejemplos de preguntas
+    exampleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const question = this.getAttribute('data-question');
+            userQuestionInput.value = question;
+            simulateSearch(question);
+        });
+    });
+    
+    // Reiniciar demo
+    resetButton.addEventListener('click', function() {
+        chatMessages.innerHTML = `
+            <div class="message bot">
+                <div class="message-content">
+                    ¡Hola! Soy tu asistente FAQ para {{ rol_display }}. 
+                    <br><br>
+                    Puedes preguntarme sobre citas, horarios, retroalimentación o cualquier duda del sistema.
+                    <br><br>
+                    <strong>Prueba con:</strong>
+                    <ul>
+                        <li>"¿Cómo agendo una cita?"</li>
+                        <li>"¿Qué hago si olvidé mi contraseña?"</li>
+                        <li>"¿Cómo veo mi historial?"</li>
+                    </ul>
+                </div>
+            </div>
+        `;
+        
+        historyLog = [];
+        updateLiveHistory();
+        animateStep(0);
+    });
+    
+    // Inicializar
+    animateStep(0);
+});
+</script>
+{% endblock %}

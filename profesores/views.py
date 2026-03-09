@@ -67,7 +67,6 @@ def registro_profesor_view(request):
 
 
 def login_profesor_view(request):
-    # Verificar si el profesor ya está logueado
     if request.session.get('credenciales_profesor'):
         return redirect('profesores:dashboard_profesor')
 
@@ -75,6 +74,7 @@ def login_profesor_view(request):
         form = LoginProfesorForm(request.POST)
         if form.is_valid():
             correo = form.cleaned_data['correo_electronico']
+
             try:
                 profesor = Profesor.objects.get(correo_electronico=correo)
 
@@ -82,19 +82,22 @@ def login_profesor_view(request):
                     form.add_error('contraseña', 'Credenciales incorrectas')
                     return render(request, 'profesores/login.html', {'form': form})
 
-                # Actualizar fecha de sesión ANTES de generar el hash
-                profesor.ultima_fecha_sesion = timezone.now().date()
+                # Fecha solo UNA VEZ al login
+                now = timezone.now()
+                profesor.ultima_fecha_sesion = now
                 profesor.save(update_fields=['ultima_fecha_sesion'])
 
-                # Generar hash con los datos actualizados
-                session_hash = f"{profesor.correo_electronico}-{profesor.ultima_fecha_sesion}".encode('utf-8').hex()
+                session_hash = hashlib.sha256(
+                    f"{profesor.id}-{now.timestamp()}".encode()
+                ).hexdigest()
 
                 request.session['credenciales_profesor'] = {
                     'id': profesor.id,
-                    'hash_credencial': session_hash,
-                    'rol': profesor.rol_usuario
+                    'hash': session_hash,
+                    'rol': profesor.rol_usuario,
                 }
-                request.session['ultima_actividad'] = timezone.now().isoformat()
+
+                request.session['ultima_actividad'] = now.isoformat()
 
                 messages.success(request, f'Bienvenido Prof. {profesor.nombre_completo}')
                 return redirect('profesores:dashboard_profesor')
@@ -105,12 +108,6 @@ def login_profesor_view(request):
         form = LoginProfesorForm()
 
     return render(request, 'profesores/login.html', {'form': form})
-
-
-def generate_session_hash(profesor):
-    """Genera un hash seguro para la sesión"""
-    data = f"{profesor.correo_electronico}-{profesor.ultima_fecha_sesion}-{timezone.now().timestamp()}"
-    return hashlib.sha256(data.encode('utf-8')).hexdigest()
 
 
 def logout_profesor_view(request):
@@ -138,73 +135,66 @@ def logout_profesor_view(request):
 
 def dashboard_profesor_view(request):
     # 1. Verificación básica de sesión
-    if not request.session.get('credenciales_profesor'):
+    credenciales = request.session.get('credenciales_profesor')
+    if not credenciales:
         messages.warning(request, 'Debes iniciar sesión primero')
         return redirect('profesores:login_profesor')
 
     try:
-        # 2. Obtener profesor y validar sesión
-        profesor = Profesor.objects.get(id=request.session['credenciales_profesor']['id'])
+        # 2. Obtener profesor
+        profesor = Profesor.objects.get(id=credenciales['id'])
 
-        # Generar hash esperado con los mismos datos que en login
-        expected_hash = f"{profesor.correo_electronico}-{profesor.ultima_fecha_sesion}".encode('utf-8').hex()
-        session_hash = request.session['credenciales_profesor'].get('hash_credencial', '')
-
-        if session_hash != expected_hash:
-            logger.warning(f"Hash de sesión inválido para profesor {profesor.id}")
+        # 3. Verificar hash existente (NO regenerar)
+        if 'hash' not in credenciales:
             messages.error(request, 'Sesión inválida')
             return redirect('profesores:logout_profesor')
 
-        # 3. Verificar inactividad (manejo más robusto)
-        ultima_actividad_str = request.session.get('ultima_actividad')
-        if ultima_actividad_str:
+        # 4. Verificar inactividad
+        ultima_actividad = request.session.get('ultima_actividad')
+        if ultima_actividad:
             try:
-                ultima_actividad = datetime.strptime(ultima_actividad_str, '%Y-%m-%d %H:%M:%S')
-                ultima_actividad = timezone.make_aware(ultima_actividad)
-
-                if (timezone.now() - ultima_actividad).total_seconds() > 1800:  # 30 minutos
+                ultima_actividad = timezone.make_aware(
+                    datetime.fromisoformat(ultima_actividad)
+                )
+                if (timezone.now() - ultima_actividad).total_seconds() > 1800:
                     messages.warning(request, 'Sesión expirada por inactividad')
                     return redirect('profesores:logout_profesor')
-            except ValueError as e:
-                logger.error(f"Error al parsear fecha de actividad: {str(e)}")
-                # No redirigir por error de formato, solo registrar
+            except Exception as e:
+                logger.error(f'Error al validar inactividad: {e}')
 
-        # 4. Actualizar actividad
-        request.session['ultima_actividad'] = timezone.now().strftime('%Y-%m-%d %H:%M:%S')
-        profesor.ultima_fecha_sesion = timezone.now().date()
-        profesor.save(update_fields=['ultima_fecha_sesion'])
+        # 5. Actualizar SOLO actividad (NO base de datos)
+        request.session['ultima_actividad'] = timezone.now().isoformat()
 
-        # 5. Obtener datos para el dashboard
+        # ===============================
+        # DATOS DEL DASHBOARD (IGUAL)
+        # ===============================
+
         notificaciones = profesor.get_notificaciones() if hasattr(profesor, 'get_notificaciones') else []
         notificaciones_no_leidas = [n for n in notificaciones if not n.get('is_read', True)]
         notificaciones_recientes = notificaciones[:5]
         contador_no_leidas = len(notificaciones_no_leidas)
 
-        # Verificar encuesta pendiente
         encuesta_pendiente = False
         encuesta_aplicada = EncuestaAplicada.objects.filter(activa=True).first()
-
         if encuesta_aplicada:
             encuesta_pendiente = not Respuesta.objects.filter(
                 encuesta_aplicada=encuesta_aplicada,
                 profesor=profesor
             ).exists()
 
-        # Consulta optimizada de citas
         citas = Cita.objects.filter(
-            models.Q(profesor=profesor) | models.Q(asistentes_profesores=profesor)
+            models.Q(profesor=profesor) |
+            models.Q(asistentes_profesores=profesor)
         ).distinct().select_related('solicitante').order_by('-fecha_hora_inicio')
 
-        # 6. Obtener datos en paralelo (optimizado)
         profesor_ct = ContentType.objects.get_for_model(Profesor)
         estado_filtro = request.GET.get('estado')
-
         ahora = timezone.now()
 
         citas_base = Cita.objects.filter(
             (models.Q(profesor=profesor) | models.Q(asistentes_profesores=profesor)) &
-            ~models.Q(estado='completada') &  # Excluir completadas
-            models.Q(fecha_hora_inicio__gte=ahora)  # Solo citas que no hayan iniciado aún
+            ~models.Q(estado='completada') &
+            models.Q(fecha_hora_inicio__gte=ahora)
         ).select_related(
             'solicitante', 'profesor', 'servicio_escolar'
         ).distinct()
@@ -230,69 +220,29 @@ def dashboard_profesor_view(request):
             'solicitante', 'profesor', 'servicio_escolar'
         ).order_by('nivel_prioridad', '-fecha_hora_inicio')
 
-        # Obtener la fecha y hora actual
-        ahora = timezone.now()
-        # Aplicar filtros si existen
         if estado_filtro in dict(Cita.ESTADOS):
-            citas_creadas = citas_creadas.filter(
-                estado=estado_filtro
-            ).exclude(
-                estado='completada'
-            ).filter(
-                fecha_hora_inicio__gte=ahora
-            )
+            citas_creadas = citas_creadas.filter(estado=estado_filtro)
+            citas_solicitadas = citas_solicitadas.filter(estado=estado_filtro)
+            citas_prioritarias = citas_prioritarias.filter(estado=estado_filtro)
 
-            citas_solicitadas = citas_solicitadas.filter(
-                estado=estado_filtro
-            ).exclude(
-                estado='completada'
-            ).filter(
-                fecha_hora_inicio__gte=ahora
-            )
-
-            citas_prioritarias = citas_prioritarias.filter(
-                estado=estado_filtro
-            ).exclude(
-                estado='completada'
-            ).filter(
-                fecha_hora_inicio__gte=ahora
-            )
-
-        # --- Obtener citas para completar ---
         citas_para_completar = Cita.objects.filter(
-            profesor=profesor,  # Cambio principal: filtramos por profesor en lugar de servicio escolar
+            profesor=profesor,
             estado__in=['confirmada', 'pendiente'],
             fecha_hora_fin__lt=timezone.now()
-        ).exclude(estado='completada').distinct().order_by('-fecha_hora_inicio')
+        ).exclude(estado='completada').distinct()
 
-        # --- Citas con retroalimentación pendiente ---
         citas_con_retro_pendiente = Cita.objects.filter(
-            profesor=profesor,  # Cambio principal: filtramos por profesor
+            profesor=profesor,
             estado='completada',
             retroalimentacion__completada=False
         ).distinct().select_related('solicitante', 'retroalimentacion')
 
-        logger.debug(f"Citas encontradas: {citas.count()}")
-
-        # Verificar encuesta pendiente
-        encuesta_pendiente = False
-        encuesta_aplicada = EncuestaAplicada.objects.filter(activa=True).first()
-
-        if encuesta_aplicada:
-            encuesta_pendiente = not Respuesta.objects.filter(
-                encuesta_aplicada=encuesta_aplicada,
-                profesor=profesor
-            ).exists()
-
-        # 6. Preparar datos del calendario
         now = timezone.localtime(timezone.now())
         current_date = now.date()
 
-        # Semana actual
         start_week = now - timedelta(days=now.weekday())
         week_days = [start_week + timedelta(days=i) for i in range(7)]
 
-        # Mes actual
         year, month = now.year, now.month
         _, num_days = monthrange(year, month)
         calendar_days = [{
@@ -303,13 +253,12 @@ def dashboard_profesor_view(request):
 
         month_weeks = [calendar_days[i:i + 7] for i in range(0, len(calendar_days), 7)]
 
-        # 7. Procesar asignaturas de forma segura
         asignaturas = []
         if profesor.asignaturas_impartidas:
             try:
                 asignaturas = json.loads(profesor.asignaturas_impartidas)
-            except (json.JSONDecodeError, AttributeError):
-                asignaturas = profesor.asignaturas_impartidas.split(',') if profesor.asignaturas_impartidas else []
+            except Exception:
+                asignaturas = profesor.asignaturas_impartidas.split(',')
 
         return render(request, 'profesores/index.html', {
             'profesor': profesor,
@@ -340,11 +289,6 @@ def dashboard_profesor_view(request):
 
     except Profesor.DoesNotExist:
         messages.error(request, 'Profesor no encontrado')
-        logger.error(f"Profesor no encontrado en sesión: {request.session.get('credenciales_profesor', {}).get('id')}")
-        return redirect('profesores:logout_profesor')
-    except Exception as e:
-        messages.error(request, 'Error al cargar el dashboard')
-        logger.error(f"Error en dashboard_profesor_view: {str(e)}", exc_info=True)
         return redirect('profesores:logout_profesor')
 
 
@@ -2030,13 +1974,38 @@ def requiere_servicio_escolar(view_func):
     return wrapper
 
 
+from functools import wraps
+
+
 def requiere_profesor(view_func):
+    @wraps(view_func)
     def wrapper(request, *args, **kwargs):
-        user = get_user_from_session(request)
-        if not user or user.__class__.__name__ != 'Profesor':
-            messages.warning(request, 'Acceso restringido a Profesores')
-            return redirect('profesores:login_profesor')
-        request.user_obj = user
+        credenciales = request.session.get('credenciales_profesor')
+
+        if not credenciales or 'id' not in credenciales or 'hash' not in credenciales:
+            return JsonResponse({'error': 'No autenticado'}, status=401)
+
+        try:
+            profesor = Profesor.objects.get(id=credenciales['id'])
+        except Profesor.DoesNotExist:
+            return JsonResponse({'error': 'Usuario inválido'}, status=401)
+
+        # Verificar inactividad
+        ultima_actividad = request.session.get('ultima_actividad')
+        if ultima_actividad:
+            try:
+                ultima_actividad = timezone.make_aware(
+                    datetime.fromisoformat(ultima_actividad)
+                )
+                if (timezone.now() - ultima_actividad).total_seconds() > 1800:
+                    return JsonResponse({'error': 'Sesión expirada'}, status=401)
+            except Exception:
+                pass
+
+        # Actualizar actividad
+        request.session['ultima_actividad'] = timezone.now().isoformat()
+        request.user_obj = profesor
+
         return view_func(request, *args, **kwargs)
 
     return wrapper

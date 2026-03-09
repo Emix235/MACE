@@ -14,6 +14,7 @@ from .models import TicketSoporte
 from padres.models import Padre
 from .forms import TicketSoporteForm
 import json
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 
 def crear_notificacion_ticket(ticket, creador, user_type):

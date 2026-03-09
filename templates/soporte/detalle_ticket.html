@@ -1,98 +1,131 @@
-{# Esto DEBE ser la primera línea del template #}
 {% extends base_template %}
 {% block content %}
+    <style>
+        /* Contenedor del iframe */
+        #iframe-container {
+            width: 100% !important;
+        }
+
+        /* Iframe principal */
+        #ticket-iframe {
+            width: 100%;
+            height: 75vh;
+            min-height: 600px;
+            border: none;
+        }
+
+        @media (min-width: 1400px) {
+            #ticket-iframe {
+                height: 85vh;
+            }
+        }
+    </style>
+
     <div class="container mt-4">
         <div class="card shadow">
+
+            <!-- HEADER -->
             <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                <h4 class="m-0 font-weight-bold text-primary">
-                    Ticket #{{ ticket.id }} - {{ ticket.asunto }}
+                <h4 class="m-0 fw-bold text-primary">
+                    Ticket #{{ ticket.id }} – {{ ticket.asunto }}
                 </h4>
-                <span class="badge 
+                <span class="badge
                 {% if ticket.estado == 'abierto' %}bg-danger
                 {% elif ticket.estado == 'en_progreso' %}bg-warning text-dark
                 {% else %}bg-success{% endif %}">
                 {{ ticket.get_estado_display }}
             </span>
             </div>
+
             <div class="card-body">
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h5>Información del Ticket</h5>
-                        <ul class="list-group list-group-flush">
+
+                <!-- INFO + DESCRIPCIÓN -->
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-5">
+                        <h5 class="mb-3">Información del ticket</h5>
+                        <ul class="list-group list-group-flush small">
                             <li class="list-group-item">
-                                <strong>Usuario:</strong>
-                                {{ ticket.get_tipo_usuario_display }} - {{ ticket.usuario }}
+                                <strong>Usuario:</strong><br>
+                                {{ ticket.get_tipo_usuario_display }} – {{ ticket.usuario }}
                             </li>
                             <li class="list-group-item">
-                                <strong>Fecha creación:</strong>
+                                <strong>Fecha de creación:</strong><br>
                                 {{ ticket.creado_en|date:"d/m/Y H:i" }}
                             </li>
                             {% if ticket.asignado_a %}
                                 <li class="list-group-item">
-                                    <strong>Asignado a:</strong>
+                                    <strong>Asignado a:</strong><br>
                                     {{ ticket.asignado_a.get_full_name }}
                                 </li>
                             {% endif %}
-                            {% if ticket.url_pagina %}
-                                <div class="mt-4">
-                                    <h5 class="mb-3">Página reportada</h5>
-
-                                    <div class="alert alert-info">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        Esta página requiere autenticación. Para verla completa:
-                                        <a href="{{ ticket.url_pagina }}" target="_blank" class="alert-link">
-                                            Haz clic aquí para abrirla en nueva pestaña
-                                        </a>
-                                    </div>
-
-                                    <div class="card border-secondary">
-                                        <div class="card-header bg-secondary text-white py-2">
-                                            Vista previa estática
-                                        </div>
-                                        <div class="card-body p-0">
-                                            <div style="height: 400px; background: #f8f9fa; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                                                <i class="fas fa-lock fa-3x mb-3 text-muted"></i>
-                                                <h5 class="text-muted">Contenido protegido</h5>
-                                                <p class="text-muted">Esta página requiere credenciales de acceso</p>
-                                                <a href="{{ ticket.url_pagina }}" target="_blank"
-                                                   class="btn btn-primary mt-2">
-                                                    <i class="fas fa-external-link-alt me-1"></i> Acceder a la página
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-3">
-                                        <div class="input-group">
-                                            <span class="input-group-text">URL reportada:</span>
-                                            <input type="text" class="form-control" value="{{ ticket.url_pagina }}"
-                                                   readonly>
-                                            <button class="btn btn-outline-secondary" onclick="copyUrl()">
-                                                <i class="far fa-copy"></i> Copiar
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <script>
-                                    function copyUrl() {
-                                        const urlInput = document.querySelector('input[type="text"]');
-                                        urlInput.select();
-                                        document.execCommand('copy');
-                                        // Puedes agregar notificación de copiado si usas Toast o similar
-                                    }
-                                </script>
-                            {% endif %}
                         </ul>
                     </div>
-                    <div class="col-md-6">
-                        <h5>Descripción del problema</h5>
-                        <div class="border p-3 bg-light rounded">
+
+                    <div class="col-lg-7">
+                        <h5 class="mb-3">Descripción del problema</h5>
+                        <div class="border p-3 bg-light rounded h-100">
                             {{ ticket.descripcion|linebreaks }}
                         </div>
                     </div>
                 </div>
 
+                <!-- PÁGINA REPORTADA -->
+                {% if ticket.url_pagina %}
+                    <div class="mb-4">
+                        <h5 class="mb-3">Página reportada</h5>
+
+                        <div class="alert alert-info d-flex align-items-center">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <div>
+                                Esta página puede requerir autenticación.
+                                <a href="{{ ticket.url_pagina }}" target="_blank" class="alert-link">
+                                    Abrir en nueva pestaña
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="card border-secondary">
+                            <div class="card-header bg-secondary text-white py-2">
+                                Vista embebida
+                            </div>
+
+                            <!-- IFRAME -->
+                            <div class="card-body p-0" id="iframe-container">
+                                <iframe
+                                        id="ticket-iframe"
+                                        src="{{ ticket.url_pagina }}"
+                                        loading="lazy">
+                                </iframe>
+                            </div>
+
+                            <!-- FALLBACK -->
+                            <div class="card-body text-center d-none" id="iframe-fallback">
+                                <i class="fas fa-lock fa-3x mb-3 text-muted"></i>
+                                <h5 class="text-muted">Contenido protegido</h5>
+                                <p class="text-muted">
+                                    Esta página no permite ser mostrada dentro del sistema.
+                                </p>
+                                <a href="{{ ticket.url_pagina }}" target="_blank"
+                                   class="btn btn-primary">
+                                    <i class="fas fa-external-link-alt me-1"></i> Abrir en nueva pestaña
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <div class="input-group">
+                                <span class="input-group-text">URL</span>
+                                <input type="text" class="form-control"
+                                       value="{{ ticket.url_pagina }}" readonly>
+                                <button class="btn btn-outline-secondary" onclick="copyUrl()">
+                                    <i class="far fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- RESPUESTA -->
                 {% if ticket.respuesta %}
                     <div class="alert alert-success mt-4">
                         <h5>Respuesta de soporte</h5>
@@ -103,28 +136,58 @@
                     </div>
                 {% elif puede_editar %}
                     <div class="alert alert-info mt-4">
-                        <p>Este ticket aún no tiene respuesta.</p>
+                        Este ticket aún no tiene respuesta.
                     </div>
                 {% endif %}
 
-                <div class="mt-4">
+                <!-- ACCIONES -->
+                <div class="mt-4 d-flex gap-2">
                     {% if puede_editar %}
                         <a href="{% url 'editar_ticket' ticket.id %}" class="btn btn-primary">
-                            <i class="fas fa-edit"></i> Responder/Editar
+                            <i class="fas fa-edit"></i> Responder / Editar
                         </a>
                     {% endif %}
+
                     <a href="{% if request.session.credenciales_padre %}
-             {% url 'padres:tickets_padre' %}
-             {% elif request.session.credenciales_profesor %}
-             {% url 'profesores:panel_tickets' %}
-             {% else %}
-             {% url 'servicios_escolares:todos_tickets' %}
-             {% endif %}"
+                    {% url 'padres:tickets_padre' %}
+                    {% elif request.session.credenciales_profesor %}
+                    {% url 'profesores:panel_tickets' %}
+                    {% else %}
+                    {% url 'servicios_escolares:todos_tickets' %}
+                    {% endif %}"
                        class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Volver
                     </a>
                 </div>
+
             </div>
         </div>
     </div>
+
+    <script>
+        function copyUrl() {
+            const input = document.querySelector('input[readonly]');
+            input.select();
+            document.execCommand('copy');
+        }
+
+        const iframe = document.getElementById('ticket-iframe');
+        const fallback = document.getElementById('iframe-fallback');
+
+        if (iframe) {
+            iframe.addEventListener('error', () => {
+                iframe.parentElement.classList.add('d-none');
+                fallback.classList.remove('d-none');
+            });
+
+            setTimeout(() => {
+                try {
+                    iframe.contentWindow.location.href;
+                } catch (e) {
+                    iframe.parentElement.classList.add('d-none');
+                    fallback.classList.remove('d-none');
+                }
+            }, 2000);
+        }
+    </script>
 {% endblock %}

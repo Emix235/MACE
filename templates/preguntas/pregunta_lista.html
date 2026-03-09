@@ -1,0 +1,557 @@
+{% extends base_template %}
+{% load static %}
+{% load faq_extras %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Variables de colores */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --light-bg: #f8fafc;
+        --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        --hover-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+    }
+    
+    .faq-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    /* Hero Section */
+    .faq-hero {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 60px 40px;
+        border-radius: 20px;
+        margin-bottom: 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+    }
+    
+    .faq-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: float 20s linear infinite;
+        opacity: 0.3;
+    }
+    
+    .faq-hero h1 {
+        font-size: 3.5rem;
+        margin-bottom: 15px;
+        font-weight: 700;
+        position: relative;
+        z-index: 2;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .faq-hero p {
+        font-size: 1.4rem;
+        opacity: 0.95;
+        max-width: 800px;
+        margin: 0 auto 30px;
+        position: relative;
+        z-index: 2;
+    }
+    
+    /* Botones de acción */
+    .hero-actions {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .hero-btn {
+        padding: 15px 35px;
+        border-radius: 50px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    
+    .hero-btn.primary {
+        background: white;
+        color: #667eea;
+        box-shadow: 0 5px 15px rgba(255,255,255,0.2);
+    }
+    
+    .hero-btn.primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(255,255,255,0.3);
+    }
+    
+    .hero-btn.outline {
+        background: transparent;
+        color: white;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+    
+    .hero-btn.outline:hover {
+        background: rgba(255,255,255,0.1);
+        border-color: white;
+        transform: translateY(-3px);
+    }
+    
+    /* Filtros modernos */
+    .filters-container {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 40px;
+        box-shadow: var(--card-shadow);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .filters-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--light-bg);
+    }
+    
+    .filters-header h3 {
+        color: #2d3748;
+        font-size: 1.5rem;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .filter-badges {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .filter-badge {
+        padding: 8px 20px;
+        background: var(--light-bg);
+        border-radius: 50px;
+        color: #4a5568;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .filter-badge.active {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .filter-badge:hover:not(.active) {
+        border-color: #667eea;
+        color: #667eea;
+        transform: translateY(-2px);
+    }
+    
+    /* Tarjetas de rol */
+    .role-cards-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+    
+    .role-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        transition: all 0.4s ease;
+        position: relative;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .role-card:hover {
+        transform: translateY(-10px);
+        box-shadow: var(--hover-shadow);
+        border-color: #667eea;
+    }
+    
+    .role-card-header {
+        padding: 25px;
+        position: relative;
+        overflow: hidden;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .role-card.padre .role-card-header {
+        background: var(--primary-gradient);
+    }
+    
+    .role-card.profesor .role-card-header {
+        background: var(--secondary-gradient);
+    }
+    
+    .role-card.servicio .role-card-header {
+        background: var(--success-gradient);
+    }
+    
+    .role-card.general .role-card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .role-icon {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 3.5rem;
+        opacity: 0.2;
+        color: white;
+    }
+    
+    .role-title {
+        color: white;
+        font-size: 1.8rem;
+        margin: 0 0 10px 0;
+        font-weight: 600;
+    }
+    
+    .role-count {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        display: inline-block;
+        backdrop-filter: blur(10px);
+    }
+    
+    .role-content {
+        padding: 25px;
+    }
+    
+    .role-question-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .role-question-item {
+        padding: 15px 0;
+        border-bottom: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    
+    .role-question-item:hover {
+        padding-left: 10px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .role-question-item:last-child {
+        border-bottom: none;
+    }
+    
+    .question-link {
+        color: #2d3748;
+        text-decoration: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .question-text {
+        flex: 1;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+    
+    .question-arrow {
+        color: #a0aec0;
+        transition: all 0.3s ease;
+    }
+    
+    .question-link:hover .question-arrow {
+        color: #667eea;
+        transform: translateX(5px);
+    }
+    
+    .role-actions {
+        padding: 20px 25px;
+        background: var(--light-bg);
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .view-all-btn {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .view-all-btn:hover {
+        color: #764ba2;
+        gap: 12px;
+    }
+    
+    /* Estado vacío */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: var(--card-shadow);
+    }
+    
+    .empty-icon {
+        font-size: 5rem;
+        color: #cbd5e0;
+        margin-bottom: 20px;
+        animation: pulse 2s infinite;
+    }
+    
+    .empty-state h3 {
+        color: #4a5568;
+        font-size: 2rem;
+        margin-bottom: 15px;
+    }
+    
+    .empty-state p {
+        color: #718096;
+        font-size: 1.1rem;
+        max-width: 500px;
+        margin: 0 auto 30px;
+    }
+    
+    /* Animaciones */
+    @keyframes float {
+        0% { transform: rotate(0deg) translateY(0); }
+        100% { transform: rotate(360deg) translateY(0); }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.1); }
+    }
+    
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .faq-hero {
+            padding: 40px 20px;
+        }
+        
+        .faq-hero h1 {
+            font-size: 2.5rem;
+        }
+        
+        .hero-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .hero-btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .role-cards-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .filters-header {
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-start;
+        }
+        
+        .filter-badges {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+    
+    /* Efectos de scroll */
+    .role-card {
+        animation: slideIn 0.6s ease-out forwards;
+        opacity: 0;
+    }
+    
+    .role-card:nth-child(1) { animation-delay: 0.1s; }
+    .role-card:nth-child(2) { animation-delay: 0.2s; }
+    .role-card:nth-child(3) { animation-delay: 0.3s; }
+    .role-card:nth-child(4) { animation-delay: 0.4s; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="faq-container">
+    <!-- Hero Section -->
+    <div class="faq-hero">
+        <h1><i class="fas fa-question-circle"></i> Centro de Ayuda</h1>
+        <p>Encuentra respuestas rápidas a las preguntas más comunes, organizadas específicamente para tu rol de {{ rol_display }}</p>
+        
+        <div class="hero-actions">
+            <a href="{% url 'preguntas:buscar_preguntas' %}" class="hero-btn primary">
+                <i class="fas fa-search"></i> Buscar en FAQ
+            </a>
+            <a href="{% url 'preguntas:faq_por_rol' rol_actual %}" class="hero-btn outline">
+                <i class="fas fa-user-tag"></i> Ver preguntas de {{ rol_display }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-container">
+        <div class="filters-header">
+            <h3><i class="fas fa-filter"></i> Explorar por categoría</h3>
+            <div class="filter-badges">
+                <a href="{% url 'preguntas:faq_lista' %}" 
+                   class="filter-badge {% if not request.GET.rol %}active{% endif %}">
+                    <i class="fas fa-layer-group"></i> Todas
+                </a>
+                {% for key, value in roles.items %}
+                <a href="{% url 'preguntas:faq_por_rol' key %}" 
+                   class="filter-badge {% if request.GET.rol == key %}active{% endif %}">
+                    <i class="fas fa-user-tag"></i> {{ value }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Rol -->
+    {% if preguntas_por_rol %}
+    <div class="role-cards-container">
+        {% for rol, preguntas in preguntas_por_rol.items %}
+        <div class="role-card {{ rol }}">
+            <div class="role-card-header">
+                <i class="role-icon fas fa-user-tag"></i>
+                <h3 class="role-title">{{ roles|get_item:rol|default:rol }}</h3>
+                <span class="role-count">{{ preguntas|length }} preguntas</span>
+            </div>
+            
+            <div class="role-content">
+                <ul class="role-question-list">
+                    {% for pregunta in preguntas|slice:":5" %}
+                    <li class="role-question-item">
+                        <a href="{% url 'preguntas:pregunta_detalle' pregunta.id %}" class="question-link">
+                            <span class="question-text">{{ pregunta.pregunta }}</span>
+                            <i class="question-arrow fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="role-actions">
+                <a href="{% url 'preguntas:faq_por_rol' rol %}" class="view-all-btn">
+                    Ver todas las preguntas
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                {% if preguntas|length > 5 %}
+                <span class="text-muted">+{{ preguntas|length|add:"-5" }} más</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Estado vacío -->
+    <div class="empty-state">
+        <i class="empty-icon fas fa-inbox"></i>
+        <h3>No hay preguntas frecuentes disponibles</h3>
+        <p>Próximamente añadiremos contenido a esta sección. Mientras tanto, puedes buscar en el sistema o contactar a soporte.</p>
+        <a href="{% url 'preguntas:buscar_preguntas' %}" class="hero-btn primary">
+            <i class="fas fa-search"></i> Buscar en el sistema
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Efecto de scroll para las tarjetas
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    // Observar todas las tarjetas
+    document.querySelectorAll('.role-card').forEach(card => {
+        observer.observe(card);
+    });
+    
+    // Efecto hover en preguntas
+    document.querySelectorAll('.role-question-item').forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(5px)';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0)';
+        });
+    });
+    
+    // Actualizar contador en tiempo real
+    function updateRoleCounts() {
+        document.querySelectorAll('.role-card').forEach(card => {
+            const questionCount = card.querySelectorAll('.role-question-item').length;
+            const countElement = card.querySelector('.role-count');
+            if (countElement) {
+                countElement.textContent = `${questionCount} preguntas`;
+            }
+        });
+    }
+    
+    // Inicializar
+    updateRoleCounts();
+});
+</script>
+{% endblock %}

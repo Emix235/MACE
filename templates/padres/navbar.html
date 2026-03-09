@@ -18,7 +18,7 @@
 
             <!-- Menú Principal -->
             <div class="collapse navbar-collapse" id="navbarPrivateCollapse">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0" style="margin-bottom: 0 !important;">
                     <!-- Dashboard -->
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'dashboard_padre' %}active{% endif %}"
@@ -57,7 +57,7 @@
                 </ul>
 
                 <!-- Menú Usuario y Notificaciones -->
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0" style="margin-bottom: 0 !important;">
                     <!-- Notificaciones -->
                     <li class="nav-item dropdown">
                         <a class="nav-link position-relative" href="#" id="notificacionesDropdown" role="button"
@@ -135,7 +135,7 @@
                             <li><a class="dropdown-item" href="{% url 'notas:lista_notas' %}">
                                 <i class="bi bi-journal-check me-2"></i>Apuntes
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'preguntas:preguntas_frecuentes' %}">
+                            <li><a class="dropdown-item" href="{% url 'preguntas:faq_por_rol' rol='padre' %}">
                                 <i class="bi bi-question-octagon me-2"></i>Preguntas Frecuentes
                             </a></li>
                             <li><a class="dropdown-item" href="{% url 'padres:configuracion_padre' %}">

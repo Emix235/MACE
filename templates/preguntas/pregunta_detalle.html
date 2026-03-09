@@ -1,0 +1,234 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'preguntas:faq_lista' %}">
+                            <i class="fas fa-home"></i> FAQ
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{% url 'preguntas:faq_por_rol' pregunta.rol %}">
+                            {{ pregunta.get_rol_display }}
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">
+                        Detalle
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-question-circle"></i>
+                        {{ pregunta.pregunta }}
+                    </h1>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <span class="badge bg-info">
+                            <i class="fas fa-user-tag"></i>
+                            {{ pregunta.get_rol_display }}
+                        </span>
+                        <span class="badge bg-secondary ms-2">
+                            <i class="fas fa-calendar"></i>
+                            {{ pregunta.fecha_creacion|date:"d/m/Y" }}
+                        </span>
+                    </div>
+                    
+                    <div class="respuesta-content">
+                        {{ pregunta.respuesta|linebreaks|safe }}
+                    </div>
+                    
+                    <div class="mt-4 pt-3 border-top">
+                        <h5 class="mb-3">
+                            <i class="fas fa-thumbs-up"></i> ¿Fue útil esta respuesta?
+                        </h5>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-success">
+                                <i class="fas fa-thumbs-up"></i> Sí
+                            </button>
+                            <button type="button" class="btn btn-outline-danger">
+                                <i class="fas fa-thumbs-down"></i> No
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preguntas relacionadas -->
+            {% if preguntas_relacionadas %}
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h3 class="h5 mb-0">
+                        <i class="fas fa-link"></i> Preguntas relacionadas
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for relacionada in preguntas_relacionadas %}
+                        <a href="{% url 'preguntas:pregunta_detalle' relacionada.id %}" 
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ relacionada.pregunta }}</h6>
+                            </div>
+                            <small class="text-muted">
+                                {{ relacionada.respuesta|truncatewords:20|safe }}
+                            </small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Enlaces rápidos -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-bolt"></i> Acciones rápidas
+                    </h5>
+                    <div class="list-group list-group-flush">
+                        {# <a href="{% url 'preguntas:faq_lista' %}" class="list-group-item list-group-item-action"> #}
+                        {# <i class="fas fa-list"></i> Ver todas las preguntas #}
+                        {#                        </a> #}
+                        <a href="{% url 'preguntas:faq_por_rol' pregunta.rol %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-user-tag"></i> Ver más preguntas de {{ pregunta.get_rol_display }}
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#shareModal">
+                            <i class="fas fa-share-alt"></i> Compartir esta pregunta
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#contactModal">
+                            <i class="fas fa-question-circle"></i> No encontré mi respuesta
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información de la pregunta -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-info-circle"></i> Información
+                    </h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-user-tag text-primary"></i>
+                            <strong>Rol:</strong> {{ pregunta.get_rol_display }}
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-calendar text-primary"></i>
+                            <strong>Creada:</strong> {{ pregunta.fecha_creacion|date:"d/m/Y" }}
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-sort-numeric-up text-primary"></i>
+                            <strong>Orden:</strong> {{ pregunta.orden }}
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-toggle-on text-primary"></i>
+                            <strong>Estado:</strong> 
+                            {% if pregunta.activa %}
+                                <span class="badge bg-success">Activa</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactiva</span>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para compartir -->
+<div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shareModalLabel">
+                    <i class="fas fa-share-alt"></i> Compartir pregunta
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="shareUrl" class="form-label">Enlace directo:</label>
+                    <input type="text" class="form-control" id="shareUrl" 
+                           value="{{ request.build_absolute_uri }}" readonly>
+                </div>
+                <div class="text-center">
+                    <button onclick="copyToClipboard()" class="btn btn-primary">
+                        <i class="fas fa-copy"></i> Copiar enlace
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de contacto -->
+<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="contactModalLabel">
+                    <i class="fas fa-question-circle"></i> ¿No encontraste tu respuesta?
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Si no encontraste la respuesta que buscabas, puedes:</p>
+                <ol>
+                    <li>Reformular tu pregunta usando palabras diferentes</li>
+                    <li>Contactar a nuestro equipo de soporte</li>
+                    <li>Buscar en nuestra documentación completa</li>
+                </ol>
+                <p><strong>Email de soporte:</strong> soporte@tuapp.com</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <a href="mailto:emilio142018@gmail.com" class="btn btn-primary">
+                    <i class="fas fa-envelope"></i> Contactar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToClipboard() {
+    var copyText = document.getElementById("shareUrl");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    document.execCommand("copy");
+    
+    // Mostrar mensaje de éxito
+    alert("Enlace copiado al portapapeles!");
+}
+
+// Feedback de utilidad
+document.querySelectorAll('.btn-outline-success, .btn-outline-danger').forEach(button => {
+    button.addEventListener('click', function() {
+        const fueUtil = this.classList.contains('btn-outline-success');
+        // Aquí puedes hacer una petición AJAX para guardar el feedback
+        alert(fueUtil ? '¡Gracias por tu feedback positivo!' : 'Lamentamos que no te fuera útil. Mejoraremos.');
+    });
+});
+</script>
+{% endblock %}

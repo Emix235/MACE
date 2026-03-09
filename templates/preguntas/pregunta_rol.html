@@ -1,0 +1,236 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{% url 'preguntas:faq_lista' %}">
+                                <i class="fas fa-home"></i> FAQ
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            {{ nombre_rol }}
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="mb-0">
+                            <i class="fas fa-user-tag"></i>
+                            Preguntas Frecuentes - {{ nombre_rol }}
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <p class="lead mb-0">
+                            Preguntas específicas para usuarios con rol de
+                            <span class="badge bg-info">{{ nombre_rol }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Preguntas específicas del rol -->
+            <div class="col-md-8">
+                <div class="card border-0 shadow mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h3 class="mb-0">
+                            <i class="fas fa-star"></i>
+                            Preguntas para {{ nombre_rol }}
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if preguntas_rol %}
+                            <div class="accordion" id="accordionRol">
+                                {% for pregunta in preguntas_rol %}
+                                    <div class="accordion-item border-0">
+                                        <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                            <button class="accordion-button collapsed bg-light"
+                                                    type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target="#collapse{{ forloop.counter }}"
+                                                    aria-expanded="false"
+                                                    aria-controls="collapse{{ forloop.counter }}">
+                                                <i class="fas fa-question-circle me-2 text-info"></i>
+                                                {{ pregunta.pregunta }}
+                                            </button>
+                                        </h2>
+                                        <div id="collapse{{ forloop.counter }}"
+                                             class="accordion-collapse collapse"
+                                             aria-labelledby="heading{{ forloop.counter }}"
+                                             data-bs-parent="#accordionRol">
+                                            <div class="accordion-body bg-white">
+                                                {{ pregunta.respuesta|linebreaks|safe }}
+
+                                                <!-- Botón de tutorial debajo de cada respuesta -->
+                                                <div class="mt-4 p-3 bg-light rounded border">
+                                                    <h6 class="mb-3">
+                                                        <i class="fas fa-graduation-cap text-primary"></i>
+                                                        ¿Necesitas una demostración práctica?
+                                                    </h6>
+                                                    <p class="small text-muted mb-3">
+                                                        Aprende paso a paso con nuestro tutorial interactivo:
+                                                    </p>
+                                                    <a href="{% url 'preguntas:demo_completa' %}"
+                                                       class="btn btn-outline-primary btn-sm">
+                                                        <i class="fas fa-play-circle"></i> Ver Tutorial Interactivo
+                                                    </a>
+                                                </div>
+
+                                                <div class="mt-3 pt-3 border-top text-end">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-clock"></i>
+                                                        Actualizado: {{ pregunta.fecha_creacion|date:"d/m/Y" }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <h4 class="text-muted mb-2">No hay preguntas específicas</h4>
+                                <p class="text-muted">Próximamente añadiremos contenido específico.</p>
+                                <!-- Botón de tutorial en caso de no haber preguntas -->
+                                <div class="mt-4">
+                                    <a href="{% url 'preguntas:demo_completa' %}"
+                                       class="btn btn-primary">
+                                        <i class="fas fa-graduation-cap"></i> Ver Tutoriales Interactivos
+                                    </a>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preguntas generales y sidebar -->
+            <div class="col-md-4">
+                <!-- Preguntas generales -->
+                <div class="card border-0 shadow mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h3 class="mb-0">
+                            <i class="fas fa-globe"></i>
+                            Preguntas Generales
+                        </h3>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if preguntas_generales %}
+                            <div class="list-group list-group-flush">
+                                {% for pregunta in preguntas_generales %}
+                                    <a href="{% url 'preguntas:pregunta_detalle' pregunta.id %}"
+                                       class="list-group-item list-group-item-action border-0 py-3">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">
+                                                <i class="fas fa-question text-primary"></i>
+                                                {{ pregunta.pregunta|truncatewords:10 }}
+                                            </h6>
+                                        </div>
+                                        <p class="mb-1 small text-muted">
+                                            {{ pregunta.respuesta|truncatewords:15|safe }}
+                                        </p>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                                <p class="text-muted mb-0">No hay preguntas generales</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Card de tutorial destacado -->
+                <div class="card border-0 shadow mb-4 border-primary">
+                    <div class="card-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-graduation-cap fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="card-title">Aprende con Tutoriales</h5>
+                        <p class="card-text small text-muted">
+                            ¿Te resulta difícil entender? Prueba nuestros tutoriales interactivos paso a paso.
+                        </p>
+                        <a href="{% url 'preguntas:demo_completa' %}"
+                           class="btn btn-primary w-100">
+                            <i class="fas fa-play-circle"></i> Iniciar Tutoriales
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Enlaces rápidos -->
+                <div class="card border-0 shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-link"></i> Enlaces rápidos
+                        </h5>
+                        <div class="list-group list-group-flush">
+                            <a href="{% url 'preguntas:faq_lista' %}"
+                               class="list-group-item list-group-item-action border-0 py-2">
+                                <i class="fas fa-list text-primary"></i>
+                                <span class="ms-2">Ver todas las preguntas</span>
+                            </a>
+                            {% if rol_actual != rol_seleccionado %}
+                                <a href="{% url 'preguntas:faq_por_rol' rol_actual %}"
+                                   class="list-group-item list-group-item-action border-0 py-2">
+                                    <i class="fas fa-user text-primary"></i>
+                                    <span class="ms-2">Ver preguntas para mi rol ({{ rol_actual }})</span>
+                                </a>
+                            {% endif %}
+                            <a href="#"
+                               class="list-group-item list-group-item-action border-0 py-2"
+                               data-bs-toggle="modal"
+                               data-bs-target="#contactModal">
+                                <i class="fas fa-envelope text-primary"></i>
+                                <span class="ms-2">Contactar soporte</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de contacto -->
+    <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contactModalLabel">
+                        <i class="fas fa-envelope"></i> Contactar Soporte
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿No encontraste la respuesta que buscabas?</p>
+                    <p>Puedes contactar a nuestro equipo de soporte:</p>
+                    <ul>
+                        <li><strong>Email:</strong> soporte@tuapp.com</li>
+                        <li><strong>Teléfono:</strong> +1 234 567 890</li>
+                        <li><strong>Horario:</strong> Lunes a Viernes 9:00 - 18:00</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <a href="mailto:soporte@tuapp.com" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Enviar Email
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

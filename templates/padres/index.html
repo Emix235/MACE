@@ -46,58 +46,6 @@ qqqqqqq{% extends 'padres/base.html' %}
                 </div>
             </div>
 
-            <style>
-                .modal-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background-color: rgba(0, 0, 0, 0.85);
-                    z-index: 9999;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    animation: fadeIn 0.3s;
-                }
-
-                .modal-aviso {
-                    background: white;
-                    border-radius: 12px;
-                    padding: 2rem;
-                    text-align: center;
-                    max-width: 500px;
-                    width: 90%;
-                    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-                }
-
-                .modal-aviso-icono {
-                    margin-bottom: 1.5rem;
-                    color: var(--primary);
-                }
-
-                .modal-aviso-titulo {
-                    font-weight: 600;
-                    margin-bottom: 1rem;
-                    color: #333;
-                }
-
-                .modal-aviso-texto {
-                    color: #555;
-                    margin-bottom: 2rem;
-                    line-height: 1.6;
-                }
-
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                    }
-                    to {
-                        opacity: 1;
-                    }
-                }
-            </style>
-
             <script>
                 // Opcional: Evitar cerrar el modal haciendo click fuera
                 document.getElementById('avisoRetroalimentacion').addEventListener('click', function (e) {
@@ -357,11 +305,6 @@ qqqqqqq{% extends 'padres/base.html' %}
                         </div>
                     {% endfor %}
                 </div>
-                <!-- Nota adhesiva -->
-                <!--    <div class="emergency-sticky-note">
-                        ¡URGENTE!
-                    </div>
-                -->
             </div>
 
             <!-- Estilos CSS para el modal -->
@@ -628,12 +571,6 @@ qqqqqqq{% extends 'padres/base.html' %}
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <style>
             /* Estilos base del calendario */
-            #calendar-parent {
-                background-color: white;
-                border-radius: 0.5rem;
-                padding: 1rem;
-                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            }
 
             .fc-daygrid-day {
                 border-width: 1px;

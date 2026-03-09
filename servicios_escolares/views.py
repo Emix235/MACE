@@ -39,7 +39,6 @@ from estudiantes.models import Estudiante
 from django.db.models import Count, Q
 from .forms import CitaForm, ProfesorOptionalForm
 from notificaciones.models import Notification
-from django.views.decorators.clickjacking import xframe_options_exempt
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -55,6 +54,10 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 import logging
 from django.utils.timezone import is_naive, localtime
+from django.views.generic import DetailView
+from django.utils.decorators import method_decorator
+from django.views.decorators.clickjacking import xframe_options_exempt
+
 
 logger = logging.getLogger(__name__)
 
@@ -1806,6 +1809,7 @@ def generar_invitacion_grafica(estudiante, grupo):
 '''
 
 
+@method_decorator(xframe_options_exempt, name='dispatch')
 class DetalleTicketView(DetailView):
     model = TicketSoporte
     template_name = 'soporte/detalle_ticket.html'  # Un solo template
@@ -2204,3 +2208,8 @@ def marcar_todas_leidas(request, padre_id):
 
     messages.success(request, 'Todas las notificaciones han sido marcadas como leídas')
     return redirect('detalle_padre', padre_id=padre.id)
+
+
+
+
+

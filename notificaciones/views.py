@@ -92,7 +92,7 @@ class PanelNotificacionesView(generic.TemplateView):
                 }
                 tipos_notificaciones.append(tipo)
             except Exception as e:
-                print(f"Error procesando {event_key}: {str(e)}")
+                # print(f"Error procesando {event_key}: {str(e)}")
                 continue
 
         context.update({
@@ -124,7 +124,7 @@ class PanelNotificacionesView(generic.TemplateView):
             return reverse(url_name)
 
         except Exception as e:
-            print(f"Error generando URL para {url_name}: {str(e)}")
+            # print(f"Error generando URL para {url_name}: {str(e)}")
             return reverse('servicios_escolares:dashboard')
 
 
@@ -159,7 +159,7 @@ class PanelServiciosEscolaresView(generic.ListView):
     def dispatch(self, request, *args, **kwargs):
         # 1. Verificación de autenticación
         if not request.session.get('credenciales'):
-            print("[DEBUG] No hay sesión activa - Redirigiendo a login")
+            # print("[DEBUG] No hay sesión activa - Redirigiendo a login")
             messages.error(request, 'Debes iniciar sesión primero')
             return redirect('servicios_escolares:login')
 
@@ -169,10 +169,10 @@ class PanelServiciosEscolaresView(generic.ListView):
                 id=request.session['credenciales']['id'],
                 estado_cuenta='Activo'
             )
-            print(f"[DEBUG] Servicio escolar autenticado: {self.servicio_escolar}")
+            # print(f"[DEBUG] Servicio escolar autenticado: {self.servicio_escolar}")
 
         except ServicioEscolar.DoesNotExist:
-            print("[DEBUG] Error: ServicioEscolar no existe o cuenta no activa")
+            # print("[DEBUG] Error: ServicioEscolar no existe o cuenta no activa")
             messages.error(request, 'Error de autenticación')
             return redirect('servicios_escolares:logout')
 

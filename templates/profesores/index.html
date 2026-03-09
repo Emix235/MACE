@@ -751,15 +751,25 @@
                         const url = filtroPendientes ?
                             '/profesores/api/profesor/eventos/?estado=pendiente' :
                             '/profesores/api/profesor/eventos/';
+
                         console.log('Cargando eventos desde URL:', url);
 
-                        fetch(url)
+                        fetch(url, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            credentials: 'same-origin'
+                        })
                             .then(response => {
                                 console.log('Respuesta recibida:', response);
+
+                                if (!response.ok) {
+                                    throw new Error(`Error HTTP ${response.status}`);
+                                }
+
                                 return response.json();
                             })
                             .then(data => {
-                                console.log('Datos de eventos cargados:', data);
                                 successCallback(data);
                             })
                             .catch(error => {
