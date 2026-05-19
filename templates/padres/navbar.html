@@ -1,7 +1,87 @@
 {% url 'logout' as logout %}
 <!--navbar-dark bg-primary -->
 {% load static %}
+<style>
+    /* --- ESTILOS MEJORADOS PARA SCROLL EN NOTIFICACIONES --- */
+    /* Contenedor de la lista de notificaciones con scroll */
+    .notifications-scroll-container {
+        max-height: 380px;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    /* Scroll personalizado para notificaciones */
+    .notifications-scroll-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .notifications-scroll-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .notifications-scroll-container::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 10px;
+    }
+    
+    .notifications-scroll-container::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+    
+    /* Ajuste para el dropdown de notificaciones */
+    .dropdown-menu.notifications-dropdown {
+        min-width: 360px;
+        max-width: 450px;
+        padding: 0;
+        overflow: hidden !important;
+    }
+    
+    /* Header fijo dentro del dropdown */
+    .notifications-header {
+        position: sticky;
+        top: 0;
+        /*background: white;*/
+        z-index: 2;
+        border-bottom: 1px solid #eee;
+    }
+    
+    /* Footer fijo dentro del dropdown */
+    .notifications-footer {
+        position: sticky;
+        bottom: 0;
+        /*background: white;*/
+        border-top: 1px solid #dee2e6;
+        z-index: 2;
+    }
+    
+    /* Mejora para items de notificación */
+    .notification-item {
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .notification-item:last-child {
+        border-bottom: none;
+    }
+    
+    .notification-item .dropdown-item {
+        white-space: normal;
+        word-wrap: break-word;
+        padding: 12px 16px;
+    }
+    
+    /* Notificación no leída - fondo sutil */
+    .notification-item.unread {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    .notification-item.unread:hover {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+    }
+</style>
+
 {% if request.session.credenciales_padre %}
+    <div class="sticky-top" style="position: sticky; top: 0; z-index: 1020;">
     <nav class="navbar navbar-expand-lg shadow-sm">
         <div class="container-fluid">
             <!-- Logo y Nombre del Sistema -->
@@ -58,7 +138,7 @@
 
                 <!-- Menú Usuario y Notificaciones -->
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0" style="margin-bottom: 0 !important;">
-                    <!-- Notificaciones -->
+                    <!-- Notificaciones CON SCROLL MEJORADO -->
                     <li class="nav-item dropdown">
                         <a class="nav-link position-relative" href="#" id="notificacionesDropdown" role="button"
                            data-bs-toggle="dropdown">
@@ -67,60 +147,75 @@
                             </i>
                             {% if notificaciones_no_leidas > 0 %}
                                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger pulse">
-                {{ notificaciones_no_leidas }}
-                <span class="visually-hidden">Notificaciones no leídas</span>
-            </span>
+                                    {{ notificaciones_no_leidas }}
+                                    <span class="visually-hidden">Notificaciones no leídas</span>
+                                </span>
                             {% endif %}
                         </a>
 
-                        <ul class="dropdown-menu dropdown-menu-end p-2" aria-labelledby="notificacionesDropdown"
-                            style="max-height: 400px; overflow-y: auto; margin: 0; overflow-x: hidden;width: 450px;">
-                            <li><h6 class="dropdown-header">Notificaciones</h6></li>
+                        <ul class="dropdown-menu dropdown-menu-end notifications-dropdown" aria-labelledby="notificacionesDropdown">
+                            <!-- Header fijo -->
+                            <div class="notifications-header">
+                                <li><h6 class="dropdown-header">Notificaciones</h6></li>
 
-                            {% if notificaciones_no_leidas > 0 %}
-                                <li>
-                                    <button class="dropdown-item text-center text-primary" id="marcar-todas-leidas">
-                                        <i class="bi bi-check-all me-2"></i>Marcar todas como leídas
-                                    </button>
-                                </li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                            {% endif %}
-
-                            {% if notificaciones|length > 0 %}
-                                {% for notificacion in notificaciones %}
-                                    <li class="notification-item {% if not notificacion.is_read %}unread{% endif %}">
-                                        <a class="dropdown-item {% if not notificacion.is_read %}fw-bold{% endif %}"
-                                           href="{{ notificacion.url }}"
-                                           data-notificacion-id="{{ notificacion.id }}">
-                                            <i class="bi 
-                            {% if notificacion.event_type == 'circular' %}bi-file-earmark-text-fill text-primary
-                            {% elif notificacion.event_type == 'cita' %}bi-calendar-check-fill text-success
-                            {% else %}bi-exclamation-circle-fill text-warning
-                            {% endif %} me-2">
-                                            </i>
-                                            <div>
-                                                <span class="notification-title">{{ notificacion.title }}</span>
-                                                <small class="text-muted d-block">{{ notificacion.message|truncatechars:40 }}</small>
-                                            </div>
-                                        </a>
+                                {% if notificaciones_no_leidas > 0 %}
+                                    <li>
+                                        <button class="dropdown-item text-center text-primary" id="marcar-todas-leidas">
+                                            <i class="bi bi-check-all me-2"></i>Marcar todas como leídas
+                                        </button>
                                     </li>
-                                {% endfor %}
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                {% endif %}
+                            </div>
+
+                            <!-- Contenedor con SCROLL para las notificaciones -->
+                            <div class="notifications-scroll-container">
+                                {% if notificaciones|length > 0 %}
+                                    {% for notificacion in notificaciones %}
+                                        <li class="notification-item {% if not notificacion.is_read %}unread{% endif %}">
+                                            <a class="dropdown-item {% if not notificacion.is_read %}fw-bold{% endif %}"
+                                               href="{{ notificacion.url }}"
+                                               data-notificacion-id="{{ notificacion.id }}">
+                                                <i class="bi 
+                                {% if notificacion.event_type == 'circular' %}bi-file-earmark-text-fill text-primary
+                                {% elif notificacion.event_type == 'cita' %}bi-calendar-check-fill text-success
+                                {% else %}bi-exclamation-circle-fill text-warning
+                                {% endif %} me-2">
+                                                </i>
+                                                <div>
+                                                    <span class="notification-title">{{ notificacion.title }}</span>
+                                                    <small class="text-muted d-block">{{ notificacion.message|truncatechars:40 }}</small>
+                                                    {% if notificacion.created_at %}
+                                                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                                                            {{ notificacion.created_at|date:"d/m/Y H:i" }}
+                                                        </small>
+                                                    {% endif %}
+                                                </div>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li><span class="dropdown-item text-muted">No hay notificaciones nuevas</span></li>
+                                {% endif %}
+                            </div>
+
+                            <!-- Footer fijo -->
+                            <div class="notifications-footer">
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
-                                <li style="position: sticky; bottom: 0; background: white; margin-top: auto; border-top: 1px solid #dee2e6;">
+                                <li>
                                     <a class="dropdown-item text-center"
                                        href="{% url 'padres:panel_notificaciones' %}">
                                         Ver todas las notificaciones
                                     </a>
                                 </li>
-                            {% else %}
-                                <li><span class="dropdown-item text-muted">No hay notificaciones nuevas</span></li>
-                            {% endif %}
+                            </div>
                         </ul>
                     </li>
+
                     <!-- Perfil de Usuario -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
@@ -153,8 +248,12 @@
             </div>
         </div>
     </nav>
+</div>
+<!-- Espaciador para evitar que el contenido quede tapado -->
+    <div style="height: 0;"></div>
 {% else %}
     {% load static %}
+    <div class="sticky-top" style="position: sticky; top: 0; z-index: 1020;">
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
         <div class="container-fluid">
             <!-- Logo y Nombre del Sistema -->
@@ -186,26 +285,9 @@
             </div>
         </div>
     </nav>
-    {#    'credenciales_padre': {{ request.session.credenciales_padre|default:"null"|safe }}, #}
-    {#    'session_keys': [{% for key in request.session.keys %}'{{ key }}'{% if not forloop.last %}, {% endif %}{% endfor %}] #}
+</div>
+<div style="height: 0;"></div>
 {% endif %}
-<script>
-    // Debug en consola
-    /**
-     console.group('Depuración de sesión');
-     console.log('Session storage:', sessionStorage);
-     console.log('Request session:', {
-     aqui van las credenciales, credenciales_padre, session_keys
-     });
-     console.groupEnd();
-
-     // Mostrar panel de debug con Ctrl+D
-     document.addEventListener('keydown', function(e) {
-     if (e.ctrlKey && e.key === 'd') {
-     document.querySelector('.debug-info').style.display = 'block';
-     }
-     });**/
-</script>
 
 <script>
     // Marcar una por una como leídas y remover de la lista
@@ -216,7 +298,7 @@
             const notificacionId = this.getAttribute('data-notificacion-id');
             const urlDestino = this.getAttribute('href');
             const notificationItem = this.closest('li');
-            const dropdownMenu = this.closest('.dropdown-menu');
+            const scrollContainer = document.querySelector('.notifications-scroll-container');
 
             fetch(`{% url 'notificaciones:marcar_notificacion_leida' 0 %}`.replace('0', notificacionId), {
                 method: 'POST',
@@ -240,15 +322,22 @@
                                 badgeCounter.textContent = newCount;
                             } else {
                                 badgeCounter.remove();
-                                document.querySelector('.bi-bell-fill').classList.remove('animate-bell');
+                                const bellIcon = document.querySelector('.bi-bell-fill');
+                                if (bellIcon) bellIcon.classList.remove('animate-bell');
 
                                 // Ocultar el botón "Marcar todas"
                                 const markAllButton = document.getElementById('marcar-todas-leidas');
-                                if (markAllButton) {
+                                if (markAllButton && markAllButton.closest('li')) {
                                     markAllButton.closest('li').remove();
-                                    document.querySelector('.dropdown-divider').remove();
+                                    const divider = document.querySelector('.notifications-header .dropdown-divider');
+                                    if (divider) divider.remove();
                                 }
                             }
+                        }
+
+                        // Verificar si no quedan notificaciones
+                        if (scrollContainer && scrollContainer.querySelectorAll('.notification-item').length === 0) {
+                            scrollContainer.innerHTML = '<li><span class="dropdown-item text-muted">No hay notificaciones nuevas</span></li>';
                         }
 
                         // 3. Redirigir después de la animación
@@ -281,28 +370,27 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    // 1. Eliminar todas las notificaciones de la lista
-                    const notificationsList = document.querySelectorAll('.dropdown-item[data-notificacion-id]');
-                    notificationsList.forEach(item => {
-                        item.closest('li').remove();
-                    });
+                    // 1. Limpiar el contenedor de scroll
+                    const scrollContainer = document.querySelector('.notifications-scroll-container');
+                    if (scrollContainer) {
+                        scrollContainer.innerHTML = '<li><span class="dropdown-item text-muted">No hay notificaciones nuevas</span></li>';
+                    }
 
-                    // 2. Mostrar mensaje de "No hay notificaciones"
-                    const emptyMessage = document.createElement('li');
-                    emptyMessage.innerHTML = '<a class="dropdown-item" href="#">No hay notificaciones nuevas</a>';
-                    document.querySelector('.dropdown-menu').insertBefore(
-                        emptyMessage,
-                        document.querySelector('.dropdown-divider:last-of-type')
-                    );
-
-                    // 3. Actualizar UI
-                    document.querySelector('.bi-bell-fill').classList.remove('animate-bell');
+                    // 2. Actualizar UI - eliminar badge
                     const badgeCounter = document.querySelector('.badge.bg-danger');
                     if (badgeCounter) badgeCounter.remove();
+                    
+                    const bellIcon = document.querySelector('.bi-bell-fill');
+                    if (bellIcon) bellIcon.classList.remove('animate-bell');
 
-                    // 4. Ocultar el botón "Marcar todas"
-                    this.closest('li').remove();
-                    document.querySelector('.dropdown-divider').remove();
+                    // 3. Ocultar el botón "Marcar todas"
+                    const markAllButton = document.getElementById('marcar-todas-leidas');
+                    if (markAllButton && markAllButton.closest('li')) {
+                        markAllButton.closest('li').remove();
+                        // Eliminar el divider también
+                        const divider = document.querySelector('.notifications-header .dropdown-divider');
+                        if (divider) divider.remove();
+                    }
                 }
             })
             .catch(error => console.error('Error:', error));
@@ -323,4 +411,22 @@
         }
         return cookieValue;
     }
+</script>
+
+<script>
+    // Debug en consola
+    /**
+     console.group('Depuración de sesión');
+     console.log('Session storage:', sessionStorage);
+     console.log('Request session:', {
+     aqui van las credenciales, credenciales_padre, session_keys
+     });
+     console.groupEnd();
+
+     // Mostrar panel de debug con Ctrl+D
+     document.addEventListener('keydown', function(e) {
+     if (e.ctrlKey && e.key === 'd') {
+     document.querySelector('.debug-info').style.display = 'block';
+     }
+     });**/
 </script>

@@ -8,49 +8,57 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 
 
-def get_user_role_and_base(request):
-    """Obtiene el usuario actual, su rol y la plantilla base correspondiente."""
-    print(f"\n[UTILS DEBUG] get_user_role_and_base llamado")
-    print(f"[UTILS DEBUG] Sesión: {dict(request.session)}")
+from django.apps import apps
 
+def get_user_role_and_base(request):
     user = None
     role = None
     base_template = None
-    redirect_response = None
+    extra_context = {}
 
-    try:
-        if 'credenciales_padre' in request.session:
-            print(f"[UTILS DEBUG] Detectado padre: {request.session['credenciales_padre']}")
-            user = get_object_or_404(Padre, id=request.session['credenciales_padre']['id'])
-            role = 'padre'
-            base_template = 'padres/base.html'
+    ThemeConfig = apps.get_model('servicios_escolares.ThemeConfig')
+    theme_config = ThemeConfig.objects.first()
 
-        elif 'credenciales_profesor' in request.session:
-            print(f"[UTILS DEBUG] Detectado profesor: {request.session['credenciales_profesor']}")
-            user = get_object_or_404(Profesor, id=request.session['credenciales_profesor']['id'])
-            role = 'profesor'
-            base_template = 'profesores/base.html'
+    default_theme = 'css/themes/default.css'
+    global_theme = theme_config.global_theme if theme_config else default_theme
 
-        elif 'credenciales' in request.session:
-            print(f"[UTILS DEBUG] Detectado servicio: {request.session['credenciales']}")
-            user = get_object_or_404(ServicioEscolar, id=request.session['credenciales']['id'])
-            role = 'servicio'
-            base_template = 'servicios_escolares/base.html'
+    if 'credenciales_padre' in request.session:
+        user = get_object_or_404(Padre, id=request.session['credenciales_padre']['id'])
+        role = 'padre'
+        base_template = 'padres/base.html'
 
-        else:
-            print("[UTILS DEBUG] No hay sesión activa")
-            return None, None, None, None
+        personal_theme = getattr(user, 'personal_theme', None)
+        active_theme = personal_theme if personal_theme else global_theme
 
-        print(f"[UTILS DEBUG] Usuario encontrado: {user}")
-        print(f"[UTILS DEBUG] Rol: {role}")
-        print(f"[UTILS DEBUG] Tipo usuario: {type(user)}")
+        extra_context.update({
+            'active_theme': active_theme
+        })
 
-        return user, role, base_template, None
+    elif 'credenciales_profesor' in request.session:
+        user = get_object_or_404(Profesor, id=request.session['credenciales_profesor']['id'])
+        role = 'profesor'
+        base_template = 'profesores/base.html'
 
-    except Exception as e:
-        print(f"[UTILS DEBUG] ERROR: {e}")
-        traceback.print_exc()
-        return None, None, None, None
+        personal_theme = getattr(user, 'personal_theme', None)
+        active_theme = personal_theme if personal_theme else global_theme
+
+        extra_context.update({
+            'active_theme': active_theme
+        })
+
+    elif 'credenciales' in request.session:
+        user = get_object_or_404(ServicioEscolar, id=request.session['credenciales']['id'])
+        role = 'servicio'
+        base_template = 'servicios_escolares/base.html'
+
+        extra_context.update({
+            'active_theme': global_theme
+        })
+
+    else:
+        return None, None, None, None, None
+
+    return user, role, base_template, None, extra_context
 
 
 def get_user_role_display(role):

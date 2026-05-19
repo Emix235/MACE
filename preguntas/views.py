@@ -18,7 +18,7 @@ def buscar_respuesta(request):
             print("[FAQ] Iniciando búsqueda...")
 
             # Obtener usuario y rol
-            user, role, base_template, redirect_response = get_user_role_and_base(request)
+            user, role, base_template, redirect_response, extra_context = get_user_role_and_base(request)
             print(f"[FAQ] Rol detectado: {role}")
             print(f"[FAQ] Tipo de usuario: {type(user)}")
 
@@ -160,7 +160,7 @@ def buscar_respuesta(request):
 '''
 def obtener_preguntas_frecuentes(request):
     # Obtener usuario y rol
-    user, role, base_template, redirect_response = get_user_role_and_base(request)
+    user, role, base_template, redirect_response, extra_context = get_user_role_and_base(request)
     if not user:
         return JsonResponse({'error': 'Debes iniciar sesión'}, status=401)
 
@@ -181,7 +181,7 @@ def obtener_preguntas_frecuentes(request):
 # Vista para ver todas las preguntas FAQ
 def faq_lista(request):
     # Obtener usuario y rol
-    user, role, base_template, redirect_response = get_user_role_and_base(request)
+    user, role, base_template, redirect_response, extra_context = get_user_role_and_base(request)
 
     if redirect_response:
         return redirect_response
@@ -221,26 +221,71 @@ def faq_lista(request):
     return render(request, 'preguntas/pregunta_lista.html', context)
 
 
+'''
 def faq_por_rol(request, rol):
-    user, role, base_template, redirect_response = get_user_role_and_base(request)
+    print(f"[DEBUG] === INICIO faq_por_rol ===")
+    print(f"[DEBUG] Rol recibido en URL: {rol}")
+    print(f"[DEBUG] Tipo de rol: {type(rol)}")
+    
+    user, role, base_template, redirect_response, extra_context = get_user_role_and_base(request)
+    print(f"[DEBUG] user: {user}")
+    print(f"[DEBUG] role obtenido: {role}")
+    print(f"[DEBUG] base_template: {base_template}")
+    print(f"[DEBUG] redirect_response: {redirect_response}")
+    
     if redirect_response:
+        print(f"[DEBUG] Hay redirect_response, redirigiendo a: {redirect_response.url if hasattr(redirect_response, 'url') else redirect_response}")
         return redirect_response
 
     roles_validos = dict(PreguntaRespuesta.ROL_CHOICES)
+    print(f"[DEBUG] roles_validos: {roles_validos}")
+    print(f"[DEBUG] ¿El rol '{rol}' está en roles_validos?: {rol in roles_validos}")
+    
     if rol not in roles_validos:
         from django.contrib import messages
+        print(f"[DEBUG] Rol NO válido: {rol}")
         messages.error(request, 'Rol no válido')
-        return redirect('preguntas:faq_lista')  # O a donde prefieras
+        return redirect('preguntas:faq_lista')
 
+    print(f"[DEBUG] Rol válido, continuando...")
+    
     # Ahora sí funcionan estos métodos
     preguntas_rol = PreguntaRespuesta.get_preguntas_por_rol(rol)
     preguntas_generales = PreguntaRespuesta.get_preguntas_generales()
+    
+    print(f"[DEBUG] preguntas_rol (type: {type(preguntas_rol)}):")
+    if preguntas_rol:
+        print(f"[DEBUG]   - Cantidad: {len(preguntas_rol) if hasattr(preguntas_rol, '__len__') else 'N/A'}")
+        for i, p in enumerate(preguntas_rol):
+            print(f"[DEBUG]     [{i}] pregunta: {getattr(p, 'pregunta', 'N/A')[:50]}...")
+            print(f"[DEBUG]         respuesta: {getattr(p, 'respuesta', 'N/A')[:50]}...")
+    else:
+        print(f"[DEBUG]   - preguntas_rol está vacío o es None")
+    
+    print(f"[DEBUG] preguntas_generales (type: {type(preguntas_generales)}):")
+    if preguntas_generales:
+        print(f"[DEBUG]   - Cantidad: {len(preguntas_generales) if hasattr(preguntas_generales, '__len__') else 'N/A'}")
+        for i, p in enumerate(preguntas_generales):
+            print(f"[DEBUG]     [{i}] pregunta: {getattr(p, 'pregunta', 'N/A')[:50]}...")
+    else:
+        print(f"[DEBUG]   - preguntas_generales está vacío o es None")
 
     rol_display = get_user_role_display(role)
     rol_seleccionado_display = get_user_role_display(rol)
+    
+    print(f"[DEBUG] rol_display: {rol_display}")
+    print(f"[DEBUG] rol_seleccionado_display: {rol_seleccionado_display}")
+    print(f"[DEBUG] rol_seleccionado: {rol}")
+    print(f"[DEBUG] rol_actual: {role}")
 
-    # CAMBIA 'preguntas/pregunta_rol.html' por 'faq/faq_rol.html'
-    return render(request, 'preguntas/pregunta_rol.html', {
+    # Mapeo de rol (que viene de la URL) a tutorial_id específico
+    rol_to_tutorial = {
+        'servicio': 'agendar_cita',      # ID del tutorial en servicios_escolares
+        'padre': 'ver_citas',            # ID del tutorial en padre
+        'profesor': 'gestionar_citas',   # ID del tutorial en profesor
+    }
+    
+    context = {
         'preguntas_rol': preguntas_rol,
         'preguntas_generales': preguntas_generales,
         'rol_seleccionado': rol,
@@ -250,13 +295,182 @@ def faq_por_rol(request, rol):
         'base_template': base_template,
         'titulo': f'FAQ - {rol_seleccionado_display}',
         'user': user,
-    })
+    }
+    
+    print(f"[DEBUG] Context a enviar a template:")
+    for key, value in context.items():
+        if key in ['preguntas_rol', 'preguntas_generales']:
+            print(f"[DEBUG]   {key}: {type(value)} - cantidad: {len(value) if hasattr(value, '__len__') else 'N/A'}")
+        else:
+            print(f"[DEBUG]   {key}: {value}")
+    
+    print(f"[DEBUG] Template a renderizar: preguntas/pregunta_rol.html")
+    print(f"[DEBUG] === FIN faq_por_rol ===")
+    
+    return render(request, 'preguntas/pregunta_rol.html', context)
+'''
+
+
+def faq_por_rol(request, rol):
+    print(f"[DEBUG] === INICIO faq_por_rol ===")
+    print(f"[DEBUG] Rol recibido en URL: {rol}")
+    print(f"[DEBUG] Tipo de rol: {type(rol)}")
+    
+    user, role, base_template, redirect_response, extra_context = get_user_role_and_base(request)
+    print(f"[DEBUG] user: {user}")
+    print(f"[DEBUG] role obtenido: {role}")
+    print(f"[DEBUG] base_template: {base_template}")
+    print(f"[DEBUG] redirect_response: {redirect_response}")
+    
+    if redirect_response:
+        print(f"[DEBUG] Hay redirect_response, redirigiendo a: {redirect_response.url if hasattr(redirect_response, 'url') else redirect_response}")
+        return redirect_response
+
+    roles_validos = ['servicio', 'padre', 'profesor']
+    print(f"[DEBUG] roles_validos: {roles_validos}")
+    print(f"[DEBUG] ¿El rol '{rol}' está en roles_validos?: {rol in roles_validos}")
+    
+    if rol not in roles_validos:
+        from django.contrib import messages
+        print(f"[DEBUG] Rol NO válido: {rol}")
+        messages.error(request, 'Rol no válido')
+        return redirect('preguntas:faq_lista')
+
+    print(f"[DEBUG] Rol válido, continuando...")
+    
+    # Mapeo de rol a ID de tutorial (para pasar al frontend)
+    rol_to_tutorial = {
+        'servicio': 'agendar_cita',      # ID del tutorial en servicios_escolares
+        'padre': 'ver_citas',            # ID del tutorial en padre
+        'profesor': 'gestionar_citas',   # ID del tutorial en profesor
+    }
+    
+    # Mapeo de rol a nombre para mostrar
+    rol_display_names = {
+        'servicio': 'Servicios Escolares',
+        'padre': 'Padre de Familia',
+        'profesor': 'Profesor'
+    }
+    
+    rol_seleccionado_display = rol_display_names.get(rol, rol)
+    rol_actual_display = rol_display_names.get(role, role)
+    
+    # Obtenemos los tutoriales según el rol seleccionado
+    # Esto ahora se pasará al contexto para que JS lo maneje
+    tutoriales_por_rol = {
+        'servicio': {
+            'agendar_cita': {
+                'nombre': 'Cómo Agendar una Cita',
+                'descripcion': 'Aprende a agendar citas para estudiantes paso a paso'
+            },
+            'gestionar_calendario': {
+                'nombre': 'Gestión de Calendario',
+                'descripcion': 'Aprende a gestionar y visualizar el calendario de citas'
+            },
+            'generar_reportes': {
+                'nombre': 'Generar Reportes',
+                'descripcion': 'Aprende a generar reportes estadísticos del sistema'
+            },
+            'gestionar_usuarios': {
+                'nombre': 'Gestión de Usuarios',
+                'descripcion': 'Aprende a gestionar usuarios y permisos en el sistema'
+            }
+        },
+        'padre': {
+            'ver_citas': {
+                'nombre': 'Ver Citas de mi Hijo',
+                'descripcion': 'Consulta las citas programadas para tus hijos'
+            },
+            'solicitar_reunion': {
+                'nombre': 'Solicitar Reunión',
+                'descripcion': 'Aprende a solicitar una reunión con los profesores'
+            }
+        },
+        'profesor': {
+            'gestionar_citas': {
+                'nombre': 'Gestionar Mis Citas',
+                'descripcion': 'Administra las citas programadas con padres y estudiantes'
+            },
+            'registrar_notas': {
+                'nombre': 'Registrar Notas',
+                'descripcion': 'Registrar observaciones después de cada reunión'
+            }
+        }
+    }
+    
+    # Obtener tutoriales del rol seleccionado
+    tutoriales_del_rol = tutoriales_por_rol.get(rol, {})
+    
+    # Crear lista de preguntas frecuentes desde los tutoriales
+    preguntas_rol = []
+    for tutorial_id, tutorial_info in tutoriales_del_rol.items():
+        preguntas_rol.append({
+            'id': tutorial_id,
+            'pregunta': f"¿Cómo {tutorial_info['nombre'].lower()}?",
+            'respuesta': tutorial_info['descripcion'],
+            'tutorial_id': tutorial_id,
+            'fecha_creacion': None  # O puedes poner una fecha por defecto
+        })
+    
+    # Preguntas generales (puedes mantenerlas desde BD o crear algunas)
+    preguntas_generales = [
+        {
+            'id': 1,
+            'pregunta': '¿Cómo cambio mi contraseña?',
+            'respuesta': 'Puedes cambiar tu contraseña desde tu perfil de usuario, en la sección de configuración.'
+        },
+        {
+            'id': 2,
+            'pregunta': '¿Cómo recupero mi cuenta?',
+            'respuesta': 'Usa la opción "Olvidé mi contraseña" en la página de inicio de sesión.'
+        },
+        {
+            'id': 3,
+            'pregunta': '¿Dónde puedo ver mis notificaciones?',
+            'respuesta': 'Las notificaciones aparecen en el ícono de campana en la parte superior derecha.'
+        }
+    ]
+    
+    print(f"[DEBUG] preguntas_rol creadas: {len(preguntas_rol)}")
+    for i, p in enumerate(preguntas_rol):
+        print(f"[DEBUG]   [{i}] pregunta: {p['pregunta']}")
+        print(f"[DEBUG]       tutorial_id: {p['tutorial_id']}")
+    
+    print(f"[DEBUG] preguntas_generales: {len(preguntas_generales)}")
+
+    context = {
+        'preguntas_rol': preguntas_rol,
+        'preguntas_generales': preguntas_generales,
+        'rol_seleccionado': rol,
+        'rol_seleccionado_display': rol_seleccionado_display,
+        'rol_actual': role,
+        'rol_actual_display': rol_actual_display,
+        'base_template': base_template,
+        'titulo': f'FAQ - {rol_seleccionado_display}',
+        'user': user,
+        'tutorial_id_principal': rol_to_tutorial.get(rol, ''),
+    }
+    
+    print(f"[DEBUG] Context a enviar a template:")
+    for key, value in context.items():
+        if key == 'preguntas_rol':
+            print(f"[DEBUG]   {key}: lista con {len(value)} items")
+        elif key == 'preguntas_generales':
+            print(f"[DEBUG]   {key}: lista con {len(value)} items")
+        else:
+            print(f"[DEBUG]   {key}: {value}")
+    
+    print(f"[DEBUG] Template a renderizar: preguntas/pregunta_rol.html")
+    print(f"[DEBUG] === FIN faq_por_rol ===")
+    
+    return render(request, 'preguntas/pregunta_rol.html', context)
+
 
 
 # Vista para ver detalles de una pregunta
 def pregunta_detalle(request, pk):
     # Obtener usuario y rol
-    user, role, base_template, redirect_response = get_user_role_and_base(request)
+    user, role, base_template, redirect_response, extra_context = get_user_role_and_base(request)
 
     if redirect_response:
         return redirect_response
@@ -293,7 +507,7 @@ def pregunta_detalle(request, pk):
 
 
 def buscar_preguntas(request):
-    user, role, base_template, redirect_response = get_user_role_and_base(request)
+    user, role, base_template, redirect_response, extra_context = get_user_role_and_base(request)
     if redirect_response:
         return redirect_response
 
@@ -335,7 +549,7 @@ def buscar_preguntas(request):
 
 def obtener_preguntas_frecuentes(request):
     # Obtener usuario y rol
-    user, role, base_template, redirect_response = get_user_role_and_base(request)
+    user, role, base_template, redirect_response, extra_context = get_user_role_and_base(request)
     if not user:
         return JsonResponse({'error': 'Debes iniciar sesión'}, status=401)
 
@@ -364,7 +578,12 @@ def obtener_preguntas_frecuentes(request):
 # views.py
 def demo_chatbot(request):
     """Vista para demostración interactiva del FAQ"""
-    user, role, base_template, redirect_response = get_user_role_and_base(request)
+    user, role, base_template, redirect_response, extra_context = get_user_role_and_base(request)
+
+    # 🔥 OVERRIDE DESDE URL
+    role_param = request.GET.get("role")
+    if role_param:
+        role = role_param
 
     if redirect_response:
         return redirect_response
@@ -385,11 +604,11 @@ def demo_chatbot(request):
 
     return render(request, 'preguntas/chatbot_demo.html', context)
 
-
+'''
 @xframe_options_exempt
 def demo_completa_view(request):
     """Vista para la demo completa con iframe"""
-    user, role, base_template, redirect_response = get_user_role_and_base(request)
+    user, role, base_template, redirect_response, extra_context = get_user_role_and_base(request)
 
     if redirect_response:
         return redirect_response
@@ -400,6 +619,53 @@ def demo_completa_view(request):
         'rol_display': get_user_role_display(role),
         'titulo': 'Demo Completa - Agendar Cita',
         'user': user,
+    }
+
+    return render(request, 'preguntas/demo_completa.html', context)
+'''
+
+'''
+@xframe_options_exempt
+def demo_completa_view(request):
+    """Vista para la demo completa con iframe"""
+    user, role, base_template, redirect_response, extra_context = get_user_role_and_base(request)
+
+    if redirect_response:
+        return redirect_response
+
+    # Obtener tutorial específico desde la URL (parámetro 'tutorial')
+    tutorial_seleccionado = request.GET.get('tutorial', role)
+    
+    context = {
+        'base_template': base_template,
+        'rol_actual': role,
+        'rol_display': get_user_role_display(role),
+        'titulo': 'Demo Completa - Agendar Cita',
+        'user': user,
+        'tutorial_seleccionado': tutorial_seleccionado,  # ← NUEVO
+    }
+
+    return render(request, 'preguntas/demo_completa.html', context)
+'''
+
+
+@xframe_options_exempt
+def demo_completa_view(request):
+    """Vista para la demo completa con iframe"""
+    user, role, base_template, redirect_response, extra_context = get_user_role_and_base(request)
+
+    if redirect_response:
+        return redirect_response
+
+    # Obtener tutorial específico desde la URL (parámetro 'tutorial')
+    tutorial_seleccionado = request.GET.get('tutorial', '')
+    
+    context = {
+        'base_template': base_template,
+        'rol_actual': role,
+        'titulo': 'Demo Interactiva',
+        'user': user,
+        'tutorial_seleccionado': tutorial_seleccionado,
     }
 
     return render(request, 'preguntas/demo_completa.html', context)

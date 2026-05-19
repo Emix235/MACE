@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Servicios Escolares</title>
 
+     <!-- Icons Font awesome -->
+    <script src="https://kit.fontawesome.com/7e8129260b.js" crossorigin="anonymous"></script>
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
     <!-- Bootstrap JS Bundle with Popper -->
@@ -75,44 +77,6 @@
         .navbar-custom .dropdown-menu {
             border: none;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
-        }
-
-        /* Footer */
-        .footer {
-            padding: 2rem 0 1rem;
-            margin-top: auto;
-        }
-
-        .footer h5 {
-            margin-bottom: 1.25rem;
-            font-weight: 600;
-        }
-
-        .footer ul {
-            padding-left: 0;
-            list-style: none;
-        }
-
-        .footer ul li {
-            margin-bottom: 0.5rem;
-        }
-
-        .footer a {
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .footer .social-icons a {
-            display: inline-block;
-            margin-right: 1rem;
-            font-size: 1.25rem;
-        }
-
-        .footer .copyright {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 1rem;
-            margin-top: 2rem;
-            font-size: 0.9rem;
         }
 
         /* Contenido principal */
@@ -398,5 +362,36 @@
 
 {% include 'padres/footer.html' %}
 
+
+ <!-- CÓDIGO DE COMUNICACIÓN CON APP MÓVIL - SOLO UNA VEZ -->
+    <script>
+    (function() {
+        // Función para enviar mensajes a React Native
+        window.enviarMensajeANative = function(mensaje) {
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify(mensaje));
+                console.log('📱 Enviado a app nativa:', mensaje);
+            }
+        };
+        
+        // Notificar cuando la página carga
+        document.addEventListener('DOMContentLoaded', function() {
+            window.enviarMensajeANative({
+                type: 'pagina_cargada',
+                url: window.location.pathname,
+                titulo: document.title
+            });
+        });
+        
+        // Capturar tutorial completado (desde demo_completa.js)
+        window.notificarTutorialCompletado = function(nombreTutorial) {
+            window.enviarMensajeANative({
+                type: 'tutorial_completado',
+                tutorial: nombreTutorial,
+                timestamp: new Date().toISOString()
+            });
+        };
+    })();
+    </script>
 </body>
 </html>

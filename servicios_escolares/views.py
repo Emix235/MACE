@@ -437,7 +437,7 @@ def detalle_cita_modal(request, cita_id):
         # Obtener usuario desde la sesión
         usuario = ServicioEscolar.objects.get(
             id=request.session['credenciales']['id'],
-            estado_cuenta='Activo'  # Solo cuentas activas
+            estado_cuenta='Activo'
         )
     except ServicioEscolar.DoesNotExist:
         messages.error(request, 'Usuario no encontrado o cuenta inactiva')
@@ -452,10 +452,11 @@ def detalle_cita_modal(request, cita_id):
     # Contexto para renderizar la vista
     context = {
         'cita': cita,
-        'es_servicio_escolar': True,  # El usuario es un servicio escolar porque lo obtuvimos de la sesión
+        'es_servicio_escolar': True,
     }
 
-    html = render_to_string('servicios_escolares/citas/detalle_cita.html', context, request)
+    # Usar el template específico para modal (SIN base.html)
+    html = render_to_string('servicios_escolares/citas/detalle_cita_modal.html', context, request)
     return HttpResponse(html)
 
 
@@ -818,7 +819,7 @@ def panel_horarios_servicio_escolar(request):
     """
     # Verificar autenticación
     if not request.session.get('credenciales'):
-        messages.warning(request, '[DEBUG] No hay credenciales en la sesión')
+        # messages.warning(request, '[DEBUG] No hay credenciales en la sesión')
         return redirect('servicios_escolares:login')
 
     try:
@@ -828,7 +829,7 @@ def panel_horarios_servicio_escolar(request):
             estado_cuenta='Activo',
             rol_usuario='Servicio Escolar'
         )
-        messages.info(request, f'[DEBUG] Usuario autenticado: {usuario.nombre_completo}')
+        # messages.info(request, f'[DEBUG] Usuario autenticado: {usuario.nombre_completo}')
     except ServicioEscolar.DoesNotExist:
         messages.error(request, '[DEBUG] Usuario no encontrado o no autorizado')
         return redirect('servicios_escolares:logout')
@@ -842,24 +843,24 @@ def panel_horarios_servicio_escolar(request):
         messages.error(request, '[DEBUG] No hay ciclo escolar activo')
         return redirect('servicios_escolares:gestion_ciclos')
 
-    messages.info(request, f'[DEBUG] Ciclo escolar actual: {ciclo_actual.nombre}')
+    # messages.info(request, f'[DEBUG] Ciclo escolar actual: {ciclo_actual.nombre}')
 
     # Configurar horas del día (7:00 AM a 3:00 PM)
     horas = [time(h, 0) for h in range(7, 16)]
-    messages.info(request, f'[DEBUG] Rango de horas configurado: 7:00 - 15:00')
+    # messages.info(request, f'[DEBUG] Rango de horas configurado: 7:00 - 15:00')
 
     # Obtener todos los grados del ciclo actual
     grados = Grado.objects.filter(
         ciclo=ciclo_actual
     ).select_related('nivel').order_by('nivel__orden', 'numero')
 
-    messages.info(request, f'[DEBUG] Grados encontrados: {grados.count()}')
+    # messages.info(request, f'[DEBUG] Grados encontrados: {grados.count()}')
 
     estructura_grados = []
 
     for grado in grados:
-        messages.info(request,
-                      f'[DEBUG] Procesando grado: {grado.nombre if grado.nombre else f"{grado.numero}° {grado.nivel.nombre}"}')
+        # messages.info(request,
+                     # f'[DEBUG] Procesando grado: {grado.nombre if grado.nombre else f"{grado.numero}° {grado.nivel.nombre}"}')
 
         # Obtener grupos de este grado
         grupos = Grupo.objects.filter(
@@ -867,12 +868,12 @@ def panel_horarios_servicio_escolar(request):
             ciclo=ciclo_actual
         ).order_by('letra')
 
-        messages.info(request, f'[DEBUG] Grupos encontrados para este grado: {grupos.count()}')
+        # messages.info(request, f'[DEBUG] Grupos encontrados para este grado: {grupos.count()}')
 
         grupos_data = []
 
         for grupo in grupos:
-            messages.info(request, f'[DEBUG] Procesando grupo: {grupo.letra}')
+            # messages.info(request, f'[DEBUG] Procesando grupo: {grupo.letra}')
 
             # Obtener clases con sus horarios
             clases = Clase.objects.filter(
@@ -885,7 +886,7 @@ def panel_horarios_servicio_escolar(request):
                 )
             )
 
-            messages.info(request, f'[DEBUG] Clases encontradas para este grupo: {clases.count()}')
+            # messages.info(request, f'[DEBUG] Clases encontradas para este grupo: {clases.count()}')
 
             # Preparar matriz de horarios
             matriz_horarios = []
@@ -934,7 +935,7 @@ def panel_horarios_servicio_escolar(request):
             'grupos': grupos_data
         })
 
-    messages.info(request, '[DEBUG] Procesamiento completado. Renderizando plantilla...')
+    # messages.info(request, '[DEBUG] Procesamiento completado. Renderizando plantilla...')
 
     return render(request, 'servicios_escolares/administracion/panel_horarios_grupos.html', {
         'grados': estructura_grados,
@@ -2208,8 +2209,3 @@ def marcar_todas_leidas(request, padre_id):
 
     messages.success(request, 'Todas las notificaciones han sido marcadas como leídas')
     return redirect('detalle_padre', padre_id=padre.id)
-
-
-
-
-

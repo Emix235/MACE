@@ -21,30 +21,6 @@
                     <h4><i class="bi bi-shield-lock"></i> Panel Seguro - Servicios Escolares</h4>
                 </div>
 
-                <!--{% if messages %}
-                <div class="fixed top-4 right-4 z-50 space-y-3">
-                    {% for message in messages %}
-                        <div class="flex items-start justify-between max-w-sm p-4 rounded-lg shadow-lg  
-                  {% if message.tags == 'success' %}bg-green-500
-                  {% elif message.tags == 'error' %}bg-red-500
-                  {% elif message.tags == 'warning' %}bg-yellow-500 text-black
-                  {% else %}bg-blue-500
-                  {% endif %}"
-                             style="    
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;"
-                             x-data="{ show: true }" x-show="show" x-transition>
-                            <div class="flex-1">
-                                {{ message }}
-                            </div>
-                            <button class="ml-4 font-bold" @click="show = false">&times;</button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}-->
-
-
                 <div class="card-body">
                     <div class="alert alert-success">
                         <h5>Bienvenido, {{ usuario.nombre }}</h5>
@@ -123,10 +99,15 @@
                                                         <i class="fas fa-check-circle"></i> Completar
                                                     </button>
                                                 </form>
-                                                <a href="{% url 'servicios_escolares:detalle_cita' cita.id %}"
+                                                <!--
+                                                    <a href="{% url 'servicios_escolares:detalle_cita' cita.id %}"
                                                    class="btn btn-sm btn-info mt-1">
                                                     <i class="fas fa-eye"></i> Ver
                                                 </a>
+                                                -->
+                                                <button class="btn btn-info ver-detalle" data-cita-id="{{ cita.id }}">
+                                                            <i class="fas fa-eye"></i> Ver
+                                                </button>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -200,13 +181,13 @@
                                                         <strong>Tipo:</strong> {{ cita.get_tipo_display }}
                                                     </p>
                                                     <div class="btn-group btn-group-sm mt-2 gap-2">
-                                                        <a href="{% url 'servicios_escolares:detalle_cita' cita.id %}"
+                                                        <!--
+                                                            <a href="{% url 'servicios_escolares:detalle_cita' cita.id %}"
                                                            class="btn btn-info btn-sm">
                                                             <i class="fas fa-info-circle"></i> Detalles
                                                         </a>
-                                                        <button class="btn btn-info ver-detalle" data-bs-toggle="modal"
-                                                                data-bs-target="#citaModal"
-                                                                data-cita-id="{{ cita.id }}">
+                                                        -->
+                                                        <button class="btn btn-info ver-detalle" data-cita-id="{{ cita.id }}">
                                                             <i class="fas fa-eye"></i> Ver
                                                         </button>
                                                         <form method="post"
@@ -304,10 +285,15 @@
                                                     <strong>Fecha:</strong> {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}<br>
                                                     <strong>Ubicación:</strong> {{ cita.ubicacion|default:"Por definir" }}
                                                 </p>
-                                                <a href="{% url 'servicios_escolares:detalle_cita' cita.id %}"
+                                                <!--
+                                                    <a href="{% url 'servicios_escolares:detalle_cita' cita.id %}"
                                                    class="btn btn-sm btn-outline-primary mt-1">
                                                     <i class="fas fa-info-circle"></i> Detalles
                                                 </a>
+                                                -->
+                                                <button class="btn btn-info ver-detalle" data-cita-id="{{ cita.id }}">
+                                                            <i class="fas fa-info-circle"></i> Detalles
+                                                        </button>
                                                 {# {% url 'servicios_escolares:detalle_cita' cita.id %} #}
                                                 <a href="#"
                                                    class="btn btn-sm btn-warning text-dark">
@@ -322,41 +308,39 @@
                             <!--border-start border-5 border-success-->
                             <!-- Citas confirmadas donde participa como asistente -->
                             {% if citas_solicitadas_por_padres or citas_como_asistente %}
-                                <h6 class="mt-3"><i class="fas fa-user-check text-success"></i> Citas confirmadas donde
-                                    participa</h6>
-                                <div class="list-group">
-                                    {% for cita in citas_solicitadas_por_padres %}
-                                        {% if cita.estado == 'confirmada' %}
-                                            <div class="list-group-item">
-                                                <div class="d-flex w-100 justify-content-between">
-                                                    <h6 class="mb-1">{{ cita.titulo }}</h6>
-                                                    <small class="text-{{ cita.get_badge_color }}">{{ cita.get_estado_display }}</small>
-                                                </div>
-                                                <p class="mb-1">
-                                                    <strong>Con:</strong> {{ cita.solicitante.nombre_completo|default:"N/D" }}<br>
-                                                    <strong>Fecha:</strong> {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}<br>
-                                                    <strong>Ubicación:</strong> {{ cita.ubicacion|default:"Por definir" }}
-                                                </p>
-                                                <div class="btn-group btn-group-sm mt-2">
-                                                    <a href="{% url 'servicios_escolares:detalle_cita' cita.id %}"
-                                                       class="btn btn-outline-success btn-sm">
-                                                        <i class="fas fa-info-circle"></i> Detalles
-                                                    </a>
-                                                    <a href="{{ cita.evento_url|default:'#' }}"
-                                                       target="_blank"
-                                                       class="btn btn-outline-primary btn-sm {% if not cita.evento_url %}disabled{% endif %}">
-                                                        <i class="fas fa-calendar-day"></i> Ver en calendario
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        {% endif %}
-                                    {% empty %}
+                            <h6 class="mt-3"><i class="fas fa-user-check text-success"></i> Citas confirmadas donde participa</h6>
+                            <div class="list-group">
+                                {% for cita in citas_solicitadas_por_padres %}
+                                    {% if cita.estado == 'confirmada' %}
                                         <div class="list-group-item">
-                                            <p class="text-muted mb-0">No hay citas confirmadas donde participe</p>
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1">{{ cita.titulo }}</h6>
+                                                <small class="text-{{ cita.get_badge_color }}">{{ cita.get_estado_display }}</small>
+                                            </div>
+                                            <p class="mb-1">
+                                                <strong>Con:</strong> {{ cita.solicitante.nombre_completo|default:"N/D" }}<br>
+                                                <strong>Fecha:</strong> {{ cita.fecha_hora_inicio|date:"d/m/Y H:i" }}<br>
+                                                <strong>Ubicación:</strong> {{ cita.ubicacion|default:"Por definir" }}
+                                            </p>
+                                            <div class="btn-group btn-group-sm mt-2">
+                                                <button class="btn btn-info ver-detalle" data-cita-id="{{ cita.id }}">
+                                                    <i class="fas fa-eye"></i> Ver
+                                                </button>
+                                                <a href="{{ cita.evento_url|default:'#' }}"
+                                                target="_blank"
+                                                class="btn btn-outline-primary btn-sm {% if not cita.evento_url %}disabled{% endif %}">
+                                                    <i class="fas fa-calendar-day"></i> Ver en calendario
+                                                </a>
+                                            </div>
                                         </div>
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
+                                    {% endif %}
+                                {% empty %}
+                                    <div class="list-group-item">
+                                        <p class="text-muted mb-0">No hay citas confirmadas donde participe</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                         {% else %}
                             <p class="text-muted">No hay citas próximas</p>
                         {% endif %}
@@ -366,18 +350,48 @@
         </div>
     </div>
 
-    <!--<h1>Calendario de Citas (Prueba)</h1>-->
-    <!-- FullCalendar con estilo Bootstrap -->
+    <!-- Contenedor del calendario con botón de sugerencia -->
     <div class="row">
         <div class="col-md-12">
-            <div class="card shadow">
+            <div class="card shadow calendar-container" id="calendarContainer">
                 <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">
                         <i class="bi bi-calendar3"></i> Calendario de Citas - {{ current_month }}
                     </h4>
+                    <!-- Botón de sugerencia que aparece al hacer hover -->
+                    <div class="suggest-btn-container" id="suggestBtnContainer">
+                        <button class="btn btn-warning btn-sm suggest-agendar-btn" onclick="mostrarSugerencia()" style="display: none;">
+                            <i class="fas fa-lightbulb"></i> ¿Necesitas agendar una cita? ¡Haz clic aquí!
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body position-relative" id="calendarBody">
                     <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de sugerencia simple (sin formulario) -->
+    <div class="modal fade" id="sugerenciaModal" tabindex="-1" aria-labelledby="sugerenciaModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title" id="sugerenciaModalLabel">
+                        <i class="fas fa-lightbulb"></i> Sugerencia de Agenda
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="fas fa-calendar-plus fa-4x text-warning mb-3"></i>
+                    <h5>¿Necesitas agendar una nueva cita?</h5>
+                    <p class="text-muted">Puedes crear una nueva cita desde el panel de administración o contactar al área correspondiente.</p>
+                    <div class="alert alert-info">
+                        <small>Esta funcionalidad estará disponible próximamente.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -423,7 +437,7 @@
         <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
 
         <style>
-
+            /* Estilos existentes... */
             .fc-daygrid-day {
                 border-width: 1px;
                 border-style: solid;
@@ -743,6 +757,57 @@
                     max-width: 350px;
                 }
             }
+
+            /* Nuevos estilos para el botón de sugerencia */
+            .calendar-container {
+                position: relative;
+                transition: all 0.3s ease;
+            }
+
+            .calendar-container:hover .suggest-agendar-btn {
+                display: inline-block !important;
+                animation: pulse 1.5s infinite;
+            }
+
+            .suggest-btn-container {
+                position: relative;
+            }
+
+            .suggest-agendar-btn {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 50px;
+                font-weight: 500;
+                box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+                transition: all 0.3s ease;
+                white-space: nowrap;
+            }
+
+            .suggest-agendar-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+                background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            }
+
+            @keyframes pulse {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+                }
+                70% {
+                    box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+                }
+                100% {
+                    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+                }
+            }
+
+            /* Efecto de resaltado en el calendario al hacer hover */
+            .calendar-container:hover #calendar {
+                filter: brightness(1.02);
+                transition: filter 0.3s ease;
+            }
         </style>
 
         <script>
@@ -946,13 +1011,25 @@
     </div>
 
 
-    <script>
+        <script>
         $(document).ready(function () {
             // Manejar clic en botón de detalles
-            $('.ver-detalle').click(function () {
+            $('.ver-detalle').click(function (e) {
+                e.preventDefault(); // Prevenir comportamiento por defecto
+                
                 var citaId = $(this).data('cita-id');
                 var url = "{% url 'servicios_escolares:detalle_cita' 0 %}".replace('0', citaId);
-
+                var modal = new bootstrap.Modal(document.getElementById('citaModal'));
+                
+                // Mostrar loading
+                $('#citaModalBody').html(
+                    '<div class="text-center"><div class="spinner-border" role="status">' +
+                    '<span class="visually-hidden">Cargando...</span></div></div>'
+                );
+                
+                // Abrir el modal
+                modal.show();
+                
                 // Cargar contenido via AJAX
                 $.get(url, function (data) {
                     $('#citaModalBody').html(data);
@@ -962,6 +1039,7 @@
                     );
                 });
             });
+            
             // Limpiar modal al cerrar
             $('#citaModal').on('hidden.bs.modal', function () {
                 $('#citaModalBody').html(
@@ -971,124 +1049,11 @@
             });
         });
     </script>
+
+    <script>
+        function mostrarSugerencia() {
+            var modal = new bootstrap.Modal(document.getElementById('sugerenciaModal'));
+            modal.show();
+        }
+    </script>
 {% endblock %}
-
-
-<!--Eliminado solo por si acaso-->
-<!--
-                <div class="card mb-4">
-                    <div class="card-header bg-info text-white">
-                        <i class="bi bi-graph-up"></i> Estadísticas de Sesión
-                    </div>
-                    <div class="card-body">
-                        <p><i class="bi bi-clock"></i> <strong>Hora actual del sistema:</strong> {{ hora_actual }}</p>
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-striped bg-warning" style="width: 100%">
-                                Sesión activa
-                            </div>
-                        </div>
-                    </div>
-                </div>-->
-
-<!--<div class="d-grid gap-2">
-                    <a href="{% url 'servicios_escolares:logout' %}" class="btn btn-danger">
-                        <i class="bi bi-box-arrow-left"></i> Cerrar Sesión Segura
-                    </a>
-                </div>-->
-<!-- Calendario Mensual -->
-<div class="row">
-    <div class="col-md-12">
-        <div class="card shadow">
-            <div class="card-header bg-success text-white">
-                <h4><i class="bi bi-calendar-month"></i> Calendario Mensual - {{ current_month }}</h4>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
-                        <tr class="bg-light">
-                            <th>Lun</th>
-                            <th>Mar</th>
-                            <th>Mié</th>
-                            <th>Jue</th>
-                            <th>Vie</th>
-                            <th>Sáb</th>
-                            <th>Dom</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {% for week in month_weeks %}
-                            <tr>
-                                {% for day in week %}
-                                    <td class="{% if not day.current_month %}text-muted{% endif %} 
-                                               {% if day.is_today %}bg-primary text-white{% endif %}">
-                                        <div class="day-number">{{ day.date.day }}</div>
-                                        <div class="day-events">
-                                            {% if day.current_month %}
-                                                <!-- Espacio para eventos -->
-                                            {% endif %}
-                                        </div>
-                                    </td>
-                                {% endfor %}
-                            </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<script>
-    // Versión simple que funciona directamente
-    document.addEventListener('DOMContentLoaded', function() {
-        // Esperar a que el calendario se renderice
-        setTimeout(function() {
-            // Agregar event listener a todo el calendario
-            const calendar = document.getElementById('calendar');
-            if (!calendar) return;
-
-            // Usar event delegation
-            calendar.addEventListener('mouseover', function(e) {
-                const dayCell = e.target.closest('.fc-daygrid-day:not(.fc-day-other)');
-                if (dayCell) {
-                    addSimpleButton(dayCell);
-                }
-            });
-
-            function addSimpleButton(cell) {
-                if (cell.querySelector('.simple-agendar-btn')) return;
-
-                const btn = document.createElement('button');
-                btn.className = 'simple-agendar-btn';
-                btn.innerHTML = '📅 Agendar';
-                btn.style.cssText = `
-                position: absolute;
-                top: 2px;
-                right: 2px;
-                background: #28a745;
-                color: white;
-                border: none;
-                border-radius: 3px;
-                padding: 2px 6px;
-                font-size: 10px;
-                cursor: pointer;
-                z-index: 1000;
-                display: none;
-            `;
-
-                cell.style.position = 'relative';
-                cell.appendChild(btn);
-
-                cell.addEventListener('mouseenter', () => btn.style.display = 'block');
-                cell.addEventListener('mouseleave', () => btn.style.display = 'none');
-
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    alert('Funcionalidad de agendar activada');
-                    // window.location.href = 'tu_url_aqui';
-                });
-            }
-        }, 500);
-    });
-</script>

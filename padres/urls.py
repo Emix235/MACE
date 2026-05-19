@@ -1,6 +1,5 @@
 from django.template.context_processors import static
 from django.urls import path
-
 from MACE import settings
 from . import views
 from ticket_soporte.views import CrearTicketSoporteView

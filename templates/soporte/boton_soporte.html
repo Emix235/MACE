@@ -16,23 +16,55 @@
         position: relative;
     }
 
+        /* Estilos para el botón de soporte/ticket si existe */
     .btn-flotante-ticket {
         border-radius: 50px;
         padding: 10px 20px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         display: flex;
         align-items: center;
-        transition: all 0.3s ease;
-        background-color: #dc3545;
+        gap: 8px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background-color: #28a745;
         color: white;
         border: none;
         font-size: 16px;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-flotante-ticket::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-flotante-ticket:hover::before {
+        left: 100%;
     }
 
     .btn-flotante-ticket:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-        background-color: #c82333;
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        background-color: #218838;
+    }
+
+    .btn-flotante-ticket:active {
+        transform: translateY(0px) scale(0.98);
+    }
+
+    .btn-flotante-ticket i {
+        transition: transform 0.3s ease;
+    }
+
+    .btn-flotante-ticket:hover i {
+        transform: rotate(-5deg) scale(1.1);
     }
 
     .texto-boton {

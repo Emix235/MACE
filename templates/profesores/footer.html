@@ -1,14 +1,11 @@
 {% load static %}
-<!-- Tus estilos personalizados DEBEN ir después de Bootstrap -->
-    {% if profesor.personal_theme %}
-        <!-- NO FALLO LA CONDICION -->
-        <link rel="stylesheet" href="{% static profesor.personal_theme %}" id="theme-stylesheet">
+    {% if request.session.credenciales_profesor %}
+    <link rel="stylesheet" href="{% static active_theme %}" id="theme-stylesheet">
     {% else %}
-        <!-- FALLO LA CONDICION -->
-        <link rel="stylesheet" href="{% static 'css/themes/default.css' %}"/>
+    <link rel="stylesheet" href="{% static 'css/themes/default.css' %}" id="theme-stylesheet">
     {% endif %}
 
-<footer class="bg-dark text-white pt-4 pb-2 mt-5">
+<footer class="footer-custom pt-4 pb-2 mt-5">
     <div class="container">
         <div class="row">
             <!-- Contacto -->

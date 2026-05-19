@@ -271,7 +271,7 @@ def dashboard_padre_view(request):
             'horas': [f"{h:02d}:00" for h in range(7, 19)],
             'active_tab': request.GET.get('tab', 'clases'),
             'notificaciones_no_leidas': notificaciones_no_leidas.count(),
-            'notificaciones': padre.get_notificaciones()[:5],
+            'notificaciones': padre.get_notificaciones(), '''[:5] sin limites'''
             'citas_creadas': citas_creadas.order_by('-fecha_hora_inicio'),
             'citas_como_solicitante': citas_como_solicitante.order_by('-fecha_hora_inicio'),
             'citas_como_asistente': citas_como_asistente.order_by('-fecha_hora_inicio'),
@@ -472,7 +472,8 @@ def detalles_estudiante(request, estudiante_id):
     )
 
     return render(request, 'padres/detalles_estudiante.html', {
-        'estudiante': estudiante
+        'estudiante': estudiante,
+        'padre': padre 
     })
 
 

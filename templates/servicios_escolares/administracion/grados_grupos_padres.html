@@ -10,24 +10,25 @@
                 <input type="text" id="searchInput" class="form-control" placeholder="Buscar padre o estudiante...">
             </div>
         </div>
+       
 
         <!-- Lista de grados y grupos -->
         <div class="accordion" id="gradosAccordion">
-            {% for nivel in estructura %}
+            {% for item in estructura %}
                 <div class="accordion-item mb-3">
-                    <h2 class="accordion-header" id="heading{{ nivel.grado.id }}">
+                    <h2 class="accordion-header" id="heading{{ item.grado.id }}">
                         <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#collapseGrado{{ nivel.grado.id }}" aria-expanded="false"
-                                aria-controls="collapseGrado{{ nivel.grado.id }}">
-                            <strong>{{ nivel.grado.nivel.nombre }} - {{ nivel.grado.nombre }}</strong>
-                            <span class="badge bg-primary ms-2">{{ nivel.grupos|length }} grupos</span>
+                                data-bs-target="#collapseGrado{{ item.grado.id }}" aria-expanded="false"
+                                aria-controls="collapseGrado{{ item.grado.id }}">
+                            <strong>{{ item.grado.nivel.nombre }} - {{ item.grado.nombre }}</strong>
+                            <span class="badge bg-primary ms-2">{{ item.grupos|length }} grupos</span>
                         </button>
                     </h2>
-                    <div id="collapseGrado{{ nivel.grado.id }}" class="accordion-collapse collapse"
-                         aria-labelledby="heading{{ nivel.grado.id }}" data-bs-parent="#gradosAccordion">
+                    <div id="collapseGrado{{ item.grado.id }}" class="accordion-collapse collapse"
+                         aria-labelledby="heading{{ item.grado.id }}" data-bs-parent="#gradosAccordion">
                         <div class="accordion-body p-0">
-                            <div class="accordion" id="gruposAccordion{{ nivel.grado.id }}">
-                                {% for grupo_data in nivel.grupos %}
+                            <div class="accordion" id="gruposAccordion{{ item.grado.id }}">
+                                {% for grupo_data in item.grupos %}
                                     <div class="accordion-item">
                                         <h2 class="accordion-header" id="headingGrupo{{ grupo_data.grupo.id }}">
                                             <button class="accordion-button collapsed" type="button"
@@ -43,7 +44,7 @@
                                         <div id="collapseGrupo{{ grupo_data.grupo.id }}"
                                              class="accordion-collapse collapse"
                                              aria-labelledby="headingGrupo{{ grupo_data.grupo.id }}"
-                                             data-bs-parent="#gruposAccordion{{ nivel.grado.id }}">
+                                             data-bs-parent="#gruposAccordion{{ item.grado.id }}">
                                             <div class="accordion-body">
                                                 {% if grupo_data.padres %}
                                                     <div class="list-group">

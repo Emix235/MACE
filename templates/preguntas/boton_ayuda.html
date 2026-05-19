@@ -2,7 +2,7 @@
 <!-- Botón Ayuda -->
 <div class="ayuda-flotante">
   <button type="button" class="btn btn-info btn-flotante-ayuda" data-bs-toggle="modal" data-bs-target="#ayudaModal">
-    <i class="fas fa-question-circle"></i>
+    <i class="fa-solid fa-question"></i>
     <span class="texto-boton">Ayuda</span>
   </button>
 </div>
@@ -22,17 +22,71 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     display: flex;
     align-items: center;
-    transition: all 0.3s ease;
+    gap: 8px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background-color: #17a2b8;
     color: white;
     border: none;
     font-size: 16px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
 }
 
+/* Efecto de brillo/reflejo al hacer hover */
+.btn-flotante-ayuda::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-flotante-ayuda:hover::before {
+    left: 100%;
+}
+
+/* Efectos principales del hover */
 .btn-flotante-ayuda:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
     background-color: #138496;
+    color: #FFF
+}
+
+/* Efecto de pulsación al hacer clic */
+.btn-flotante-ayuda:active {
+    transform: translateY(0px) scale(0.98);
+    transition: transform 0.1s ease;
+}
+
+/* Hover para el ícono dentro del botón */
+.btn-flotante-ayuda i {
+    transition: transform 0.3s ease;
+}
+
+.btn-flotante-ayuda:hover i {
+    transform: rotate(5deg) scale(1.1);
+}
+
+/* Efecto de sombra exterior */
+.btn-flotante-ayuda:hover {
+    filter: brightness(1.05);
+}
+
+/* Versión responsiva */
+@media (max-width: 768px) {
+    .btn-flotante-ayuda {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+    
+    .btn-flotante-ayuda:hover {
+        transform: translateY(-2px) scale(1.01);
+    }
 }
 
 .texto-boton {

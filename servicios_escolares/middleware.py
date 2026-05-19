@@ -35,7 +35,7 @@ class NotificacionesMiddleware:
             # print("[Notificaciones] Obteniendo notificaciones...")
             notificaciones = usuario.notificaciones.order_by('-created_at').values(
                 'id', 'title', 'message', 'is_read', 'created_at', 'event_type', 'target_id'
-            )[:10]
+            )  # Sin [:10]
             # print(f"[Notificaciones] Total notificaciones encontradas: {len(notificaciones)}")
 
             notificaciones_list = []

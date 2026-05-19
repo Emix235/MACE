@@ -111,7 +111,7 @@
                                     <small>{{ notificacion.created_at|timesince }}</small>
                                 </div>
                                 <p class="mb-1">{{ notificacion.message|truncatechars:100 }}</p>
-                                <small class="text-muted">Tipo: {{ notificacion.get_event_type_display }}</small>
+                                <small>Tipo: {{ notificacion.get_event_type_display }}</small>
                             </div>
                             <div class="ms-3">
                                 {% if not notificacion.is_read %}

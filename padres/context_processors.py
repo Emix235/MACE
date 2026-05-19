@@ -11,15 +11,25 @@ def notificaciones_padre(request):
             return {}
 
         padre = Padre.objects.get(id=request.session['credenciales_padre']['id'])
-        notificaciones_recientes = padre.get_notificaciones()
-        notificaciones_no_leidas = request.session.get('notificaciones_padre_no_leidas', 0)
-        contador_no_leidas = request.session.get('contador_padre_no_leidas', 0)
+        
+        # CAMBIO PRINCIPAL: Usar filter en lugar de get_notificaciones() para tener control
+        # Obtener SOLO las no leídas (son las que interesan en el dropdown)
+        notificaciones_no_leidas = padre.notificaciones_no_leidas()  # Esto ya filtra is_read=False
+        
+        # Si quieres mostrar las últimas 50 en lugar de todas (por rendimiento)
+        # notificaciones_recientes = notificaciones_no_leidas[:50]
+        
+        # O si quieres TODAS las no leídas (recomendado)
+        notificaciones_recientes = notificaciones_no_leidas
+        
+        contador_no_leidas = notificaciones_no_leidas.count()
 
         return {
             'notificaciones_recientes': notificaciones_recientes,
-            'notificaciones_no_leidas': notificaciones_no_leidas,
+            'notificaciones_no_leidas': contador_no_leidas,
             'contador_no_leidas': contador_no_leidas,
-            'notificaciones': padre.get_notificaciones()[:5]  # Por ejemplo, las 5 más recientes
+            'notificaciones': notificaciones_recientes,  # Todas las no leídas
+            'todas_notificaciones': padre.get_notificaciones(),  # Todas (leídas y no leídas)
         }
     except Padre.DoesNotExist:
         return {}

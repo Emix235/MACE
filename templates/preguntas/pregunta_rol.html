@@ -15,7 +15,7 @@
                             </a>
                         </li>
                         <li class="breadcrumb-item active" aria-current="page">
-                            {{ nombre_rol }}
+                            {{ rol_seleccionado_display }}
                         </li>
                     </ol>
                 </nav>
@@ -24,75 +24,94 @@
 
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card border-0 shadow">
-                    <div class="card-header bg-primary text-white">
+                <div class="card">
+                    <div class="card-header">
                         <h2 class="mb-0">
                             <i class="fas fa-user-tag"></i>
-                            Preguntas Frecuentes - {{ nombre_rol }}
+                            Tutoriales y Preguntas Frecuentes del usuario: {{ rol_seleccionado_display }}
                         </h2>
                     </div>
                     <div class="card-body">
                         <p class="lead mb-0">
-                            Preguntas específicas para usuarios con rol de
-                            <span class="badge bg-info">{{ nombre_rol }}</span>
+                            Tutoriales específicos para usuarios con rol de
+                            <span class="badge">{{ rol_seleccionado_display }}</span>
                         </p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row">
-            <!-- Preguntas específicas del rol -->
+        <!-- BARRA DE BÚSQUEDA MEJORADA -->
+        <div class="row mb-4">
             <div class="col-md-8">
-                <div class="card border-0 shadow mb-4">
-                    <div class="card-header bg-info text-white">
+                <div class="faq-search-container">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" id="searchInput" class="form-control" 
+                            placeholder="Filtrar tutoriales... (ej: 'cita', 'calendario', 'reportes')">
+                        <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                    </div>
+                    <div class="help-text">
+                        <i class="fas fa-info-circle"></i> Haz clic en cualquier tutorial para ver los pasos detallados.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Tutoriales específicos del rol -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header">
                         <h3 class="mb-0">
                             <i class="fas fa-star"></i>
-                            Preguntas para {{ nombre_rol }}
+                            Tutoriales para {{ rol_seleccionado_display }}
                         </h3>
                     </div>
                     <div class="card-body p-0">
                         {% if preguntas_rol %}
                             <div class="accordion" id="accordionRol">
-                                {% for pregunta in preguntas_rol %}
-                                    <div class="accordion-item border-0">
+                                {% for tutorial in preguntas_rol %}
+                                    <div class="accordion-item" data-pregunta-texto="{{ tutorial.pregunta|lower }}" data-tutorial-id="{{ tutorial.tutorial_id }}">
                                         <h2 class="accordion-header" id="heading{{ forloop.counter }}">
-                                            <button class="accordion-button collapsed bg-light"
+                                            <button class="accordion-button collapsed"
                                                     type="button"
                                                     data-bs-toggle="collapse"
                                                     data-bs-target="#collapse{{ forloop.counter }}"
                                                     aria-expanded="false"
                                                     aria-controls="collapse{{ forloop.counter }}">
-                                                <i class="fas fa-question-circle me-2 text-info"></i>
-                                                {{ pregunta.pregunta }}
+                                                <i class="fas fa-graduation-cap me-2"></i>
+                                                {{ tutorial.pregunta }}
                                             </button>
                                         </h2>
                                         <div id="collapse{{ forloop.counter }}"
                                              class="accordion-collapse collapse"
                                              aria-labelledby="heading{{ forloop.counter }}"
                                              data-bs-parent="#accordionRol">
-                                            <div class="accordion-body bg-white">
-                                                {{ pregunta.respuesta|linebreaks|safe }}
-
-                                                <!-- Botón de tutorial debajo de cada respuesta -->
-                                                <div class="mt-4 p-3 bg-light rounded border">
+                                            <div class="accordion-body">
+                                                <p>{{ tutorial.respuesta }}</p>
+                                                <div class="mt-4 p-3 tutorial-box bg-light rounded">
                                                     <h6 class="mb-3">
-                                                        <i class="fas fa-graduation-cap text-primary"></i>
+                                                        <i class="fas fa-play-circle text-primary"></i>
                                                         ¿Necesitas una demostración práctica?
                                                     </h6>
-                                                    <p class="small text-muted mb-3">
+                                                    <p class="small mb-3">
                                                         Aprende paso a paso con nuestro tutorial interactivo:
                                                     </p>
-                                                    <a href="{% url 'preguntas:demo_completa' %}"
-                                                       class="btn btn-outline-primary btn-sm">
-                                                        <i class="fas fa-play-circle"></i> Ver Tutorial Interactivo
+                                                    <a href="{% url 'preguntas:demo_completa' %}?tutorial={{ tutorial.tutorial_id }}"
+                                                    class="btn btn-primary btn-sm"
+                                                    target="_blank">
+                                                        <i class="fas fa-play-circle"></i> Iniciar Tutorial Interactivo
                                                     </a>
                                                 </div>
-
                                                 <div class="mt-3 pt-3 border-top text-end">
-                                                    <small class="text-muted">
-                                                        <i class="fas fa-clock"></i>
-                                                        Actualizado: {{ pregunta.fecha_creacion|date:"d/m/Y" }}
+                                                    <small>
+                                                        <i class="fas fa-info-circle"></i>
+                                                        Tutorial interactivo paso a paso
                                                     </small>
                                                 </div>
                                             </div>
@@ -100,17 +119,20 @@
                                     </div>
                                 {% endfor %}
                             </div>
+                            <div id="noResultRol" class="no-results-message d-none text-center py-5">
+                                <i class="fas fa-search fa-3x mb-3"></i>
+                                <h5>No hay tutoriales que coincidan</h5>
+                                <p>Intenta con otras palabras clave.</p>
+                            </div>
                         {% else %}
                             <div class="text-center py-5">
-                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                <h4 class="text-muted mb-2">No hay preguntas específicas</h4>
-                                <p class="text-muted">Próximamente añadiremos contenido específico.</p>
-                                <!-- Botón de tutorial en caso de no haber preguntas -->
+                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                <h4 class="mb-2">No hay tutoriales disponibles</h4>
+                                <p>Próximamente añadiremos más tutoriales específicos.</p>
                                 <div class="mt-4">
-                                    <a href="{% url 'preguntas:demo_completa' %}"
-                                       class="btn btn-primary">
-                                        <i class="fas fa-graduation-cap"></i> Ver Tutoriales Interactivos
-                                    </a>
+                                    <button onclick="verTodosTutoriales()" class="btn btn-primary">
+                                        <i class="fas fa-graduation-cap"></i> Ver Tutoriales Disponibles
+                                    </button>
                                 </div>
                             </div>
                         {% endif %}
@@ -121,8 +143,8 @@
             <!-- Preguntas generales y sidebar -->
             <div class="col-md-4">
                 <!-- Preguntas generales -->
-                <div class="card border-0 shadow mb-4">
-                    <div class="card-header bg-secondary text-white">
+                <div class="card mb-4">
+                    <div class="card-header">
                         <h3 class="mb-0">
                             <i class="fas fa-globe"></i>
                             Preguntas Generales
@@ -130,76 +152,110 @@
                     </div>
                     <div class="card-body p-0">
                         {% if preguntas_generales %}
-                            <div class="list-group list-group-flush">
+                            <div id="generalQuestionsList" class="list-group list-group-flush">
                                 {% for pregunta in preguntas_generales %}
-                                    <a href="{% url 'preguntas:pregunta_detalle' pregunta.id %}"
-                                       class="list-group-item list-group-item-action border-0 py-3">
+                                    <a href="#" 
+                                       class="list-group-item list-group-item-action py-3"
+                                       data-pregunta-texto="{{ pregunta.pregunta|lower }}"
+                                       onclick="return false;">
                                         <div class="d-flex w-100 justify-content-between">
                                             <h6 class="mb-1">
-                                                <i class="fas fa-question text-primary"></i>
+                                                <i class="fas fa-question"></i>
                                                 {{ pregunta.pregunta|truncatewords:10 }}
                                             </h6>
                                         </div>
-                                        <p class="mb-1 small text-muted">
+                                        <p class="mb-1 small">
                                             {{ pregunta.respuesta|truncatewords:15|safe }}
                                         </p>
                                     </a>
                                 {% endfor %}
                             </div>
+                            <div id="noResultGeneral" class="no-results-message d-none text-center py-4">
+                                <i class="fas fa-search fa-2x mb-2"></i>
+                                <p class="mb-0">No hay preguntas generales que coincidan</p>
+                            </div>
                         {% else %}
                             <div class="text-center py-4">
-                                <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
-                                <p class="text-muted mb-0">No hay preguntas generales</p>
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <p class="mb-0">No hay preguntas generales</p>
                             </div>
                         {% endif %}
                     </div>
                 </div>
 
                 <!-- Card de tutorial destacado -->
-                <div class="card border-0 shadow mb-4 border-primary">
+                <div class="card mb-4 tutorial-card bg-primary text-white">
                     <div class="card-body text-center">
                         <div class="mb-3">
-                            <i class="fas fa-graduation-cap fa-3x text-primary"></i>
+                            <i class="fas fa-graduation-cap fa-3x"></i>
                         </div>
                         <h5 class="card-title">Aprende con Tutoriales</h5>
-                        <p class="card-text small text-muted">
-                            ¿Te resulta difícil entender? Prueba nuestros tutoriales interactivos paso a paso.
+                        <p class="card-text small">
+                            ¿Te resulta difícil entender algún proceso? Prueba nuestros tutoriales interactivos paso a paso.
                         </p>
-                        <a href="{% url 'preguntas:demo_completa' %}"
-                           class="btn btn-primary w-100">
-                            <i class="fas fa-play-circle"></i> Iniciar Tutoriales
-                        </a>
+                        <button onclick="verTodosTutoriales()" class="btn btn-light w-100">
+                            <i class="fas fa-play-circle text-primary"></i> Ver Todos los Tutoriales
+                        </button>
                     </div>
                 </div>
 
                 <!-- Enlaces rápidos -->
-                <div class="card border-0 shadow">
+                <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">
                             <i class="fas fa-link"></i> Enlaces rápidos
                         </h5>
                         <div class="list-group list-group-flush">
                             <a href="{% url 'preguntas:faq_lista' %}"
-                               class="list-group-item list-group-item-action border-0 py-2">
-                                <i class="fas fa-list text-primary"></i>
+                               class="list-group-item list-group-item-action py-2">
+                                <i class="fas fa-list"></i>
                                 <span class="ms-2">Ver todas las preguntas</span>
                             </a>
                             {% if rol_actual != rol_seleccionado %}
                                 <a href="{% url 'preguntas:faq_por_rol' rol_actual %}"
-                                   class="list-group-item list-group-item-action border-0 py-2">
-                                    <i class="fas fa-user text-primary"></i>
-                                    <span class="ms-2">Ver preguntas para mi rol ({{ rol_actual }})</span>
+                                   class="list-group-item list-group-item-action py-2">
+                                    <i class="fas fa-user"></i>
+                                    <span class="ms-2">Ver tutoriales para mi rol ({{ rol_actual_display }})</span>
                                 </a>
                             {% endif %}
-                            <a href="#"
-                               class="list-group-item list-group-item-action border-0 py-2"
-                               data-bs-toggle="modal"
-                               data-bs-target="#contactModal">
-                                <i class="fas fa-envelope text-primary"></i>
+                            <button onclick="abrirSoporte()"
+                                    class="list-group-item list-group-item-action py-2 text-start"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#contactModal">
+                                <i class="fas fa-envelope"></i>
                                 <span class="ms-2">Contactar soporte</span>
-                            </a>
+                            </button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para mostrar pasos del tutorial -->
+    <div class="modal fade" id="tutorialModal" tabindex="-1" aria-labelledby="tutorialModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="tutorialModalLabel">
+                        <i class="fas fa-graduation-cap"></i> Tutorial Interactivo
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="tutorialContent">
+                        <div id="stepContent" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                            <p class="mt-3">Cargando tutorial...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary" id="nextStepBtn" onclick="nextStep()">Siguiente <i class="fas fa-arrow-right"></i></button>
+                    <button type="button" class="btn btn-success" id="finishStepBtn" onclick="finishTutorial()" style="display: none;">Finalizar <i class="fas fa-check"></i></button>
                 </div>
             </div>
         </div>
@@ -219,18 +275,219 @@
                     <p>¿No encontraste la respuesta que buscabas?</p>
                     <p>Puedes contactar a nuestro equipo de soporte:</p>
                     <ul>
-                        <li><strong>Email:</strong> soporte@tuapp.com</li>
-                        <li><strong>Teléfono:</strong> +1 234 567 890</li>
-                        <li><strong>Horario:</strong> Lunes a Viernes 9:00 - 18:00</li>
+                        <li><strong>Email:</strong> emilio1402018@gmail.com</li>
+                        <li><strong>Teléfono:</strong> +52 246 297 7318</li>
+                        <li><strong>Horario:</strong> Lunes a Viernes 8:00 am - 18:00 pm</li>
                     </ul>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <a href="mailto:soporte@tuapp.com" class="btn btn-primary">
+                    <a href="mailto:emilio1402018@gmail.com" class="btn btn-primary">
                         <i class="fas fa-paper-plane"></i> Enviar Email
                     </a>
                 </div>
             </div>
         </div>
     </div>
+
+    <script src="{% static 'js/tutorial_instrucciones.js' %}"></script>
+    
+    <!-- SCRIPT DE FILTRADO Y TUTORIALES -->
+    <script>
+        let currentTutorial = null;
+        let currentStep = 0;
+        let currentRole = '{{ rol_seleccionado }}';
+        
+        // Función para iniciar un tutorial
+        function startTutorial(role, tutorialId) {
+            console.log(`Iniciando tutorial: ${tutorialId} para rol: ${role}`);
+            
+            // Obtener el tutorial desde la configuración global
+            const tutorialConfig = getTutorialById(role, tutorialId);
+            
+            if (!tutorialConfig) {
+                console.error(`Tutorial ${tutorialId} no encontrado para rol ${role}`);
+                alert('Lo sentimos, el tutorial no está disponible en este momento.');
+                return;
+            }
+            
+            currentTutorial = tutorialConfig;
+            currentStep = 0;
+            
+            // Mostrar el modal
+            const modal = new bootstrap.Modal(document.getElementById('tutorialModal'));
+            modal.show();
+            
+            // Mostrar primer paso
+            showStep(0);
+        }
+        
+        // Función para mostrar un paso específico
+        function showStep(stepIndex) {
+            if (!currentTutorial || stepIndex >= currentTutorial.pasos.length) {
+                finishTutorial();
+                return;
+            }
+            
+            const step = currentTutorial.pasos[stepIndex];
+            const stepContent = document.getElementById('stepContent');
+            const nextBtn = document.getElementById('nextStepBtn');
+            const finishBtn = document.getElementById('finishStepBtn');
+            
+            // Actualizar contenido
+            stepContent.innerHTML = `
+                <div class="text-start">
+                    <h4>Paso ${stepIndex + 1} de ${currentTutorial.pasos.length}: ${step.titulo}</h4>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Instrucción:</strong> ${step.texto}
+                    </div>
+                    ${step.selector ? `
+                        <div class="alert alert-warning mt-2">
+                            <i class="fas fa-mouse-pointer"></i>
+                            <strong>Elemento a buscar:</strong> ${step.selector}
+                        </div>
+                    ` : ''}
+                    ${step.url ? `
+                        <div class="mt-3">
+                            <button onclick="irAlPaso('${step.url}')" class="btn btn-outline-primary">
+                                <i class="fas fa-external-link-alt"></i> Ir a la página
+                            </button>
+                        </div>
+                    ` : ''}
+                    <div class="progress mt-4">
+                        <div class="progress-bar" role="progressbar" style="width: ${((stepIndex + 1) / currentTutorial.pasos.length) * 100}%"></div>
+                    </div>
+                    <p class="text-muted mt-3 small">
+                        <i class="fas fa-lightbulb"></i> Consejo: Sigue las instrucciones paso a paso
+                    </p>
+                </div>
+            `;
+            
+            // Configurar botones
+            if (stepIndex === currentTutorial.pasos.length - 1) {
+                nextBtn.style.display = 'none';
+                finishBtn.style.display = 'inline-block';
+            } else {
+                nextBtn.style.display = 'inline-block';
+                finishBtn.style.display = 'none';
+            }
+        }
+        
+        // Función para ir al siguiente paso
+        function nextStep() {
+            currentStep++;
+            showStep(currentStep);
+        }
+        
+        // Función para finalizar el tutorial
+        function finishTutorial() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('tutorialModal'));
+            modal.hide();
+            
+            // Mostrar mensaje de finalización
+            setTimeout(() => {
+                alert(`¡Felicidades! Has completado el tutorial "${currentTutorial.nombre}".\n\nAhora puedes aplicar lo aprendido.`);
+            }, 300);
+        }
+        
+        // Función para ir a una URL específica
+        function irAlPaso(url) {
+            window.open(url, '_blank');
+        }
+        
+        // Función para ver todos los tutoriales del rol
+        function verTodosTutoriales() {
+            const tutoriales = getTutorialesList(currentRole);
+            if (tutoriales.length === 0) {
+                alert('No hay tutoriales disponibles para este rol.');
+                return;
+            }
+            
+            let mensaje = 'Tutoriales disponibles:\n\n';
+            tutoriales.forEach((t, index) => {
+                mensaje += `${index + 1}. ${t.nombre}\n   ${t.descripcion}\n   ${t.pasosCount} pasos\n\n`;
+            });
+            mensaje += '\nHaz clic en cualquier tutorial de la lista para comenzar.';
+            alert(mensaje);
+        }
+        
+        // Función para abrir soporte
+        function abrirSoporte() {
+            const modal = new bootstrap.Modal(document.getElementById('contactModal'));
+            modal.show();
+        }
+        
+        // Función de filtrado para la búsqueda
+        function filterQuestions() {
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+            const rolItems = document.querySelectorAll('#accordionRol .accordion-item');
+            const generalItems = document.querySelectorAll('#generalQuestionsList .list-group-item');
+            const noResultRol = document.getElementById('noResultRol');
+            const noResultGeneral = document.getElementById('noResultGeneral');
+            
+            let rolVisibleCount = 0;
+            let generalVisibleCount = 0;
+            
+            // Filtrar tutoriales del rol
+            if (rolItems.length) {
+                rolItems.forEach(item => {
+                    const preguntaTexto = item.getAttribute('data-pregunta-texto') || '';
+                    if (searchTerm === '' || preguntaTexto.includes(searchTerm)) {
+                        item.style.display = '';
+                        rolVisibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                if (noResultRol) {
+                    if (rolVisibleCount === 0) {
+                        noResultRol.classList.remove('d-none');
+                    } else {
+                        noResultRol.classList.add('d-none');
+                    }
+                }
+            }
+            
+            // Filtrar preguntas generales
+            if (generalItems.length) {
+                generalItems.forEach(item => {
+                    const preguntaTexto = item.getAttribute('data-pregunta-texto') || '';
+                    if (searchTerm === '' || preguntaTexto.includes(searchTerm)) {
+                        item.style.display = '';
+                        generalVisibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                if (noResultGeneral) {
+                    if (generalVisibleCount === 0) {
+                        noResultGeneral.classList.remove('d-none');
+                    } else {
+                        noResultGeneral.classList.add('d-none');
+                    }
+                }
+            }
+        }
+        
+        // Eventos de búsqueda
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', filterQuestions);
+            }
+            
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    searchInput.value = '';
+                    filterQuestions();
+                    searchInput.focus();
+                });
+            }
+            
+            filterQuestions();
+        });
+    </script>
 {% endblock %}

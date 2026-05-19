@@ -20,7 +20,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Configuración para desarrollo local
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 DEBUG = True
 
 # Quick-start development settings - unsuitable for production
@@ -34,11 +33,19 @@ SECRET_KEY = 'django-insecure-h$@lq%w6dl(ss4d8_+q&4kvzez3v##^=t#-3etu3+vl-6%*&20
 # Permitir iframes desde el mismo origen (para la demo)
 X_FRAME_OPTIONS = 'SAMEORIGIN'  # Cambia de 'DENY' a 'SAMEORIGIN'
 
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '3558-187-187-225-32.ngrok-free.app']
+
 # También necesitas esto para iframes:
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+    'https://3558-187-187-225-32.ngrok-free.app'
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://3558-187-187-225-32.ngrok-free.app",
+]
+
 
 # Application definition
 
@@ -80,8 +87,10 @@ MIDDLEWARE = [
     'servicios_escolares.middleware.NotificacionesMiddleware',
     'profesores.middleware.ProfesorNotificacionesMiddleware',  # Ajusta el path según donde pongas este middleware
     'padres.middleware.PadreNotificacionesMiddleware',
+    'padres.middleware.PadreMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'MACE.middleware.DemoModeMiddleware',  # Primero
 ]
 
 # Configuración CORS (para desarrollo)
@@ -110,6 +119,7 @@ TEMPLATES = [
                 'padres.context_processors.padre_context',
                 'servicios_escolares.context_processors.eventos_servicio_escolar',
                 'preguntas.context_processors.faq_context',
+                'MACE.middleware.demo_context_processor',
             ],
         },
     },

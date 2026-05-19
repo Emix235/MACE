@@ -4,310 +4,275 @@
 {% block title %}Demo Interactiva - Agendar Cita{% endblock %}
 
 {% block content %}
-    <div class="container-fluid p-0">
-        <!-- Header de la demo -->
-        <div class="demo-header bg-primary text-white p-4">
-            <div class="container">
-                <h1><i class="fas fa-graduation-cap"></i> Demo: Cómo Agendar una Cita</h1>
-                <p class="lead">Sigue los pasos guiados para aprender a usar el sistema</p>
+<div class="container-fluid p-0">
+  <!-- Header de la demo -->
+  <div class="demo-header p-3 p-md-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+    <div class="container">
+      <h1 class="h3 mb-2">
+        <i class="fas fa-graduation-cap"></i> Demo Interactiva
+      </h1>
+      <p class="small mb-2">
+        Sigue los pasos guiados para aprender a usar el sistema
+      </p>
 
-                <div class="btn-group mt-3">
-                    <button id="iniciarDemo" class="btn btn-light btn-lg">
-                        <i class="fas fa-play"></i> Iniciar Tutorial
-                    </button>
-                    <button id="reiniciarDemo" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-redo"></i> Reiniciar
-                    </button>
-                    <a href="{% url 'servicios_escolares:dashboard' %}" class="btn btn-outline-light btn-lg">
-                        <i class="fas fa-times"></i> Salir
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Contenedor principal -->
-        <div class="container-fluid mt-4">
-            <div class="row">
-                <!-- Panel de instrucciones (25%) -->
-                <div class="col-md-3">
-                    <div class="card sticky-top" style="top: 20px;">
-                        <div class="card-header bg-info text-white">
-                            <h5 class="mb-0"><i class="fas fa-list-ol"></i> Pasos del Tutorial</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="list-group" id="listaPasos">
-                                <!-- Se llenará dinámicamente -->
-                            </div>
-
-                            <div class="mt-4">
-                                <h6><i class="fas fa-lightbulb"></i> Consejos:</h6>
-                                <ul class="small">
-                                    <li>Sigue la flecha animada que señala los elementos</li>
-                                    <li>Puedes hacer clic directamente en el iframe</li>
-                                    <li>Usa las flechas del teclado para navegar</li>
-                                    <li>Presiona ESC para salir</li>
-                                </ul>
-                            </div>
-
-                            <!-- Controles de tamaño del iframe -->
-                            <div class="mt-4">
-                                <h6><i class="fas fa-expand-alt"></i> Tamaño de Vista:</h6>
-                                <div class="btn-group w-100">
-                                    <button id="zoomOut" class="btn btn-sm btn-outline-secondary">
-                                        <i class="fas fa-search-minus"></i> 80%
-                                    </button>
-                                    <button id="zoomReset" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-sync-alt"></i> 100%
-                                    </button>
-                                    <button id="zoomIn" class="btn btn-sm btn-outline-secondary">
-                                        <i class="fas fa-search-plus"></i> 120%
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Iframe con el sistema real (75%) -->
-                <div class="col-md-9">
-                    <div class="card">
-                        <div class="card-header bg-dark text-white d-flex justify-content-between">
-                            <h5 class="mb-0"><i class="fas fa-external-link-alt"></i> Sistema en Tiempo Real</h5>
-                            <span id="paginaActual" class="badge bg-light text-dark">Dashboard</span>
-                        </div>
-                        <div class="card-body p-0 position-relative">
-                            <!-- IFRAME QUE CARGA TU SISTEMA REAL -->
-                            <iframe
-                                    id="demoIframe"
-                                    src="{% url 'servicios_escolares:dashboard' %}"
-                                    style="width: 100%; height: 700px; border: none; transform-origin: top left;"
-                                    sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-                                    allowfullscreen>
-                            </iframe>
-
-                            <!-- Flecha animada que apunta a elementos -->
-                            <div id="demoArrow" class="demo-arrow">
-                                <div class="arrow-line"></div>
-                                <div class="arrow-head">
-                                    <i class="fas fa-hand-point-up"></i>
-                                </div>
-                            </div>
-
-                            <!-- Punto de resaltado en el elemento -->
-                            <div id="demoSpotlight" class="demo-spotlight"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <div class="btn-group mt-2 flex-wrap gap-2">
+        <button id="iniciarDemo" class="btn btn-light btn-sm">
+          <i class="fas fa-play"></i> Iniciar Tutorial
+        </button>
+        <button id="reiniciarDemo" class="btn btn-outline-light btn-sm">
+          <i class="fas fa-redo"></i> Reiniciar
+        </button>
+        <button id="cancelarTutorial" class="btn btn-danger btn-sm btn-cancelar-tutorial">
+          <i class="fas fa-times-circle"></i> Cancelar Tutorial
+        </button>
+        <a href="{% url 'preguntas:faq_lista' %}" class="btn btn-outline-light btn-sm">
+          <i class="fas fa-arrow-left"></i> Volver a FAQ
+        </a>
+      </div>
     </div>
+  </div>
 
-    <!-- Popup flotante para instrucciones -->
-    <div id="demoPopup" class="demo-instruction-popup">
-        <div class="demo-popup-content">
-            <div class="demo-popup-header">
-                <h5><i class="fas fa-graduation-cap"></i> <span id="popupTitulo">Tutorial</span></h5>
-                <button class="btn-close-popup">&times;</button>
-            </div>
-            <div class="demo-popup-body">
-                <p id="popupTexto">Instrucciones aparecerán aquí</p>
-                <div class="demo-progress">
-                    <div class="progress">
-                        <div id="popupProgreso" class="progress-bar" style="width: 0%"></div>
-                    </div>
-                    <small>Paso <span id="popupPasoActual">1</span> de <span id="popupTotalPasos">10</span></small>
-                </div>
-            </div>
-            <div class="demo-popup-footer">
-                <button id="popupAnterior" class="btn btn-sm btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> Anterior
-                </button>
-                <button id="popupSiguiente" class="btn btn-sm btn-primary">
-                    Siguiente <i class="fas fa-arrow-right"></i>
-                </button>
-                <button id="popupSaltar" class="btn btn-sm btn-link">
-                    Saltar tutorial
-                </button>
-            </div>
+  <!-- Panel de instrucciones -->
+  <div class="row mt-2 mt-md-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fas fa-list-ol"></i> Pasos del Tutorial: <span id="tutorialNombre">Selecciona un tutorial</span>
+          </h5>
         </div>
+        <div class="card-body p-2 p-md-3">
+          <div class="row">
+            <div class="col-12">
+              <div id="listaPasos" style="max-height: 150px; overflow-y: auto; scroll-behavior: smooth;">
+                <!-- Se llenará dinámicamente -->
+              </div>
+            </div>
+          </div>
+          <div class="row mt-3">
+            <div class="col-12 text-center">
+              <button id="scrollToIframeBtn" class="btn btn-sm btn-primary btn-scroll">
+                <i class="fas fa-arrow-down"></i> Ir al Sistema
+              </button>
+              <button id="scrollToInstruccionesBtn" class="btn btn-sm btn-secondary btn-scroll ms-2">
+                <i class="fas fa-arrow-up"></i> Ir a Instrucciones
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <style>
-        .sticky-top {
-            position: -webkit-sticky;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
+    <!-- Contenedor principal - iframe -->
+  <div class="container-fluid mt-2 mt-md-4" id="iframeContainer">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+            <h5 class="mb-2 mb-md-0">
+              <i class="fas fa-external-link-alt"></i> Sistema en Tiempo Real
+            </h5>
+            <span id="paginaActual" class="badge mt-2 mt-md-0">Dashboard</span>
+          </div>
+          <div class="card-body p-0 position-relative">
+            <iframe
+              id="demoIframe"
+              {% if rol_actual == "servicio" %}
+                {% url 'servicios_escolares:dashboard' as dashboard_url %}
+              {% elif rol_actual == "padre" %}
+                {% url 'padres:dashboard_padre' as dashboard_url %}
+              {% elif rol_actual == "profesor" %}
+                {% url 'profesores:dashboard_profesor' as dashboard_url %}
+              {% else %}
+                {% with "" as dashboard_url %}
+                {% endwith %}
+              {% endif %}
+              src="{{ dashboard_url }}?role={{ rol_actual }}"
+              style="width: 100%; height: 500px; border: none; transform-origin: top left;"
+              allowfullscreen
+              loading="lazy"
+            >
+            </iframe>
+            <div id="demoArrow" class="demo-arrow" style="display: none;">
+              <div class="arrow-line"></div>
+              <div class="arrow-head">
+                <i class="fas fa-hand-point-up"></i>
+              </div>
+            </div>
+            <div id="demoSpotlight" class="demo-spotlight" style="display: none;"></div>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
 
-        /* Estilos para la demo */
-        .demo-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin-bottom: 0;
-        }
+  <!-- Otros tutoriales como sugerencia -->
+  <div class="container-fluid mt-4">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <h5 class="mb-0">
+              <i class="fas fa-graduation-cap"></i> Otros Tutoriales Disponibles
+            </h5>
+          </div>
+          <div class="card-body">
+            <div class="row" id="otrosTutoriales">
+              <div class="col-12 text-center py-3">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2">Cargando tutoriales...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        /* Flecha animada */
-        .demo-arrow {
-            position: absolute;
-            z-index: 9999;
-            display: none;
-            pointer-events: none;
-        }
+<script>
+  const rol = "{{ rol_actual }}";
+  const url = "{{ dashboard_url|default:'' }}";
+  
+  console.log("ROL:", rol);
+  console.log("URL:", url);
+  
+  if (!url) {
+    console.error("❌ Error: No se pudo resolver la URL del dashboard");
+  } else {
+    console.log("✅ Dashboard URL cargada correctamente");
+  }
+</script>
 
-        .arrow-line {
-            position: absolute;
-            background: linear-gradient(to right, #ff6b6b, #ffa500);
-            height: 4px;
-            border-radius: 2px;
-            transform-origin: left center;
-            box-shadow: 0 0 10px rgba(255, 107, 107, 0.7);
-        }
+<script>
+  const params = new URLSearchParams(window.location.search);
+  window.USER_ROLE = params.get("role") || "{{ rol_actual|default:'default' }}";
+  window.TUTORIAL_SELECCIONADO = params.get("tutorial") || "";
+</script>
 
-        .arrow-head {
-            position: absolute;
-            background: #ff6b6b;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 20px;
-            box-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
-            animation: pulse 1.5s infinite;
-        }
+<script>
+  const DEMO_CONFIG = {
+    urls: {
+      dashboard: "{% url 'servicios_escolares:dashboard' %}",
+      panel_citas: "{% url 'servicios_escolares:panel_citas' %}",
+      agendar_cita: "{% url 'servicios_escolares:agendar_cita' 0 %}",
+    },
+  };
+</script>
 
-        /* Punto de resaltado */
-        .demo-spotlight {
-            position: absolute;
-            z-index: 9998;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.8) 0%, rgba(255, 215, 0, 0) 70%);
-            display: none;
-            pointer-events: none;
-            animation: spotlight-pulse 2s infinite;
-        }
+<script src="{% static 'js/tutorial_instrucciones.js' %}"></script>
+<script src="{% static 'js/demo_completa.js' %}"></script>
 
-        /* Popup flotante */
-        .demo-instruction-popup {
-            position: fixed;
-            z-index: 10000;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            width: 400px;
-            display: none;
-            animation: popupEntrar 0.3s ease;
-            bottom: 20px;
-            right: 20px;
-        }
-
-        .demo-popup-content {
-            padding: 0;
-        }
-
-        .demo-popup-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px 10px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .demo-popup-header h5 {
-            margin: 0;
-            font-size: 1.1rem;
-        }
-
-        .btn-close-popup {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            line-height: 1;
-        }
-
-        .demo-popup-body {
-            padding: 20px;
-        }
-
-        .demo-popup-footer {
-            padding: 15px 20px;
-            border-top: 1px solid #e9ecef;
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        /* Lista de pasos */
-        .paso-activo {
-            background: #e3f2fd !important;
-            border-left: 4px solid #2196f3 !important;
-        }
-
-        .paso-completado {
-            background: #e8f5e9 !important;
-            border-left: 4px solid #4caf50 !important;
-            opacity: 0.7;
-        }
-
-        /* Animaciones */
-        @keyframes popupEntrar {
-            from { opacity: 0; transform: translateY(30px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
-            }
-            50% {
-                transform: scale(1.1);
-                box-shadow: 0 0 30px rgba(255, 107, 107, 1);
-            }
-        }
-
-        @keyframes spotlight-pulse {
-            0%, 100% {
-                opacity: 0.8;
-                transform: scale(1);
-            }
-            50% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
-        }
-
-        /* Estilos para elementos resaltados dentro del iframe */
-        .demo-highlighted {
-            animation: shake 0.5s infinite !important;
-            position: relative !important;
-            z-index: 1000 !important;
-        }
-    </style>
-
-    <script>
-        // Configuración de URLs para la demo
-        const DEMO_CONFIG = {
-            urls: {
-                dashboard: "{% url 'servicios_escolares:dashboard' %}",
-                panel_citas: "{% url 'servicios_escolares:panel_citas' %}",
-                agendar_cita: "{% url 'servicios_escolares:agendar_cita' 0 %}"  // Se reemplazará el 0 dinámicamente
-            }
-        };
-    </script>
-    <script src="{% static 'js/demo_completa.js' %}"></script>
+<style>
+  /* Estilos para scroll de la lista de pasos */
+  #listaPasos {
+    max-height: 150px;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+  
+  #listaPasos::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  #listaPasos::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  
+  #listaPasos::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+  }
+  
+  #listaPasos::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  
+  /* Botones de navegación */
+  .btn-scroll {
+    transition: all 0.3s ease;
+  }
+  
+  .btn-scroll:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Efecto hover para tutoriales sugeridos */
+  .tutorial-sugerencia:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+  
+  .tutorial-sugerencia .card-body {
+    transition: all 0.3s ease;
+  }
+  
+  /* Estilos para pasos activos y completados */
+  .paso-activo {
+    background-color: #007bff !important;
+    color: white !important;
+    border-color: #007bff !important;
+  }
+  
+  .paso-completado {
+    background-color: #28a745 !important;
+    color: white !important;
+    border-color: #28a745 !important;
+  }
+  
+  /* Animaciones */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .demo-arrow {
+    position: fixed;
+    z-index: 1000;
+    pointer-events: none;
+  }
+  
+  .arrow-line {
+    position: absolute;
+    width: 2px;
+    height: 30px;
+    background: #ff4444;
+    left: 50%;
+    top: 0;
+  }
+  
+  .arrow-head {
+    position: absolute;
+    color: #ff4444;
+    font-size: 24px;
+    left: 50%;
+    top: 30px;
+    transform: translateX(-50%);
+    animation: bounce 0.5s ease-in-out infinite;
+  }
+  
+  .demo-spotlight {
+    position: fixed;
+    z-index: 999;
+    pointer-events: none;
+    border-radius: 8px;
+    box-shadow: 0 0 0 4px rgba(255, 68, 68, 0.6), 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  }
+  
+  @keyframes bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-10px); }
+  }
+</style>
 {% endblock %}
